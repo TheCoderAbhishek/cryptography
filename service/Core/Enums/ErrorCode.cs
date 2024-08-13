@@ -22,11 +22,26 @@
         /// </summary>
         public const string GetAllUsersError = "ERR-1000-003";
 
+        /// <summary>
+        /// Error code indicating error occurred while adding new user.
+        /// </summary>
+        public const string AddNewUserAsyncError = "ERR-1000-004";
+
+        /// <summary>
+        /// Error code indicating error occurred while adding user.
+        /// </summary>
+        public const string AddUserFailedError = "ERR-1000-005";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.
         /// </summary>
         public const string ModelValidationError = "ERR-1000-900";
+
+        /// <summary>
+        /// Error code indicating a internal server error.
+        /// </summary>
+        public const string InternalServerError = "ERR-1000-901";
 
 
         /// <summary>

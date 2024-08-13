@@ -1,4 +1,5 @@
-﻿using service.Core.Entities.AccountManagement;
+﻿using service.Core.Dto.AccountManagement;
+using service.Core.Entities.AccountManagement;
 
 namespace service.Core.Interfaces.AccountManagement
 {
@@ -7,6 +8,13 @@ namespace service.Core.Interfaces.AccountManagement
     /// </summary>
     public interface IAccountService
     {
+        /// <summary>
+        /// Asynchronously adds a new user to the system and returns the user ID and a status code.
+        /// </summary>
+        /// <param name="inAddUserDto">The user data object containing information for the new user.</param>
+        /// <returns>A task representing the asynchronous operation. The task result is a tuple containing the ID of the newly added user and a status code.</returns>
+        Task<(int, int)> AddNewUser(InAddUserDto inAddUserDto);
+
         /// <summary>
         /// Retrieves a list of all users and the total count of users.
         /// </summary>

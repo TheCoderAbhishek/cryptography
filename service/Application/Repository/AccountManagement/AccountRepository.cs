@@ -1,6 +1,6 @@
-﻿using Serilog;
-using service.Controllers;
+﻿using service.Controllers;
 using service.Core.Entities.AccountManagement;
+using service.Core.Entities.Utility;
 using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
@@ -16,6 +16,56 @@ namespace service.Application.Repository.AccountManagement
     {
         private readonly ILogger<AccountController> _logger = logger;
         private readonly ICommonDbHander _commonDbHander = commonDbHander;
+
+        /// <summary>
+        /// This method asynchronously adds a new user to the system.
+        /// </summary>
+        /// <param name="user">The User object containing information for the new user.</param>
+        /// <returns>An integer representing the status of the operation. 
+        ///         Typically, a successful operation returns 1, while failures might return different values 
+        ///         depending on the specific implementation.</returns>
+        /// <exception cref="CustomException">Thrown if an error occurs while adding the user. 
+        ///         The exception includes details about the error and relevant error codes.</exception>
+        public async Task<int> AddNewUserAsync(User user)
+        {
+            string query = AccountQueries.AddNewUser;
+
+            try
+            {
+                var parameters = new
+                {
+                    user.UserId,
+                    user.Name,
+                    user.UserName,
+                    user.Email,
+                    user.Password,
+                    user.IsAdmin,
+                    user.IsActive,
+                    user.IsLocked,
+                    user.IsDeleted,
+                    user.LoginAttempts,
+                    user.DeletedStatus,
+                    user.CreatedOn,
+                    user.UpdatedOn,
+                    user.DeletedOn,
+                    user.AutoDeletedOn,
+                    user.LastLoginDateTime,
+                    user.LockedUntil,
+                    user.RoleId,
+                    user.Salt
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddDataReturnLatestId(query, "", "", "", ErrorCode.AddNewUserAsyncError, ConstantData.Txn(), parameters);
+
+                return baseResponse.Status;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while adding new user. {Message}", ex.Message);
+                throw new CustomException("Error adding new user from the account repository.", ex,
+                                   ErrorCode.AddNewUserAsyncError, ConstantData.Txn());
+            }
+        }
 
         /// <summary>
         /// Retrieves a list of all users asynchronously.
