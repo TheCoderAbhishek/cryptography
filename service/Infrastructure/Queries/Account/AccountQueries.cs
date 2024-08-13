@@ -8,6 +8,6 @@
         /// <summary>
         /// SQL query string to retrieve all users from the Employees table.
         /// </summary>
-        public const string GetAllUsers = "SELECT * FROM Employees";
+        public const string GetAllUsers = "SELECT * FROM [cryptography].[dbo].[User]";
     }
 }

@@ -1,26 +1,30 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Dapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
-using service.Core.Enums;
-using service.Core.Interfaces.Utility;
-using System.Data;
-using Dapper;
 using service.Core.Entities.Utility;
+using service.Core.Interfaces.Utility;
 using service.Infrastructure.Dependency;
+using System.Data;
 
 namespace service.Application.Utility
 {
     /// <summary>
     /// Handle Common Database Operations
     /// </summary>
-    public class CommonDbHander : ICommonDbHander
+    public class CommonDbHander(IConfiguration configuration, ILogger<CommonDbHander> log) : ICommonDbHander
     {
-        private static IDbConnection MSSQLConnection => new SqlConnection(ConstantData.ConstantDbConnection);
+        private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection")!;
+        private readonly ILogger<CommonDbHander> _log = log;
+
+        /// <summary>
+        /// Connection String from appsettings.json
+        /// </summary>
+        public IDbConnection MSSQLConnection => new SqlConnection(_connectionString);
 
         /// <summary>
         /// This For Add and Return id
         /// </summary>
         /// <param name="query"> database query </param>
-        /// <param name="log">log object</param>
         /// <param name="succMsg">success message</param>
         /// <param name="errMsg">error message</param>
         /// <param name="duplicateRecordError"> duplicate error message</param>
@@ -29,10 +33,12 @@ namespace service.Application.Utility
         /// <param name="param">database query parameters </param>
         /// <param name="logType"></param>
         /// <returns></returns>
-        public async Task<BaseResponse> AddDataReturnLatestId(string? query, Serilog.ILogger log, string? succMsg, string? errMsg, string? duplicateRecordError, string? errorCode, string? txn, object? param = null, string? logType = null)
+        public async Task<BaseResponse> AddDataReturnLatestId(string? query, string? succMsg, string? errMsg, string? duplicateRecordError, string? errorCode, string? txn, object? param = null, string? logType = null)
         {
-            BaseResponse baseResponse = new();
-            baseResponse.Txn = $"{txn}";
+            BaseResponse baseResponse = new()
+            {
+                Txn = $"{txn}"
+            };
             using (var cn = MSSQLConnection)
             {
                 try
@@ -43,14 +49,17 @@ namespace service.Application.Utility
                         baseResponse.Status = await cn.ExecuteScalarAsync<int>(query!, param, tr).ConfigureAwait(false);
                         tr.Commit();
                     }
-                    cn.Close();
-                    if (!string.IsNullOrEmpty(succMsg) && logType == null)
+                    if (!string.IsNullOrEmpty(succMsg))
                     {
-                        baseResponse.SuccessMessage = succMsg;
-                        log.Information(succMsg);
+                        if (logType == null)
+                        {
+                            _log.LogInformation("Operation succeeded: {SuccessMessage}", succMsg);
+                        }
+                        else if (logType == "debug")
+                        {
+                            _log.LogDebug("Debugging: {SuccessMessage}", succMsg);
+                        }
                     }
-                    if (logType == "debug" && !succMsg.IsNullOrEmpty())
-                        log.Debug(succMsg!);
                 }
                 catch (Exception ex)
                 {
@@ -84,7 +93,6 @@ namespace service.Application.Utility
         /// This For Add , Update and Delete Without Return id
         /// </summary>
         /// <param name="query"> database query </param>
-        /// <param name="log">log object</param>
         /// <param name="succMsg">success message</param>
         /// <param name="errMsg">error message</param>
         /// <param name="duplicateRecordError"> duplicate error message</param>
@@ -94,10 +102,12 @@ namespace service.Application.Utility
         /// <param name="logType"></param>
         /// <returns></returns>
 
-        public async Task<BaseResponse> AddUpdateDeleteData(string? query, Serilog.ILogger log, string? succMsg, string? errMsg, string? duplicateRecordError, string? errorCode, string? txn, object? param = null, string? logType = null)
+        public async Task<BaseResponse> AddUpdateDeleteData(string? query, string? succMsg, string? errMsg, string? duplicateRecordError, string? errorCode, string? txn, object? param = null, string? logType = null)
         {
-            BaseResponse baseResponse = new();
-            baseResponse.Txn = $"{txn}";
+            BaseResponse baseResponse = new()
+            {
+                Txn = $"{txn}"
+            };
 
             using (var cn = MSSQLConnection)
             {
@@ -109,14 +119,17 @@ namespace service.Application.Utility
                         baseResponse.Status = await cn.ExecuteAsync(query!, param, tr).ConfigureAwait(false);
                         tr.Commit();
                     }
-                    cn.Close();
-                    if (!string.IsNullOrEmpty(succMsg) && logType == null)
+                    if (!string.IsNullOrEmpty(succMsg))
                     {
-                        baseResponse.SuccessMessage = succMsg;
-                        log.Information(succMsg);
+                        if (logType == null)
+                        {
+                            _log.LogInformation("Operation succeeded: {SuccessMessage}", succMsg);
+                        }
+                        else if (logType == "debug")
+                        {
+                            _log.LogDebug("Debugging: {SuccessMessage}", succMsg);
+                        }
                     }
-                    if (logType == "debug" && !succMsg.IsNullOrEmpty())
-                        log.Debug(succMsg!);
                 }
                 catch (Exception ex)
                 {
@@ -151,7 +164,6 @@ namespace service.Application.Utility
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="query">database query</param>
-        /// <param name="log">log object</param>
         /// <param name="succMsg">success message</param>
         /// <param name="errMsg">error message</param>
         /// <param name="errorCode"></param>
@@ -160,9 +172,9 @@ namespace service.Application.Utility
         /// <param name="logType"></param>
         /// <returns></returns>
 
-        public async Task<List<T>> GetData<T>(string? query, Serilog.ILogger log, string? succMsg, string? errMsg, string? errorCode, string? txn, object? param = null, string? logType = null)
+        public async Task<List<T>> GetData<T>(string? query, string? succMsg, string? errMsg, string? errorCode, string? txn, object? param = null, string? logType = null)
         {
-            List<T> res = new List<T>();
+            List<T> res = [];
             using (IDbConnection cn = MSSQLConnection)
             {
                 try
@@ -173,13 +185,17 @@ namespace service.Application.Utility
                         res = (await cn.QueryAsync<T>(query!, param, tr).ConfigureAwait(false)).ToList();
                         tr.Commit();
                     }
-                    cn.Close();
-                    if (res.Count > 0 && logType == null && !succMsg.IsNullOrEmpty())
+                    if (res.Count > 0 && !string.IsNullOrEmpty(succMsg))
                     {
-                        log.Information(succMsg!);
+                        if (logType == null)
+                        {
+                            _log.LogInformation("Operation succeeded: {SuccessMessage}", succMsg);
+                        }
+                        else if (logType == "debug")
+                        {
+                            _log.LogDebug("Debugging: {SuccessMessage}", succMsg);
+                        }
                     }
-                    if (logType == "debug" && !succMsg.IsNullOrEmpty())
-                        log.Debug(succMsg!);
                 }
                 catch (Exception ex)
                 {
@@ -199,7 +215,6 @@ namespace service.Application.Utility
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="query"></param>
-        /// <param name="log"></param>
         /// <param name="succMsg">success message</param>
         /// <param name="errMsg">error message</param>
         /// <param name="errorCode"></param>
@@ -208,7 +223,7 @@ namespace service.Application.Utility
         /// <param name="logType"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<T> GetSingleData<T>(string? query, Serilog.ILogger log, string? succMsg, string? errMsg, string? errorCode, string? txn, object? param = null, string? logType = null)
+        public async Task<T> GetSingleData<T>(string? query, string? succMsg, string? errMsg, string? errorCode, string? txn, object? param = null, string? logType = null)
         {
             T? res;
             using (IDbConnection cn = MSSQLConnection)
@@ -221,13 +236,17 @@ namespace service.Application.Utility
                         res = (await cn.QueryAsync<T>(query!, param, tr).ConfigureAwait(false)).SingleOrDefault();
                         tr.Commit();
                     }
-                    cn.Close();
-                    if (res != null! && logType == null && !succMsg.IsNullOrEmpty())
+                    if (!string.IsNullOrEmpty(succMsg))
                     {
-                        log.Information(succMsg!);
+                        if (logType == null)
+                        {
+                            _log.LogInformation("Operation succeeded: {SuccessMessage}", succMsg);
+                        }
+                        else if (logType == "debug")
+                        {
+                            _log.LogDebug("Debugging: {SuccessMessage}", succMsg);
+                        }
                     }
-                    if (logType == "debug" && !succMsg.IsNullOrEmpty())
-                        log.Debug(succMsg!);
                 }
                 catch (Exception ex)
                 {

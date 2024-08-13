@@ -1,7 +1,11 @@
 using Microsoft.Data.SqlClient;
-using service.Infrastructure.Data;
-using System.Data;
 using Serilog;
+using service.Application.Repository.AccountManagement;
+using service.Application.Service.AccountManagement;
+using service.Application.Utility;
+using service.Core.Interfaces.AccountManagement;
+using service.Core.Interfaces.Utility;
+using System.Data;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,12 +17,15 @@ builder.Host.UseSerilog((context, configuration) =>
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Register the repository
-builder.Services.AddScoped<YourEntityRepository>();
-
 // Configure Dapper with MSSQL
 builder.Services.AddScoped<IDbConnection>(sp =>
-    new SqlConnection(builder.Configuration.GetConnectionString("MssqlDatabaseConnection")));
+    new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+#region Dependency Injection Container
+builder.Services.AddScoped<ICommonDbHander, CommonDbHander>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+#endregion Dependency Injection Container
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
