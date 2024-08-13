@@ -21,8 +21,8 @@ namespace service.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(ApiResponse<List<User>>), 200)]
         [HttpGet]
-        [Route("GetAsync")]
-        public async Task<IActionResult> GetAsync()
+        [Route("GetUsersAsync")]
+        public async Task<IActionResult> GetUsersAsync()
         {
             _logger.LogInformation("Fetching all users.");
 
