@@ -13,19 +13,5 @@
         {
             return DateTime.Now.ToString("yyyyMMddHHmmssfff");
         }
-
-        /// <summary>
-        /// Holds the constant database connection string.
-        /// </summary>
-        public static string? ConstantDbConnection { get; private set; }
-
-        /// <summary>
-        /// Initializes the constant database connection string from configuration.
-        /// </summary>
-        /// <param name="configuration">The application configuration.</param>
-        public static void Initialize(IConfiguration configuration)
-        {
-            ConstantDbConnection = configuration.GetConnectionString("MssqlDatabaseConnection");
-        }
     }
 }
