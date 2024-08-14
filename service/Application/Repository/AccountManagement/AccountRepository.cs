@@ -1,21 +1,106 @@
-﻿using Serilog;
-using service.Controllers;
+﻿using service.Controllers;
 using service.Core.Entities.AccountManagement;
+using service.Core.Entities.Utility;
 using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using service.Infrastructure.Dependency;
 using service.Infrastructure.Queries.Account;
+using System.Runtime.InteropServices;
 
 namespace service.Application.Repository.AccountManagement
 {
     /// <summary>
     /// Represents a repository for managing user accounts.
     /// </summary>
-    public class AccountRepository(ILogger<AccountController> logger, ICommonDbHander commonDbHander) : IAccountRepository
+    public class AccountRepository(ILogger<AccountRepository> logger, ICommonDbHander commonDbHander) : IAccountRepository
     {
-        private readonly ILogger<AccountController> _logger = logger;
+        private readonly ILogger<AccountRepository> _logger = logger;
         private readonly ICommonDbHander _commonDbHander = commonDbHander;
+
+        /// <summary>
+        /// Retrieves the ID of a user based on their username and email address.
+        /// </summary>
+        /// <param name="userName">The username of the user.</param>
+        /// <param name="email">The email address of the user.</param>
+        /// <returns>A Task representing the asynchronous operation. The result of the Task is the ID of the user, or 0 if no user is found.</returns>
+        /// <exception cref="CustomException">Thrown when an error occurs during the retrieval process.</exception>
+        public async Task<int> GetUserUsernameEmailAsync(string userName, string email)
+        {
+            string query = AccountQueries.GetUserUsernameEmail;
+
+            try
+            {
+                var parameter = new
+                {
+                    UserName = userName,
+                    Email = email
+                };
+
+                int id = await _commonDbHander.GetSingleData<int>(query,
+                    $"Getting ID associated with username or email {email}",
+                    $"An error occurred while getting ID associated with username or email {email}",
+                    ErrorCode.GetUserUsernameEmailAsyncError, ConstantData.Txn(), parameter);
+
+                return id;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while getting Id based upon username or email. {Message}", ex.Message);
+                throw new CustomException("Error getting Id based upon username or email from the account repository.", ex,
+                                   ErrorCode.GetUserUsernameEmailAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// This method asynchronously adds a new user to the system.
+        /// </summary>
+        /// <param name="user">The User object containing information for the new user.</param>
+        /// <returns>An integer representing the status of the operation. 
+        ///         Typically, a successful operation returns 1, while failures might return different values 
+        ///         depending on the specific implementation.</returns>
+        /// <exception cref="CustomException">Thrown if an error occurs while adding the user. 
+        ///         The exception includes details about the error and relevant error codes.</exception>
+        public async Task<int> AddNewUserAsync(User user)
+        {
+            string query = AccountQueries.AddNewUser;
+
+            try
+            {
+                var parameters = new
+                {
+                    user.UserId,
+                    user.Name,
+                    user.UserName,
+                    user.Email,
+                    user.Password,
+                    user.IsAdmin,
+                    user.IsActive,
+                    user.IsLocked,
+                    user.IsDeleted,
+                    user.LoginAttempts,
+                    user.DeletedStatus,
+                    user.CreatedOn,
+                    user.UpdatedOn,
+                    user.DeletedOn,
+                    user.AutoDeletedOn,
+                    user.LastLoginDateTime,
+                    user.LockedUntil,
+                    user.RoleId,
+                    user.Salt
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddDataReturnLatestId(query, "New user added successfully.", "An error occurred while adding the new user. Please try again.", "A user with the same username or email already exists.", ErrorCode.AddNewUserAsyncError, ConstantData.Txn(), parameters);
+
+                return baseResponse.Status;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while adding new user. {Message}", ex.Message);
+                throw new CustomException("Error adding new user from the account repository.", ex,
+                                   ErrorCode.AddNewUserAsyncError, ConstantData.Txn());
+            }
+        }
 
         /// <summary>
         /// Retrieves a list of all users asynchronously.
@@ -41,6 +126,105 @@ namespace service.Application.Repository.AccountManagement
                 _logger.LogError(ex, "An unexpected error occurred while fetching users. {Message}", ex.Message);
                 throw new CustomException("Error fetching users from the account repository.", ex,
                                    ErrorCode.GetAllUsersAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Retrieve ID of email associated with email.
+        /// </summary>
+        /// <param name="email">Email associated with user.</param>
+        /// <returns>An integer ID associated with email.</returns>
+        public async Task<int> GetIdEmailAsync(string email)
+        {
+            try
+            {
+                string query = AccountQueries.GetIdEmail;
+
+                var parameter = new
+                {
+                    Email = email,
+                };
+
+                int id = await _commonDbHander.GetSingleData<int>(query, $"Getting ID associated with email {email}",
+                    $"An error occurred while getting ID associated with email {email}",
+                    ErrorCode.GetIdEmailAsyncError,
+                    ConstantData.Txn(), parameter);
+
+                return id;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while fetching ID associated with email. {Message}", ex.Message);
+                throw new CustomException("Error fetching ID associated with email from the account repository.", ex,
+                                   ErrorCode.GetIdEmailAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the ID and validity period of an OTP (One-Time Password) associated with the provided email address from the database.
+        /// </summary>
+        /// <param name="email">The email address for which to retrieve the OTP information.</param>
+        /// <returns>A Task representing the asynchronous operation. The result of the Task is an OtpStorage object containing the ID and valid until timestamp of the OTP, or null if no OTP is found for the given email.</returns>
+        /// <exception cref="CustomException">Thrown if an error occurs during the retrieval process from the database.</exception>
+        public async Task<OtpStorage> GetIdValidUntilEmailAsync(string email)
+        {
+            try
+            {
+                string query = AccountQueries.GetIdValidUntilEmail;
+
+                var parameter = new
+                {
+                    Email = email
+                };
+
+                OtpStorage otpDetails = await _commonDbHander.GetSingleData<OtpStorage>(query,
+                    $"Getting OTP details associated with email {email}",
+                    $"An error occurred while getting OTP details associated with email {email}",
+                    ErrorCode.GetIdValidUntilEmailAsyncError, ConstantData.Txn(), parameter);
+
+                return otpDetails;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while fetching OTP details associated with email. {Message}", ex.Message);
+                throw new CustomException("Error fetching OTP details associated with email from the account repository.", ex,
+                                   ErrorCode.GetIdValidUntilEmailAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously updates the OTP details in the storage.
+        /// </summary>
+        /// <param name="otpStorage">The OTP storage object containing the updated details.</param>
+        /// <returns>A Task representing the asynchronous operation.</returns>
+        /// <exception cref="CustomException">Thrown when an error occurs during the update process.</exception>
+        public async Task<BaseResponse> UpdateOtpDetailsAsync(OtpStorage otpStorage)
+        {
+            try
+            {
+                string query = AccountQueries.UpdateOtpInValid;
+
+                var parameter = new
+                {
+                    otpStorage.Email,
+                    otpStorage.GeneratedOn,
+                    otpStorage.ValidUntil,
+                    otpStorage.Otp
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, "OTP details updated successfully.",
+                    "Error updating OTP details associated with email from the account repository.",
+                    "Not applicable in this context.",
+                    ErrorCode.UpdateOtpDetailsAsyncError,
+                    ConstantData.Txn(), parameter);
+
+                return baseResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while updating OTP details associated with email. {Message}", ex.Message);
+                throw new CustomException("Error updating OTP details associated with email from the account repository.", ex,
+                                   ErrorCode.UpdateOtpDetailsAsyncError, ConstantData.Txn());
             }
         }
     }

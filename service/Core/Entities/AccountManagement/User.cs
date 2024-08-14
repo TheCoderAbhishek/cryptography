@@ -61,7 +61,7 @@
         /// <summary>
         /// Gets or sets the deleted status of the user.
         /// </summary>
-        public int DeletedStatus { get; set; }
+        public DeletedState? DeletedStatus { get; set; }
 
         /// <summary>
         /// Gets the date and time when the user account was created.
@@ -96,11 +96,58 @@
         /// <summary>
         /// Gets or sets the role ID of the user.
         /// </summary>
-        public int RoleId { get; set; }
+        public RoleId? RoleId { get; set; }
 
         /// <summary>
         /// Gets or sets the salt used for password hashing.
         /// </summary>
         public string? Salt { get; set; }
+    }
+
+    /// <summary>
+    /// Enumeration representing the different deleted states of a User record.
+    /// </summary>
+    public enum RoleId
+    {
+        /// <summary>
+        /// User have only view access.
+        /// </summary>
+        Viewer = 0,
+
+        /// <summary>
+        /// User have only using access.
+        /// </summary>
+        User = 1,
+
+        /// <summary>
+        /// User have limited editing access.
+        /// </summary>
+        Admin = 2,
+
+        /// <summary>
+        /// User have full access.
+        /// </summary>
+        SuperAdmin = 3,
+    }
+
+    /// <summary>
+    /// Enumeration representing the different deleted states of a User record.
+    /// </summary>
+    public enum DeletedState
+    {
+        /// <summary>
+        /// User record is not deleted.
+        /// </summary>
+        NotDeleted = 0,
+
+        /// <summary>
+        /// User record is in deleted state.
+        /// </summary>
+        SoftDeleted = 1,
+
+        /// <summary>
+        /// User record is deleted.
+        /// </summary>
+        HardDeleted = 2
     }
 }

@@ -101,7 +101,6 @@ namespace service.Application.Utility
         /// <param name="param">database query parameters </param>
         /// <param name="logType"></param>
         /// <returns></returns>
-
         public async Task<BaseResponse> AddUpdateDeleteData(string? query, string? succMsg, string? errMsg, string? duplicateRecordError, string? errorCode, string? txn, object? param = null, string? logType = null)
         {
             BaseResponse baseResponse = new()
@@ -117,6 +116,14 @@ namespace service.Application.Utility
                     using (IDbTransaction tr = cn.BeginTransaction())
                     {
                         baseResponse.Status = await cn.ExecuteAsync(query!, param, tr).ConfigureAwait(false);
+                        if (baseResponse.Status > 0)
+                        {
+                            baseResponse.SuccessMessage = succMsg;
+                        }
+                        else
+                        {
+                            baseResponse.ErrorMessage = errMsg;
+                        }
                         tr.Commit();
                     }
                     if (!string.IsNullOrEmpty(succMsg))
@@ -171,7 +178,6 @@ namespace service.Application.Utility
         /// <param name="param">database query parameters</param>
         /// <param name="logType"></param>
         /// <returns></returns>
-
         public async Task<List<T>> GetData<T>(string? query, string? succMsg, string? errMsg, string? errorCode, string? txn, object? param = null, string? logType = null)
         {
             List<T> res = [];

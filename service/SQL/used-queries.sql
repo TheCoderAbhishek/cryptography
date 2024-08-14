@@ -2,7 +2,7 @@
 CREATE DATABASE cryptography;
 
 -- Query to create a table
-CREATE TABLE [dbo].[User] (
+CREATE TABLE [cryptography].[dbo].[User] (
     Id                INT IDENTITY(1,1) PRIMARY KEY,
     UserId            NVARCHAR(40) NOT NULL,
     Name              NVARCHAR(255) NOT NULL,
@@ -43,4 +43,29 @@ VALUES
 ('user3', 'Alice Johnson', 'alicej', 'alice@example.com', 'hashed_password_3', 0, 1, 0, 0, 0, 0, GETDATE(), NULL, NULL, NULL, NULL, NULL, 3, 'random_salt_3'),
 ('user4', 'Bob Brown', 'bobbrown', 'bob@example.com', 'hashed_password_4', 0, 1, 1, 0, 3, 0, GETDATE(), NULL, NULL, NULL, NULL, NULL, 2, 'random_salt_4'),
 ('user5', 'Charlie White', 'charliew', 'charlie@example.com', 'hashed_password_5', 1, 0, 0, 1, 0, 1, GETDATE(), NULL, NULL, NULL, NULL, NULL, 1, 'random_salt_5');
+
+-- Query to create a [OtpStorage] table
+CREATE TABLE [cryptography].[dbo].[OtpStorage] (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+	UserId INT NOT NULL,
+    Email NVARCHAR(255) NOT NULL,
+    GeneratedOn DATETIME NOT NULL,
+    ValidUntil DATETIME NOT NULL,
+    Otp NVARCHAR(50) NOT NULL,
+    Salt NVARCHAR(50) NOT NULL,
+    AttemptCount INT NOT NULL DEFAULT 0
+);
+
+-- View all data from `OtpStorage` table
+SELECT * FROM [cryptography].[dbo].[OtpStorage];
+
+-- Truncate and reset identity `OtpStorage`
+TRUNCATE TABLE [cryptography].[dbo].[OtpStorage];
+
+-- Table Deletion Query
+DROP TABLE [cryptography].[dbo].[OtpStorage];
+
+-- Add new column in table `OtpStorage`
+ALTER TABLE [cryptography].[dbo].[OtpStorage]
+ADD OtpUseCase INT;
 

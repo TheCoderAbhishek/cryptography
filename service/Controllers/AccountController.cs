@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using service.Core.Dto.AccountManagement;
 using service.Core.Entities.AccountManagement;
+using service.Core.Entities.Utility;
 using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 
@@ -16,13 +18,84 @@ namespace service.Controllers
         private readonly IAccountService _accountService = accountService;
 
         /// <summary>
+        /// Adds a new user to the system asynchronously.
+        /// </summary>
+        /// <param name="inAddUserDto">The DTO containing the details of the user to be added.</param>
+        /// <returns>An <see cref="IActionResult"/> containing an <see cref="ApiResponse{T}"/> with the ID of the newly created user.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPost]
+        [Route("AddUserAsync")]
+        public async Task<IActionResult> AddUserAsync(InAddUserDto inAddUserDto)
+        {
+            try
+            {
+                var (statusCode, userId) = await _accountService.AddNewUser(inAddUserDto);
+
+                if (userId > 0 && statusCode == 1)
+                {
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        statusCode,
+                        successMessage: "User added successfully.",
+                        txn: ConstantData.Txn(),
+                        returnValue: userId
+                    );
+
+                    return Ok(response);
+                }
+                else if (statusCode == 0)
+                {
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status406NotAcceptable,
+                        statusCode,
+                        errorMessage: $"Failed to add user because user is already registered with Username: {inAddUserDto.UserName} or Email: {inAddUserDto.Email}.",
+                        errorCode: ErrorCode.AddUserFailedError,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return Ok(response);
+                }
+                else
+                {
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        statusCode,
+                        errorMessage: "Failed to add user.",
+                        errorCode: ErrorCode.AddUserFailedError,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return BadRequest(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while adding a new user: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while adding the user.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
         /// Getting All Data from Users Table.
         /// </summary>
         /// <returns></returns>
         [ProducesResponseType(typeof(ApiResponse<List<User>>), 200)]
         [HttpGet]
-        [Route("GetAsync")]
-        public async Task<IActionResult> GetAsync()
+        [Route("GetUsersAsync")]
+        public async Task<IActionResult> GetUsersAsync()
         {
             _logger.LogInformation("Fetching all users.");
 
@@ -33,23 +106,93 @@ namespace service.Controllers
             {
                 case 1:
                     _logger.LogInformation("Users retrieved successfully.");
-                    response = new ApiResponse<List<User>>(ApiResponseStatus.Success, 200, 1, successMessage: "Users retrieved successfully.", txn: ConstantData.Txn(), returnValue: users);
+                    response = new ApiResponse<List<User>>(ApiResponseStatus.Success, StatusCodes.Status200OK, 1, successMessage: "Users retrieved successfully.", txn: ConstantData.Txn(), returnValue: users);
                     break;
                 case 0:
                     _logger.LogWarning("No users found.");
-                    response = new ApiResponse<List<User>>(ApiResponseStatus.Failure, 404, 0, errorMessage: "No users found", errorCode: ErrorCode.NoUsersError, txn: ConstantData.Txn());
+                    response = new ApiResponse<List<User>>(ApiResponseStatus.Failure, StatusCodes.Status404NotFound, 0, errorMessage: "No users found", errorCode: ErrorCode.NoUsersError, txn: ConstantData.Txn());
                     break;
                 case -1:
                     _logger.LogError("An error occurred while retrieving users.");
-                    response = new ApiResponse<List<User>>(ApiResponseStatus.Failure, 500, -1, errorMessage: "An error occurred while retrieving users.", errorCode: ErrorCode.GetAllUsersError, txn: ConstantData.Txn());
+                    response = new ApiResponse<List<User>>(ApiResponseStatus.Failure, StatusCodes.Status500InternalServerError, -1, errorMessage: "An error occurred while retrieving users.", errorCode: ErrorCode.GetAllUsersError, txn: ConstantData.Txn());
                     break;
                 default:
                     _logger.LogError("Unknown status.");
-                    response = new ApiResponse<List<User>>(ApiResponseStatus.Failure, 500, -1, errorMessage: "Unknown status", errorCode: ErrorCode.UnknownError, txn: ConstantData.Txn());
+                    response = new ApiResponse<List<User>>(ApiResponseStatus.Failure, StatusCodes.Status500InternalServerError, -1, errorMessage: "Unknown status", errorCode: ErrorCode.UnknownError, txn: ConstantData.Txn());
                     break;
             }
 
             return StatusCode(response.StatusCode, response);
+        }
+
+        /// <summary>
+        /// Generates an OTP based on the request data provided.
+        /// </summary>
+        /// <param name="inOtpRequestDto">The request data needed to generate the OTP.</param>
+        /// <returns>A response containing the OTP or an error message.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPost]
+        [Route("OtpGenerationRequestAsync")]
+        public async Task<IActionResult> OtpGenerationRequestAsync(InOtpRequestDto inOtpRequestDto)
+        {
+            if (inOtpRequestDto == null)
+            {
+                return BadRequest(new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status400BadRequest,
+                    0,
+                    errorMessage: "Invalid OTP request data.",
+                    errorCode: ErrorCode.InvalidModelRequestError,
+                    txn: ConstantData.Txn()
+                ));
+            }
+
+            try
+            {
+                BaseResponse response = await _accountService.OtpGeneration(inOtpRequestDto);
+
+                if (response.Status == 1)
+                {
+                    var apiResponse = new ApiResponse<int>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        1,
+                        successMessage: response.SuccessMessage,
+                        txn: ConstantData.Txn(),
+                        returnValue: response.Status
+                    );
+
+                    return Ok(apiResponse);
+                }
+                else
+                {
+                    var apiResponse = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        0,
+                        errorMessage: response.ErrorMessage,
+                        errorCode: ErrorCode.BadRequestError,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return BadRequest(apiResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while generation of otp: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while generation of otp.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
         }
     }
 }
