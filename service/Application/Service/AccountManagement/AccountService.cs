@@ -75,30 +75,39 @@ namespace service.Application.Service.AccountManagement
         {
             try
             {
-                var salt = GetGenerateSalt();
-                var hashedPassword = HashPassword(inAddUserDto.Password!, salt);
+                int id = await _accountRepository.GetUserUsernameEmailAsync(inAddUserDto.UserName!, inAddUserDto.Email!);
 
-                var newUser = new User
+                if (id <= 0)
                 {
-                    UserId = GenerateClientId(),
-                    Name = inAddUserDto.Name,
-                    UserName = inAddUserDto.UserName,
-                    Email = inAddUserDto.Email,
-                    Password = hashedPassword,
-                    CreatedOn = DateTime.Now,
-                    IsAdmin = true,
-                    IsActive = true,
-                    IsLocked = true,
-                    IsDeleted = false,
-                    DeletedStatus = DeletedState.NotDeleted,
-                    LoginAttempts = 0,
-                    RoleId = RoleId.SuperAdmin,
-                    Salt = salt
-                };
+                    var salt = GetGenerateSalt();
+                    var hashedPassword = HashPassword(inAddUserDto.Password!, salt);
 
-                int userId = await _accountRepository.AddNewUserAsync(newUser);
+                    var newUser = new User
+                    {
+                        UserId = GenerateClientId(),
+                        Name = inAddUserDto.Name,
+                        UserName = inAddUserDto.UserName,
+                        Email = inAddUserDto.Email,
+                        Password = hashedPassword,
+                        CreatedOn = DateTime.Now,
+                        IsAdmin = true,
+                        IsActive = true,
+                        IsLocked = true,
+                        IsDeleted = false,
+                        DeletedStatus = DeletedState.NotDeleted,
+                        LoginAttempts = 0,
+                        RoleId = RoleId.SuperAdmin,
+                        Salt = salt
+                    };
 
-                return (1, userId);
+                    int userId = await _accountRepository.AddNewUserAsync(newUser);
+
+                    return (1, userId); 
+                }
+                else
+                {
+                    return (0, id);
+                }
             }
             catch (Exception ex)
             {

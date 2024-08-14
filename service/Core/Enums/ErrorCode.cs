@@ -47,6 +47,11 @@
         /// </summary>
         public const string OtpGenerationExceptionError = "ERR-1000-008";
 
+        /// <summary>
+        /// Error code indicating error occurred while getting Id based upon username or email.
+        /// </summary>
+        public const string GetUserUsernameEmailAsyncError = "ERR-1000-009";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.

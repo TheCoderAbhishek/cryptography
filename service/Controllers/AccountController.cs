@@ -31,7 +31,7 @@ namespace service.Controllers
             {
                 var (statusCode, userId) = await _accountService.AddNewUser(inAddUserDto);
 
-                if (userId > 0)
+                if (userId > 0 && statusCode == 1)
                 {
                     var response = new ApiResponse<int>(
                         ApiResponseStatus.Success,
@@ -40,6 +40,19 @@ namespace service.Controllers
                         successMessage: "User added successfully.",
                         txn: ConstantData.Txn(),
                         returnValue: userId
+                    );
+
+                    return Ok(response);
+                }
+                else if (statusCode == 0)
+                {
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status406NotAcceptable,
+                        statusCode,
+                        errorMessage: $"Failed to add user because user is already registered with Username: {inAddUserDto.UserName} or Email: {inAddUserDto.Email}.",
+                        errorCode: ErrorCode.AddUserFailedError,
+                        txn: ConstantData.Txn()
                     );
 
                     return Ok(response);

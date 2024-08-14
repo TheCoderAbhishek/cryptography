@@ -8,6 +8,14 @@ namespace service.Core.Interfaces.AccountManagement
     public interface IAccountRepository
     {
         /// <summary>
+        /// Gets a user's ID based on their username and email.
+        /// </summary>
+        /// <param name="userName">The username of the user.</param>
+        /// <param name="email">The email of the user.</param>
+        /// <returns>A Task that represents the asynchronous operation. The value of the Task is the user's ID, or 0 if no user is found.</returns>
+        Task<int> GetUserUsernameEmailAsync(string userName, string email);
+
+        /// <summary>
         /// Asynchronously adds a new user to the system.
         /// </summary>
         /// <param name="user">The user object to be added.</param>

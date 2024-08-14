@@ -6,6 +6,11 @@
     public static class AccountQueries
     {
         /// <summary>
+        /// SQL query to retrieve user record based upon Username or Email;
+        /// </summary>
+        public const string GetUserUsernameEmail = "SELECT Id FROM [cryptography].[dbo].[User] WHERE Email = @Email OR UserName = @UserName";
+
+        /// <summary>
         /// SQL query to add new user into User table.
         /// </summary>
         public const string AddNewUser = "INSERT INTO [cryptography].[dbo].[User] (UserId, Name, UserName, Email, Password, IsAdmin, IsActive, IsLocked, IsDeleted, LoginAttempts, DeletedStatus, CreatedOn, UpdatedOn, DeletedOn, AutoDeletedOn, LastLoginDateTime, LockedUntil, RoleId, Salt) VALUES (@UserId, @Name, @UserName, @Email, @Password, @IsAdmin, @IsActive, @IsLocked, @IsDeleted, @LoginAttempts, @DeletedStatus, @CreatedOn, @UpdatedOn, @DeletedOn, @AutoDeletedOn, @LastLoginDateTime, @LockedUntil, @RoleId, @Salt); SELECT CAST(SCOPE_IDENTITY() as int);";

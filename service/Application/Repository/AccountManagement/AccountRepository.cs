@@ -18,6 +18,40 @@ namespace service.Application.Repository.AccountManagement
         private readonly ICommonDbHander _commonDbHander = commonDbHander;
 
         /// <summary>
+        /// Retrieves the ID of a user based on their username and email address.
+        /// </summary>
+        /// <param name="userName">The username of the user.</param>
+        /// <param name="email">The email address of the user.</param>
+        /// <returns>A Task representing the asynchronous operation. The result of the Task is the ID of the user, or 0 if no user is found.</returns>
+        /// <exception cref="CustomException">Thrown when an error occurs during the retrieval process.</exception>
+        public async Task<int> GetUserUsernameEmailAsync(string userName, string email)
+        {
+            string query = AccountQueries.GetUserUsernameEmail;
+
+            try
+            {
+                var parameter = new
+                {
+                    UserName = userName,
+                    Email = email
+                };
+
+                int id = await _commonDbHander.GetSingleData<int>(query,
+                    $"Getting ID associated with username or email {email}",
+                    $"An error occurred while getting ID associated with username or email {email}",
+                    ErrorCode.GetUserUsernameEmailAsyncError, ConstantData.Txn(), parameter);
+
+                return id;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while getting Id based upon username or email. {Message}", ex.Message);
+                throw new CustomException("Error getting Id based upon username or email from the account repository.", ex,
+                                   ErrorCode.GetUserUsernameEmailAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
         /// This method asynchronously adds a new user to the system.
         /// </summary>
         /// <param name="user">The User object containing information for the new user.</param>
