@@ -116,6 +116,14 @@ namespace service.Application.Utility
                     using (IDbTransaction tr = cn.BeginTransaction())
                     {
                         baseResponse.Status = await cn.ExecuteAsync(query!, param, tr).ConfigureAwait(false);
+                        if (baseResponse.Status > 0)
+                        {
+                            baseResponse.SuccessMessage = succMsg;
+                        }
+                        else
+                        {
+                            baseResponse.ErrorMessage = errMsg;
+                        }
                         tr.Commit();
                     }
                     if (!string.IsNullOrEmpty(succMsg))

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using service.Core.Dto.AccountManagement;
 using service.Core.Entities.AccountManagement;
+using service.Core.Entities.Utility;
 using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 
@@ -109,6 +110,76 @@ namespace service.Controllers
             }
 
             return StatusCode(response.StatusCode, response);
+        }
+
+        /// <summary>
+        /// Generates an OTP based on the request data provided.
+        /// </summary>
+        /// <param name="inOtpRequestDto">The request data needed to generate the OTP.</param>
+        /// <returns>A response containing the OTP or an error message.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPost]
+        [Route("OtpGenerationRequestAsync")]
+        public async Task<IActionResult> OtpGenerationRequestAsync(InOtpRequestDto inOtpRequestDto)
+        {
+            if (inOtpRequestDto == null)
+            {
+                return BadRequest(new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status400BadRequest,
+                    0,
+                    errorMessage: "Invalid OTP request data.",
+                    errorCode: ErrorCode.InvalidModelRequestError,
+                    txn: ConstantData.Txn()
+                ));
+            }
+
+            try
+            {
+                BaseResponse response = await _accountService.OtpGeneration(inOtpRequestDto);
+
+                if (response.Status == 1)
+                {
+                    var apiResponse = new ApiResponse<int>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        1,
+                        successMessage: response.SuccessMessage,
+                        txn: ConstantData.Txn(),
+                        returnValue: response.Status
+                    );
+
+                    return Ok(apiResponse);
+                }
+                else
+                {
+                    var apiResponse = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        0,
+                        errorMessage: response.ErrorMessage,
+                        errorCode: ErrorCode.BadRequestError,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return BadRequest(apiResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while generation of otp: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while generation of otp.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
         }
     }
 }

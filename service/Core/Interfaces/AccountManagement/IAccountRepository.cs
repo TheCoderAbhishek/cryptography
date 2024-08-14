@@ -19,5 +19,12 @@ namespace service.Core.Interfaces.AccountManagement
         /// </summary>
         /// <returns>A task that represents the asynchronous operation. The task result contains a list of users.</returns>
         Task<List<User>> GetAllUsersAsync();
+
+        /// <summary>
+        /// Retrieve ID of email associated with email.
+        /// </summary>
+        /// <param name="email">Email associated with user.</param>
+        /// <returns>An integer ID associated with email.</returns>
+        Task<int> GetIdEmailAsync(string email);
     }
 }

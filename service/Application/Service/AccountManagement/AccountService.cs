@@ -1,7 +1,10 @@
 ﻿using Konscious.Security.Cryptography;
 using service.Core.Dto.AccountManagement;
 using service.Core.Entities.AccountManagement;
+using service.Core.Entities.Utility;
+using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
+using service.Core.Interfaces.Utility;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -10,10 +13,12 @@ namespace service.Application.Service.AccountManagement
     /// <summary>
     /// Represents the account service for managing user accounts.
     /// </summary>
-    public class AccountService(ILogger<AccountService> logger, IAccountRepository accountRepository) : IAccountService
+    public class AccountService(ILogger<AccountService> logger, IAccountRepository accountRepository, IEmailOtpService emailOtpService, IEmailOtpRepository emailOtpRepository) : IAccountService
     {
         private readonly ILogger<AccountService> _logger = logger;
         private readonly IAccountRepository _accountRepository = accountRepository;
+        private readonly IEmailOtpService _emailOtpService = emailOtpService;
+        private readonly IEmailOtpRepository _emailOtpRepository = emailOtpRepository;
 
         #region Private Methods for Support
         /// <summary>
@@ -126,6 +131,67 @@ namespace service.Application.Service.AccountManagement
             {
                 _logger.LogError(ex, "An error occurred while retrieving users: {Message}", ex.Message);
                 return (-1, null)!;
+            }
+        }
+
+        /// <summary>
+        /// Generates an OTP.
+        /// </summary>
+        /// <param name="inOtpRequestDto">The OTP request data containing necessary information for OTP generation.</param>
+        /// <returns>An integer representing the generated OTP.</returns>
+        public async Task<BaseResponse> OtpGeneration(InOtpRequestDto inOtpRequestDto)
+        {
+            try
+            {
+                int id = await _accountRepository.GetIdEmailAsync(inOtpRequestDto.Email!);
+
+                if (id > 0)
+                {
+                    var salt = GetGenerateSalt();
+                    string otp = _emailOtpService.GenerateOtpAsync();
+                    var hashedOtp = HashPassword(otp, salt);
+
+                    // OTP Sending on Email
+                    await _emailOtpService.SendOtpEmailAsync(inOtpRequestDto.Email!, otp, "Ayerhs - Account Activation Code", "Your One Time Password (OTP) is: ", true);
+
+                    OtpStorage otpStorage = new()
+                    {
+                        UserId = id,
+                        Email = inOtpRequestDto.Email,
+                        GeneratedOn = DateTime.Now,
+                        ValidUntil = DateTime.Now.AddMinutes(15),
+                        Otp = hashedOtp,
+                        Salt = salt,
+                        AttemptCount = 1,
+                        OtpUseCase = 1,
+                    };
+
+                    BaseResponse baseResponse = await _emailOtpRepository.AddOtpAsync(otpStorage);
+                    baseResponse.SuccessMessage = $"OTP sent successfully on email '{inOtpRequestDto.Email}'.";
+                    return baseResponse; 
+                }
+                else
+                {
+                    _logger.LogError("Email \"{Email}\" is not registered with the application.", inOtpRequestDto.Email);
+                    BaseResponse baseResponse = new()
+                    {
+                        Status = -1,
+                        ErrorMessage = $"Email '{inOtpRequestDto.Email}' is not registered with the application. Please verify it.",
+                        ErrorCode = ErrorCode.OtpGenerationExceptionError
+                    };
+                    return baseResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while OTP generation: {Message}", ex.Message);
+                BaseResponse baseResponse = new()
+                {
+                    Status = -1,
+                    ErrorMessage = ex.Message,
+                    ErrorCode = ErrorCode.OtpGenerationExceptionError
+                };
+                return baseResponse;
             }
         }
     }

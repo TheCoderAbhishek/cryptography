@@ -1,10 +1,13 @@
 using Microsoft.Data.SqlClient;
 using Serilog;
 using service.Application.Repository.AccountManagement;
+using service.Application.Repository.Utility;
 using service.Application.Service.AccountManagement;
+using service.Application.Service.Utility;
 using service.Application.Utility;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
+using service.Infrastructure.Dependency;
 using System.Data;
 using System.Reflection;
 
@@ -17,12 +20,17 @@ builder.Host.UseSerilog((context, configuration) =>
 // Add services to the container.
 builder.Services.AddControllers();
 
+// Smtp settings
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
+
 // Configure Dapper with MSSQL
 builder.Services.AddScoped<IDbConnection>(sp =>
     new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 #region Dependency Injection Container
 builder.Services.AddScoped<ICommonDbHander, CommonDbHander>();
+builder.Services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
+builder.Services.AddScoped<IEmailOtpService, EmailOtpService>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 #endregion Dependency Injection Container

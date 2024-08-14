@@ -32,6 +32,21 @@
         /// </summary>
         public const string AddUserFailedError = "ERR-1000-005";
 
+        /// <summary>
+        /// Error code indicating error occurred while adding OTP details in table.
+        /// </summary>
+        public const string AddOtpAsyncError = "ERR-1000-006";
+
+        /// <summary>
+        /// Error code indicating error occurred while getting ID associated with email.
+        /// </summary>
+        public const string GetIdEmailAsyncError = "ERR-1000-007";
+
+        /// <summary>
+        /// Error code indicating exception occurred while OTP generation
+        /// </summary>
+        public const string OtpGenerationExceptionError = "ERR-1000-008";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.
@@ -42,6 +57,16 @@
         /// Error code indicating a internal server error.
         /// </summary>
         public const string InternalServerError = "ERR-1000-901";
+
+        /// <summary>
+        /// Error code indicating a model is in invalid state
+        /// </summary>
+        public const string InvalidModelRequestError = "ERR-1000-902";
+
+        /// <summary>
+        /// Error code indicating a bad request
+        /// </summary>
+        public const string BadRequestError = "ERR-1000-903";
 
 
         /// <summary>

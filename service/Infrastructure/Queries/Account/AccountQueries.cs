@@ -14,5 +14,10 @@
         /// SQL query string to retrieve all users from the User table.
         /// </summary>
         public const string GetAllUsers = "SELECT * FROM [cryptography].[dbo].[User]";
+
+        /// <summary>
+        /// SQL query to retrieve ID by email from user table.
+        /// </summary>
+        public const string GetIdEmail = "SELECT Id FROM [cryptography].[dbo].[User] WHERE Email = @Email";
     }
 }

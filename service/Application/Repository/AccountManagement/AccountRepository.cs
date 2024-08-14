@@ -12,9 +12,9 @@ namespace service.Application.Repository.AccountManagement
     /// <summary>
     /// Represents a repository for managing user accounts.
     /// </summary>
-    public class AccountRepository(ILogger<AccountController> logger, ICommonDbHander commonDbHander) : IAccountRepository
+    public class AccountRepository(ILogger<AccountRepository> logger, ICommonDbHander commonDbHander) : IAccountRepository
     {
-        private readonly ILogger<AccountController> _logger = logger;
+        private readonly ILogger<AccountRepository> _logger = logger;
         private readonly ICommonDbHander _commonDbHander = commonDbHander;
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace service.Application.Repository.AccountManagement
                     user.Salt
                 };
 
-                BaseResponse baseResponse = await _commonDbHander.AddDataReturnLatestId(query, "", "", "", ErrorCode.AddNewUserAsyncError, ConstantData.Txn(), parameters);
+                BaseResponse baseResponse = await _commonDbHander.AddDataReturnLatestId(query, "New user added successfully.", "An error occurred while adding the new user. Please try again.", "A user with the same username or email already exists.", ErrorCode.AddNewUserAsyncError, ConstantData.Txn(), parameters);
 
                 return baseResponse.Status;
             }
@@ -91,6 +91,33 @@ namespace service.Application.Repository.AccountManagement
                 _logger.LogError(ex, "An unexpected error occurred while fetching users. {Message}", ex.Message);
                 throw new CustomException("Error fetching users from the account repository.", ex,
                                    ErrorCode.GetAllUsersAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Retrieve ID of email associated with email.
+        /// </summary>
+        /// <param name="email">Email associated with user.</param>
+        /// <returns>An integer ID associated with email.</returns>
+        public async Task<int> GetIdEmailAsync(string email)
+        {
+            try
+            {
+                string query = AccountQueries.GetIdEmail;
+
+                var parameter = new
+                {
+                    Email = email,
+                };
+
+                int id = await _commonDbHander.GetSingleData<int>(query, $"Getting ID associated with email {email}", $"An error occurred while getting ID associated with email {email}", ErrorCode.GetIdEmailAsyncError, ConstantData.Txn(), parameter);
+                return id;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while fetching ID associated with email. {Message}", ex.Message);
+                throw new CustomException("Error fetching ID associated with email from the account repository.", ex,
+                                   ErrorCode.GetIdEmailAsyncError, ConstantData.Txn());
             }
         }
     }
