@@ -6,6 +6,7 @@ using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using service.Infrastructure.Dependency;
 using service.Infrastructure.Queries.Account;
+using System.Runtime.InteropServices;
 
 namespace service.Application.Repository.AccountManagement
 {
@@ -144,7 +145,11 @@ namespace service.Application.Repository.AccountManagement
                     Email = email,
                 };
 
-                int id = await _commonDbHander.GetSingleData<int>(query, $"Getting ID associated with email {email}", $"An error occurred while getting ID associated with email {email}", ErrorCode.GetIdEmailAsyncError, ConstantData.Txn(), parameter);
+                int id = await _commonDbHander.GetSingleData<int>(query, $"Getting ID associated with email {email}",
+                    $"An error occurred while getting ID associated with email {email}",
+                    ErrorCode.GetIdEmailAsyncError,
+                    ConstantData.Txn(), parameter);
+
                 return id;
             }
             catch (Exception ex)
@@ -152,6 +157,74 @@ namespace service.Application.Repository.AccountManagement
                 _logger.LogError(ex, "An unexpected error occurred while fetching ID associated with email. {Message}", ex.Message);
                 throw new CustomException("Error fetching ID associated with email from the account repository.", ex,
                                    ErrorCode.GetIdEmailAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the ID and validity period of an OTP (One-Time Password) associated with the provided email address from the database.
+        /// </summary>
+        /// <param name="email">The email address for which to retrieve the OTP information.</param>
+        /// <returns>A Task representing the asynchronous operation. The result of the Task is an OtpStorage object containing the ID and valid until timestamp of the OTP, or null if no OTP is found for the given email.</returns>
+        /// <exception cref="CustomException">Thrown if an error occurs during the retrieval process from the database.</exception>
+        public async Task<OtpStorage> GetIdValidUntilEmailAsync(string email)
+        {
+            try
+            {
+                string query = AccountQueries.GetIdValidUntilEmail;
+
+                var parameter = new
+                {
+                    Email = email
+                };
+
+                OtpStorage otpDetails = await _commonDbHander.GetSingleData<OtpStorage>(query,
+                    $"Getting OTP details associated with email {email}",
+                    $"An error occurred while getting OTP details associated with email {email}",
+                    ErrorCode.GetIdValidUntilEmailAsyncError, ConstantData.Txn(), parameter);
+
+                return otpDetails;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while fetching OTP details associated with email. {Message}", ex.Message);
+                throw new CustomException("Error fetching OTP details associated with email from the account repository.", ex,
+                                   ErrorCode.GetIdValidUntilEmailAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously updates the OTP details in the storage.
+        /// </summary>
+        /// <param name="otpStorage">The OTP storage object containing the updated details.</param>
+        /// <returns>A Task representing the asynchronous operation.</returns>
+        /// <exception cref="CustomException">Thrown when an error occurs during the update process.</exception>
+        public async Task<BaseResponse> UpdateOtpDetailsAsync(OtpStorage otpStorage)
+        {
+            try
+            {
+                string query = AccountQueries.UpdateOtpInValid;
+
+                var parameter = new
+                {
+                    otpStorage.Email,
+                    otpStorage.GeneratedOn,
+                    otpStorage.ValidUntil,
+                    otpStorage.Otp
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, "OTP details updated successfully.",
+                    "Error updating OTP details associated with email from the account repository.",
+                    "Not applicable in this context.",
+                    ErrorCode.UpdateOtpDetailsAsyncError,
+                    ConstantData.Txn(), parameter);
+
+                return baseResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while updating OTP details associated with email. {Message}", ex.Message);
+                throw new CustomException("Error updating OTP details associated with email from the account repository.", ex,
+                                   ErrorCode.UpdateOtpDetailsAsyncError, ConstantData.Txn());
             }
         }
     }

@@ -52,6 +52,16 @@
         /// </summary>
         public const string GetUserUsernameEmailAsyncError = "ERR-1000-009";
 
+        /// <summary>
+        /// Error occurred indicating error occurred while getting OTP details based upon email.
+        /// </summary>
+        public const string GetIdValidUntilEmailAsyncError = "ERR-1000-010";
+
+        /// <summary>
+        /// Error code indicating error occurred while updating OTP details.
+        /// </summary>
+        public const string UpdateOtpDetailsAsyncError = "ERR-1000-010";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.

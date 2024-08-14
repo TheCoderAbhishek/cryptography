@@ -1,4 +1,5 @@
 ﻿using service.Core.Entities.AccountManagement;
+using service.Core.Entities.Utility;
 
 namespace service.Core.Interfaces.AccountManagement
 {
@@ -34,5 +35,19 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="email">Email associated with user.</param>
         /// <returns>An integer ID associated with email.</returns>
         Task<int> GetIdEmailAsync(string email);
+
+        /// <summary>
+        /// Retrieves the ID and validity period of an OTP (One-Time Password) associated with a given email address.
+        /// </summary>
+        /// <param name="email">The email address for which to retrieve the OTP information.</param>
+        /// <returns>A Task representing the asynchronous operation. The result of the Task is an OtpStorage object containing the ID and valid until timestamp of the OTP, or null if no OTP is found for the given email.</returns>
+        Task<OtpStorage> GetIdValidUntilEmailAsync(string email);
+
+        /// <summary>
+        /// Updates the OTP details associated with the specified email address.
+        /// </summary>
+        /// <param name="otpStorage">The entity for which to update OTP details.</param>
+        /// <returns>A Task representing the asynchronous operation.</returns>
+        Task<BaseResponse> UpdateOtpDetailsAsync(OtpStorage otpStorage);
     }
 }

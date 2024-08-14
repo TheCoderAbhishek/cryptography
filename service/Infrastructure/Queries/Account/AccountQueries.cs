@@ -24,5 +24,15 @@
         /// SQL query to retrieve ID by email from user table.
         /// </summary>
         public const string GetIdEmail = "SELECT Id FROM [cryptography].[dbo].[User] WHERE Email = @Email";
+
+        /// <summary>
+        /// SQL query to retrieve ID and OTP Valid TIme by email from user table.
+        /// </summary>
+        public const string GetIdValidUntilEmail = "SELECT * FROM [cryptography].[dbo].[OtpStorage] WHERE Email = @Email";
+
+        /// <summary>
+        /// Update OTP if it's invalid
+        /// </summary>
+        public const string UpdateOtpInValid = "UPDATE [cryptography].[dbo].[OtpStorage] SET GeneratedOn = @GeneratedOn, ValidUntil = @ValidUntil, Otp = @Otp WHERE Email = @Email";
     }
 }

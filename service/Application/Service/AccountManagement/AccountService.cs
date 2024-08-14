@@ -7,6 +7,7 @@ using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using System.Security.Cryptography;
 using System.Text;
+using static System.Net.WebRequestMethods;
 
 namespace service.Application.Service.AccountManagement
 {
@@ -156,28 +157,56 @@ namespace service.Application.Service.AccountManagement
 
                 if (id > 0)
                 {
-                    var salt = GetGenerateSalt();
-                    string otp = _emailOtpService.GenerateOtpAsync();
-                    var hashedOtp = HashPassword(otp, salt);
+                    OtpStorage isOtpFound = await _accountRepository.GetIdValidUntilEmailAsync(inOtpRequestDto.Email!);
 
-                    // OTP Sending on Email
-                    await _emailOtpService.SendOtpEmailAsync(inOtpRequestDto.Email!, otp, "Ayerhs - Account Activation Code", "Your One Time Password (OTP) is: ", true);
-
-                    OtpStorage otpStorage = new()
+                    if (isOtpFound == null)
                     {
-                        UserId = id,
-                        Email = inOtpRequestDto.Email,
-                        GeneratedOn = DateTime.Now,
-                        ValidUntil = DateTime.Now.AddMinutes(15),
-                        Otp = hashedOtp,
-                        Salt = salt,
-                        AttemptCount = 1,
-                        OtpUseCase = 1,
-                    };
+                        var salt = GetGenerateSalt();
+                        string otp = _emailOtpService.GenerateOtpAsync();
+                        var hashedOtp = HashPassword(otp, salt);
 
-                    BaseResponse baseResponse = await _emailOtpRepository.AddOtpAsync(otpStorage);
-                    baseResponse.SuccessMessage = $"OTP sent successfully on email '{inOtpRequestDto.Email}'.";
-                    return baseResponse; 
+                        // OTP Sending on Email
+                        await _emailOtpService.SendOtpEmailAsync(inOtpRequestDto.Email!, otp, "Ayerhs - Account Activation Code", "Your One Time Password (OTP) is: ", true);
+
+                        OtpStorage otpStorage = new()
+                        {
+                            UserId = id,
+                            Email = inOtpRequestDto.Email,
+                            GeneratedOn = DateTime.Now,
+                            ValidUntil = DateTime.Now.AddMinutes(15),
+                            Otp = hashedOtp,
+                            Salt = salt,
+                            AttemptCount = 1,
+                            OtpUseCase = 1,
+                        };
+
+                        BaseResponse baseResponse = await _emailOtpRepository.AddOtpAsync(otpStorage);
+                        baseResponse.SuccessMessage = $"OTP sent successfully on email '{inOtpRequestDto.Email}'.";
+                        baseResponse.Status = 1;
+                        return baseResponse;
+                    }
+                    else
+                    {
+                        var salt = isOtpFound.Salt;
+                        string otp = _emailOtpService.GenerateOtpAsync();
+                        var hashedOtp = HashPassword(otp, salt!);
+
+                        // OTP Sending on Email
+                        await _emailOtpService.SendOtpEmailAsync(inOtpRequestDto.Email!, otp, "Ayerhs - Account Activation Code", "Your One Time Password (OTP) is: ", true);
+
+                        OtpStorage otpStorage = new()
+                        {
+                            Email = inOtpRequestDto.Email,
+                            GeneratedOn = DateTime.Now,
+                            ValidUntil = DateTime.Now.AddMinutes(15),
+                            Otp = hashedOtp,
+                        };
+
+                        BaseResponse baseResponse = await _accountRepository.UpdateOtpDetailsAsync(otpStorage);
+                        baseResponse.SuccessMessage = $"OTP sent successfully on email '{inOtpRequestDto.Email}'.";
+                        baseResponse.Status = 1;
+                        return baseResponse;
+                    }
                 }
                 else
                 {
