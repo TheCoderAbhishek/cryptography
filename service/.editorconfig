@@ -2,3 +2,6 @@
 
 # CS0672: Member overrides obsolete member
 dotnet_diagnostic.CS0672.severity = none
+
+# S6781: JWT secret keys should not be disclosed
+dotnet_diagnostic.S6781.severity = none

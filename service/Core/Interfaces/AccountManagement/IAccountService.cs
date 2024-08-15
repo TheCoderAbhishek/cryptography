@@ -10,6 +10,13 @@ namespace service.Core.Interfaces.AccountManagement
     public interface IAccountService
     {
         /// <summary>
+        /// Asynchronously attempts to login a client using the provided credentials.
+        /// </summary>
+        /// <param name="inLoginUserDto">A DTO containing login credentials.</param>
+        /// <returns>A Task that resolves to a User object containing user information on success, or null on failure.</returns>
+        Task<(int, string, User?)> LoginUser(InLoginUserDto inLoginUserDto);
+
+        /// <summary>
         /// Asynchronously adds a new user to the system and returns the user ID and a status code.
         /// </summary>
         /// <param name="inAddUserDto">The user data object containing information for the new user.</param>

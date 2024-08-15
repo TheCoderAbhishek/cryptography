@@ -65,6 +65,57 @@ namespace service.Application.Service.AccountManagement
         #endregion
 
         /// <summary>
+        /// Handles the login process for a client.
+        /// </summary>
+        /// <param name="inLoginUserDto">The login data containing the user's email and password.</param>
+        /// <returns>A tuple containing:
+        ///     - An integer status code indicating the login result (1 for success, 0 for invalid email, -2 for invalid password, -1 for unexpected error).
+        ///     - A message describing the login result.
+        ///     - The User object if the login is successful, otherwise null.
+        /// </returns>
+        public async Task<(int, string, User?)> LoginUser(InLoginUserDto inLoginUserDto)
+        {
+            try
+            {
+                User? user = await _accountRepository.GetUserEmailAsync(inLoginUserDto.UserEmail!);
+
+                if (user != null)
+                {
+                    if (user.IsActive == true && user.IsLocked == false)
+                    {
+                        string providedHashedPassword = HashPassword(inLoginUserDto.UserPassword!, user.Salt!);
+
+                        if (providedHashedPassword == user.Password)
+                        {
+                            _logger.LogInformation("User logged in successfully with email {Email}", inLoginUserDto.UserEmail);
+                            return (1, $"User logged in successfully with email {inLoginUserDto.UserEmail}", user);
+                        }
+                        else
+                        {
+                            _logger.LogError("Invalid password provided.");
+                            return (-3, "Invalid password provided.", null);
+                        } 
+                    }
+                    else
+                    {
+                        _logger.LogError("User associated with email '{Email}' is inactive.", inLoginUserDto.UserEmail);
+                        return (-2, $"User associated with email '{inLoginUserDto.UserEmail}' is inactive. Please activate this user.", null);
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid email {Email} provided.", inLoginUserDto.UserEmail);
+                    return (0, "Invalid email provided.", user);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while login user: {Message}", ex.Message);
+                return (-1, "", null);
+            }
+        }
+
+        /// <summary>
         /// Adds a new user to the system.
         /// </summary>
         /// <param name="inAddUserDto">The DTO containing the details of the user to be added.</param>

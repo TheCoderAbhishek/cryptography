@@ -6,6 +6,11 @@
     public static class AccountQueries
     {
         /// <summary>
+        /// SQL query to retrieves user information based on the provided email address.
+        /// </summary>
+        public const string GetUserEmail = "SELECT * FROM [cryptography].[dbo].[User] WHERE Email = @Email";
+
+        /// <summary>
         /// SQL query to retrieve user record based upon Username or Email;
         /// </summary>
         public const string GetUserUsernameEmail = "SELECT Id FROM [cryptography].[dbo].[User] WHERE Email = @Email OR UserName = @UserName";

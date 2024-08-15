@@ -9,6 +9,13 @@ namespace service.Core.Interfaces.AccountManagement
     public interface IAccountRepository
     {
         /// <summary>
+        /// Asynchronously retrieves a user from the database based on their email address.
+        /// </summary>
+        /// <param name="email">The email address of the user to retrieve.</param>
+        /// <returns>A Task that represents the asynchronous operation. The task result contains the User object if found, otherwise null.</returns>
+        Task<User?> GetUserEmailAsync(string email);
+
+        /// <summary>
         /// Gets a user's ID based on their username and email.
         /// </summary>
         /// <param name="userName">The username of the user.</param>

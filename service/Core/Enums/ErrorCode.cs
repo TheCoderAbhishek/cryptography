@@ -60,7 +60,17 @@
         /// <summary>
         /// Error code indicating error occurred while updating OTP details.
         /// </summary>
-        public const string UpdateOtpDetailsAsyncError = "ERR-1000-010";
+        public const string UpdateOtpDetailsAsyncError = "ERR-1000-011";
+
+        /// <summary>
+        /// Error code indicating error occurred while getting user details by email.
+        /// </summary>
+        public const string GetUserEmailAsyncError = "ERR-1000-012";
+
+        /// <summary>
+        /// Error code indicating error occurred while login user.
+        /// </summary>
+        public const string LoginUserError = "ERR-1000-013";
 
 
         /// <summary>

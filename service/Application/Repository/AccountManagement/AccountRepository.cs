@@ -19,6 +19,38 @@ namespace service.Application.Repository.AccountManagement
         private readonly ICommonDbHander _commonDbHander = commonDbHander;
 
         /// <summary>
+        /// Asynchronously retrieves a user from the database based on their email address.
+        /// </summary>
+        /// <param name="email">The email address of the user to retrieve.</param>
+        /// <returns>A Task that represents the asynchronous operation. The task result contains the User object if found, otherwise null.</returns>
+        /// <exception cref="CustomException">Thrown if an error occurs while retrieving the user details.</exception>
+        public async Task<User?> GetUserEmailAsync(string email)
+        {
+            string query = AccountQueries.GetUserEmail;
+
+            try
+            {
+                var parameter = new
+                {
+                    Email = email
+                };
+
+                User user = await _commonDbHander.GetSingleData<User>(query,
+                    $"Getting user details associated with email {email}",
+                    $"An error occurred while getting user details associated with email {email}",
+                    ErrorCode.GetUserEmailAsyncError, ConstantData.Txn(), parameter);
+
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while getting user details based upon email. {Message}", ex.Message);
+                throw new CustomException("Error getting user details based upon email from the account repository.", ex,
+                                   ErrorCode.GetUserEmailAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
         /// Retrieves the ID of a user based on their username and email address.
         /// </summary>
         /// <param name="userName">The username of the user.</param>

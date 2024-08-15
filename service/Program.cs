@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Data.SqlClient;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using service.Application.Repository.AccountManagement;
 using service.Application.Repository.Utility;
@@ -9,7 +12,7 @@ using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using service.Infrastructure.Dependency;
 using System.Data;
-using System.Reflection;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +22,11 @@ builder.Host.UseSerilog((context, configuration) =>
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+});
 
 // Smtp settings
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
@@ -35,16 +43,70 @@ builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 #endregion Dependency Injection Container
 
+#region Swagger
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-
-// Configure Swagger to include XML comments
 builder.Services.AddSwaggerGen(options =>
 {
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    options.IncludeXmlComments(xmlPath);
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Cryptography Service", Version = "v1" });
+
+    var securityScheme = new OpenApiSecurityScheme
+    {
+        Name = "JWT Authentication",
+        Description = "Enter JWT Bearer token **_only_**",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Reference = new OpenApiReference
+        {
+            Id = JwtBearerDefaults.AuthenticationScheme,
+            Type = ReferenceType.SecurityScheme
+        }
+    };
+
+    options.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        { securityScheme, Array.Empty<string>() }
+    });
+
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "service.xml"));
 });
+#endregion
+
+#region JWT Token Validation Parameters
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+});
+
+// Add JwtTokenGenerator as a service
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+#endregion
+
+#region CORS Policy settings
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+    builder => builder.WithOrigins("http://localhost:4200")
+                      .AllowAnyMethod()
+                      .AllowAnyHeader());
+});
+#endregion
 
 var app = builder.Build();
 
