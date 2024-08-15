@@ -69,3 +69,5 @@ DROP TABLE [cryptography].[dbo].[OtpStorage];
 ALTER TABLE [cryptography].[dbo].[OtpStorage]
 ADD OtpUseCase INT;
 
+-- Update Record SQL Query
+UPDATE [cryptography].[dbo].[OtpStorage] SET ValidUntil='2024-08-14 19:00:54.183' WHERE Id=1;

@@ -7,7 +7,6 @@ using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using System.Security.Cryptography;
 using System.Text;
-using static System.Net.WebRequestMethods;
 
 namespace service.Application.Service.AccountManagement
 {
@@ -103,7 +102,7 @@ namespace service.Application.Service.AccountManagement
 
                     int userId = await _accountRepository.AddNewUserAsync(newUser);
 
-                    return (1, userId); 
+                    return (1, userId);
                 }
                 else
                 {
