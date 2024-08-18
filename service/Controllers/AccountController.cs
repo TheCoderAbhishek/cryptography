@@ -106,7 +106,7 @@ namespace service.Controllers
                         );
 
                         return Ok(response);
-                    } 
+                    }
                 }
                 else
                 {
@@ -314,6 +314,78 @@ namespace service.Controllers
                     StatusCodes.Status500InternalServerError,
                     0,
                     errorMessage: "An unexpected error occurred while generation of otp.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
+        /// Handles the verification of an OTP (One-Time Password).
+        /// </summary>
+        /// <param name="inVerifyOtpDto">The data transfer object containing the email and OTP to be verified.</param>
+        /// <returns>
+        /// An IActionResult representing the API response. 
+        /// Returns Ok with ApiResponse containing success or failure details based on OTP verification.
+        /// </returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPost]
+        [Route("VerifyOtpRequestAsync")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyOtpRequestAsync(InVerifyOtpDto inVerifyOtpDto)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    BaseResponse baseResponse = await _accountService.VerifyOtp(inVerifyOtpDto);
+                    if (baseResponse.Status > 0)
+                    {
+                        return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Success,
+                            StatusCodes.Status200OK,
+                            1,
+                            successMessage: baseResponse.SuccessMessage,
+                            txn: ConstantData.Txn(),
+                            returnValue: baseResponse.Status));
+                    }
+                    else
+                    {
+                        return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Failure,
+                            StatusCodes.Status200OK,
+                            0,
+                            errorMessage: baseResponse.ErrorMessage,
+                            errorCode: baseResponse.ErrorCode,
+                            txn: ConstantData.Txn(),
+                            returnValue: baseResponse.Status));
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid Verification of OTP request data.");
+
+                    return BadRequest(new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status400BadRequest,
+                    0,
+                    errorMessage: "Invalid Verification of OTP request data.",
+                    errorCode: ErrorCode.InvalidModelRequestError,
+                    txn: ConstantData.Txn()
+                ));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while verification of otp: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while verification of otp.",
                     errorCode: ErrorCode.InternalServerError,
                     txn: ConstantData.Txn()
                 );

@@ -72,6 +72,31 @@
         /// </summary>
         public const string LoginUserError = "ERR-1000-013";
 
+        /// <summary>
+        /// Error code indicating invalid email provide while verifying OTP.
+        /// </summary>
+        public const string InvalidEmailError = "ERR-1000-014";
+
+        /// <summary>
+        /// Error code indicating unable to fetch OTP details associated with email.
+        /// </summary>
+        public const string GetOtpDetailsEmailAsyncError = "ERR-1000-015";
+
+        /// <summary>
+        /// Error code indicating unable to find OTP associated with Email.
+        /// </summary>
+        public const string InvalidOtpNEmailError = "ERR-1000-016";
+
+        /// <summary>
+        /// Error code indicating unable to unlock user.
+        /// </summary>
+        public const string UpdateUserDetailsUnlockUserAsyncError = "ERR-1000-017";
+
+        /// <summary>
+        /// Error code indicating user not found associated with email.
+        /// </summary>
+        public const string UserNotFoundError = "ERR-1000-018";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.

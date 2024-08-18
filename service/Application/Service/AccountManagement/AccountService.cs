@@ -7,7 +7,6 @@ using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using System.Security.Cryptography;
 using System.Text;
-using static System.Net.WebRequestMethods;
 
 namespace service.Application.Service.AccountManagement
 {
@@ -94,7 +93,7 @@ namespace service.Application.Service.AccountManagement
                         {
                             _logger.LogError("Invalid password provided.");
                             return (-3, "Invalid password provided.", null);
-                        } 
+                        }
                     }
                     else
                     {
@@ -154,7 +153,7 @@ namespace service.Application.Service.AccountManagement
 
                     int userId = await _accountRepository.AddNewUserAsync(newUser);
 
-                    return (1, userId); 
+                    return (1, userId);
                 }
                 else
                 {
@@ -277,6 +276,123 @@ namespace service.Application.Service.AccountManagement
                 BaseResponse baseResponse = new()
                 {
                     Status = -1,
+                    ErrorMessage = ex.Message,
+                    ErrorCode = ErrorCode.OtpGenerationExceptionError
+                };
+                return baseResponse;
+            }
+        }
+
+        /// <summary>
+        /// Verifies the provided OTP (One-Time Password) for the given email address and unlocks the associated user account if successful.
+        /// </summary>
+        /// <param name="inVerifyOtpDto">The data transfer object containing the email and OTP to be verified.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. 
+        /// The task result contains a BaseResponse indicating the success or failure of the verification and any relevant messages.
+        /// </returns>
+        public async Task<BaseResponse> VerifyOtp(InVerifyOtpDto inVerifyOtpDto)
+        {
+            try
+            {
+                int id = await _accountRepository.GetIdEmailAsync(inVerifyOtpDto.Email!);
+
+                if (id > 0)
+                {
+                    OtpStorage otpStorage = await _accountRepository.GetOtpDetailsEmailAsync(inVerifyOtpDto.Email!);
+
+                    if (otpStorage != null)
+                    {
+                        if (otpStorage.Otp == HashPassword(inVerifyOtpDto.Otp!, otpStorage.Salt!))
+                        {
+                            User? user = await _accountRepository.GetUserEmailAsync(inVerifyOtpDto.Email!);
+                            if (user != null)
+                            {
+                                user.IsLocked = false;
+
+                                int res = await _accountRepository.UpdateUserDetailsUnlockUserAsync(user);
+                                if (res == 1)
+                                {
+                                    _logger.LogInformation("User '{Email}' unlocked successfully.", user.Email);
+
+                                    BaseResponse baseResponse = new()
+                                    {
+                                        Status = 1,
+                                        SuccessMessage = $"User '{user.Email}' unlocked successfully."
+                                    };
+                                    return baseResponse;
+                                }
+                                else
+                                {
+                                    _logger.LogError("Internal error occurred while unlocking user '{Email}'", inVerifyOtpDto.Email!);
+
+                                    BaseResponse baseResponse = new()
+                                    {
+                                        Status = -4,
+                                        ErrorMessage = $"Internal error occurred while unlocking '{inVerifyOtpDto.Email!}' User. Please try again.",
+                                        ErrorCode = ErrorCode.UserNotFoundError
+                                    };
+                                    return baseResponse;
+                                }
+                            }
+                            else
+                            {
+                                _logger.LogError("Unable to find user '{Email}'", inVerifyOtpDto.Email!);
+
+                                BaseResponse baseResponse = new()
+                                {
+                                    Status = -4,
+                                    ErrorMessage = $"Unable to find '{inVerifyOtpDto.Email!}' User.",
+                                    ErrorCode = ErrorCode.UserNotFoundError
+                                };
+                                return baseResponse;
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogError("Invalid OTP Provided for user '{Email}'", inVerifyOtpDto.Email!);
+
+                            BaseResponse baseResponse = new()
+                            {
+                                Status = -3,
+                                ErrorMessage = $"Invalid OTP Provided for '{inVerifyOtpDto.Email!}' User. Please Check OTP Again.",
+                                ErrorCode = ErrorCode.InvalidOtpNEmailError
+                            };
+                            return baseResponse;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError("Invalid Email Address Provided. {Email}", inVerifyOtpDto.Email!);
+
+                        BaseResponse baseResponse = new()
+                        {
+                            Status = -2,
+                            ErrorMessage = $"Invalid OTP Provided for '{inVerifyOtpDto.Email!}' Email. Please Generate a new OTP.",
+                            ErrorCode = ErrorCode.InvalidOtpNEmailError
+                        };
+                        return baseResponse;
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid Email Address Provided. {Email}", inVerifyOtpDto.Email!);
+
+                    BaseResponse baseResponse = new()
+                    {
+                        Status = -1,
+                        ErrorMessage = $"Invalid Email Address Provided. Please Verify '{inVerifyOtpDto.Email!}' Email.",
+                        ErrorCode = ErrorCode.InvalidEmailError
+                    };
+                    return baseResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while OTP verification: {Message}", ex.Message);
+                BaseResponse baseResponse = new()
+                {
+                    Status = 0,
                     ErrorMessage = ex.Message,
                     ErrorCode = ErrorCode.OtpGenerationExceptionError
                 };

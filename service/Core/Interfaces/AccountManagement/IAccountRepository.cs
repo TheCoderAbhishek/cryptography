@@ -56,5 +56,19 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="otpStorage">The entity for which to update OTP details.</param>
         /// <returns>A Task representing the asynchronous operation.</returns>
         Task<BaseResponse> UpdateOtpDetailsAsync(OtpStorage otpStorage);
+
+        /// <summary>
+        /// Retrieves OTP details associated with the specified email address.
+        /// </summary>
+        /// <param name="email">The email address for which to retrieve OTP details.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains an OtpStorage object holding the retrieved OTP details, or null if no details were found.</returns>
+        Task<OtpStorage> GetOtpDetailsEmailAsync(string email);
+
+        /// <summary>
+        /// Updates user details and unlocks the specified user in the system.
+        /// </summary>
+        /// <param name="user">The user object containing the updated details and unlock status.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the number of rows affected by the update operation.</returns>
+        Task<int> UpdateUserDetailsUnlockUserAsync(User user);
     }
 }

@@ -35,5 +35,12 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="inOtpRequestDto">The input data transfer object containing the necessary information for OTP generation.</param>
         /// <returns>An asynchronous task that returns an integer representing the status of the OTP generation process.</returns>
         Task<BaseResponse> OtpGeneration(InOtpRequestDto inOtpRequestDto);
+
+        /// <summary>
+        /// Verifies the provided OTP (One-Time Password).
+        /// </summary>
+        /// <param name="inVerifyOtpDto">The data transfer object containing the email and OTP to be verified.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the verification.</returns>
+        Task<BaseResponse> VerifyOtp(InVerifyOtpDto inVerifyOtpDto);
     }
 }

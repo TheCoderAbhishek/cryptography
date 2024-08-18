@@ -1,12 +1,10 @@
-﻿using service.Controllers;
-using service.Core.Entities.AccountManagement;
+﻿using service.Core.Entities.AccountManagement;
 using service.Core.Entities.Utility;
 using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using service.Infrastructure.Dependency;
 using service.Infrastructure.Queries.Account;
-using System.Runtime.InteropServices;
 
 namespace service.Application.Repository.AccountManagement
 {
@@ -257,6 +255,71 @@ namespace service.Application.Repository.AccountManagement
                 _logger.LogError(ex, "An unexpected error occurred while updating OTP details associated with email. {Message}", ex.Message);
                 throw new CustomException("Error updating OTP details associated with email from the account repository.", ex,
                                    ErrorCode.UpdateOtpDetailsAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Retrieves OTP details associated with the specified email address from the database.
+        /// </summary>
+        /// <param name="email">The email address for which to retrieve OTP details.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains an OtpStorage object holding the retrieved OTP details.</returns>
+        /// <exception cref="CustomException">Thrown when an error occurs while fetching OTP details from the database.</exception>
+        public async Task<OtpStorage> GetOtpDetailsEmailAsync(string email)
+        {
+            try
+            {
+                string query = AccountQueries.GetOtpDetails;
+
+                var parameters = new
+                {
+                    @Email = email
+                };
+
+                OtpStorage otpStorage = await _commonDbHander.GetSingleData<OtpStorage>(query, "OTP details fetched successfully.",
+                    "No OTP details found for the provided email.",
+                    ErrorCode.GetOtpDetailsEmailAsyncError, ConstantData.Txn(),
+                    parameters);
+
+                return otpStorage;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while fetching OTP details associated with email. {Message}", ex.Message);
+                throw new CustomException("Error occurred while fetching OTP details associated with email from the account repository.", ex,
+                                   ErrorCode.GetOtpDetailsEmailAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Unlocks a user account in the system by updating their 'IsLocked' status.
+        /// </summary>
+        /// <param name="user">The user object containing the email and the updated 'IsLocked' status (expected to be false to unlock).</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the number of rows affected (1 if successful).</returns>
+        /// <exception cref="CustomException">Thrown when an error occurs during the unlock operation.</exception>
+        public async Task<int> UpdateUserDetailsUnlockUserAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.UnlockUser;
+
+                var parameters = new
+                {
+                    user.IsLocked,
+                    user.Email,
+                };
+
+                await _commonDbHander.AddUpdateDeleteData(query, "User unlocked successfully.",
+                    "Failed to unlock user. User not found or already unlocked.",
+                    "",
+                    ErrorCode.UpdateUserDetailsUnlockUserAsyncError, ConstantData.Txn(), parameters);
+
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while unlocking user with email. {Message}", ex.Message);
+                throw new CustomException("Error occurred while unlocking user with email from the account repository.", ex,
+                                   ErrorCode.UpdateUserDetailsUnlockUserAsyncError, ConstantData.Txn());
             }
         }
     }

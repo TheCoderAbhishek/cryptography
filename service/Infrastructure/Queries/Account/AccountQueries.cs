@@ -39,5 +39,15 @@
         /// Update OTP if it's invalid
         /// </summary>
         public const string UpdateOtpInValid = "UPDATE [cryptography].[dbo].[OtpStorage] SET GeneratedOn = @GeneratedOn, ValidUntil = @ValidUntil, Otp = @Otp WHERE Email = @Email";
+
+        /// <summary>
+        /// SQL query to retrieve OTP details from table associated with email.
+        /// </summary>
+        public const string GetOtpDetails = "SELECT * FROM [cryptography].[dbo].[OtpStorage] WHERE Email = @Email";
+
+        /// <summary>
+        /// SQL query to unlock an user associated with email provided.
+        /// </summary>
+        public const string UnlockUser = "UPDATE [cryptography].[dbo].[User] SET IsLocked = @IsLocked WHERE Email = @Email";
     }
 }
