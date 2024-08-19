@@ -338,7 +338,8 @@ namespace service.Application.Repository.AccountManagement
                 var parameters = new
                 {
                     user.Email,
-                    user.LoginAttempts
+                    user.LoginAttempts,
+                    user.LastLoginDateTime
                 };
 
                 await _commonDbHander.AddUpdateDeleteData(query, "User failed login attempt counted successfully.",
@@ -371,7 +372,8 @@ namespace service.Application.Repository.AccountManagement
                 {
                     user.Email,
                     user.LockedUntil,
-                    user.IsLocked
+                    user.IsLocked,
+                    user.LoginAttempts
                 };
 
                 await _commonDbHander.AddUpdateDeleteData(query, "User locked successfully.",

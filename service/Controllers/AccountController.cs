@@ -257,7 +257,7 @@ namespace service.Controllers
         /// <param name="inOtpRequestDto">The request data needed to generate the OTP.</param>
         /// <returns>A response containing the OTP or an error message.</returns>
         [ProducesResponseType(typeof(ApiResponse<int>), 200)]
-        [HttpPost]
+        [HttpPut]
         [Route("OtpGenerationRequestAsync")]
         [AllowAnonymous]
         public async Task<IActionResult> OtpGenerationRequestAsync(InOtpRequestDto inOtpRequestDto)
@@ -331,7 +331,7 @@ namespace service.Controllers
         /// Returns Ok with ApiResponse containing success or failure details based on OTP verification.
         /// </returns>
         [ProducesResponseType(typeof(ApiResponse<int>), 200)]
-        [HttpPost]
+        [HttpPatch]
         [Route("VerifyOtpRequestAsync")]
         [AllowAnonymous]
         public async Task<IActionResult> VerifyOtpRequestAsync(InVerifyOtpDto inVerifyOtpDto)

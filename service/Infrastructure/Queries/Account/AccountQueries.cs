@@ -53,11 +53,11 @@
         /// <summary>
         /// SQL query to update failed login attempt count.
         /// </summary>
-        public const string UpdateFailedLoginAttempts = "UPDATE [cryptography].[dbo].[User] SET LoginAttempts = @LoginAttempts WHERE Email = @Email";
+        public const string UpdateFailedLoginAttempts = "UPDATE [cryptography].[dbo].[User] SET LoginAttempts = @LoginAttempts, LastLoginDateTime = @LastLoginDateTime WHERE Email = @Email";
 
         /// <summary>
         /// SQL query to locked a user.
         /// </summary>
-        public const string LockUser = "UPDATE [cryptography].[dbo].[User] SET IsLocked = @IsLocked, LockedUntil = @LockedUntil WHERE Email = @Email";
+        public const string LockUser = "UPDATE [cryptography].[dbo].[User] SET IsLocked = @IsLocked, LockedUntil = @LockedUntil, LoginAttempts = @LoginAttempts WHERE Email = @Email";
     }
 }
