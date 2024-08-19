@@ -97,6 +97,16 @@
         /// </summary>
         public const string UserNotFoundError = "ERR-1000-018";
 
+        /// <summary>
+        /// Error code indicating unable to update attempt count
+        /// </summary>
+        public const string UpdateFailedLoginAttemptsAsyncError = "ERR-1000-019";
+
+        /// <summary>
+        /// Error code indicating unable to locked in a user due to multiple unauthorised requests.
+        /// </summary>
+        public const string UpdateFailedLoginAttemptsLockedUserAsyncError = "ERR-1000-020";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.

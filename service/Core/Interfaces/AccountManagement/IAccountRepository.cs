@@ -70,5 +70,19 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="user">The user object containing the updated details and unlock status.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the number of rows affected by the update operation.</returns>
         Task<int> UpdateUserDetailsUnlockUserAsync(User user);
+
+        /// <summary>
+        /// Updates the number of failed login attempts.
+        /// </summary>
+        /// <param name="user">The updated number of failed login attempts.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task UpdateFailedLoginAttemptsAsync(User user);
+
+        /// <summary>
+        /// Asynchronously updates the failed login attempts for a locked user and potentially unlocks them if applicable.
+        /// </summary>
+        /// <param name="user">The user object containing information about the locked user, including their login attempts.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task UpdateFailedLoginAttemptsLockedUserAsync(User user);
     }
 }

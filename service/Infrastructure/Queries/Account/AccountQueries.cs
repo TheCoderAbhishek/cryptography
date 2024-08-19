@@ -49,5 +49,15 @@
         /// SQL query to unlock an user associated with email provided.
         /// </summary>
         public const string UnlockUser = "UPDATE [cryptography].[dbo].[User] SET IsLocked = @IsLocked WHERE Email = @Email";
+
+        /// <summary>
+        /// SQL query to update failed login attempt count.
+        /// </summary>
+        public const string UpdateFailedLoginAttempts = "UPDATE [cryptography].[dbo].[User] SET LoginAttempts = @LoginAttempts WHERE Email = @Email";
+
+        /// <summary>
+        /// SQL query to locked a user.
+        /// </summary>
+        public const string LockUser = "UPDATE [cryptography].[dbo].[User] SET IsLocked = @IsLocked, LockedUntil = @LockedUntil WHERE Email = @Email";
     }
 }

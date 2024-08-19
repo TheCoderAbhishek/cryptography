@@ -80,25 +80,45 @@ namespace service.Application.Service.AccountManagement
 
                 if (user != null)
                 {
-                    if (user.IsActive == true && user.IsLocked == false)
+                    if (user.LoginAttempts == 3)
                     {
-                        string providedHashedPassword = HashPassword(inLoginUserDto.UserPassword!, user.Salt!);
-
-                        if (providedHashedPassword == user.Password)
+                        if (user.IsActive == true && user.IsLocked == false && user.LockedUntil < DateTime.Now)
                         {
-                            _logger.LogInformation("User logged in successfully with email {Email}", inLoginUserDto.UserEmail);
-                            return (1, $"User logged in successfully with email {inLoginUserDto.UserEmail}", user);
+                            string providedHashedPassword = HashPassword(inLoginUserDto.UserPassword!, user.Salt!);
+
+                            if (providedHashedPassword == user.Password)
+                            {
+                                _logger.LogInformation("User logged in successfully with email {Email}", inLoginUserDto.UserEmail);
+                                user.LoginAttempts = 0;
+                                await _accountRepository.UpdateFailedLoginAttemptsAsync(user);
+                                return (1, $"User logged in successfully with email {inLoginUserDto.UserEmail}", user);
+                            }
+                            else
+                            {
+                                _logger.LogError("Invalid password provided.");
+                                user.LoginAttempts++;
+                                if (user.LoginAttempts < 3)
+                                {
+                                    await _accountRepository.UpdateFailedLoginAttemptsAsync(user); 
+                                }
+                                else
+                                {
+                                    user.LockedUntil = DateTime.Now.AddMinutes(15);
+                                    await _accountRepository.UpdateFailedLoginAttemptsLockedUserAsync(user);
+                                }
+                                return (-3, "Invalid password provided.", null);
+                            }
                         }
                         else
                         {
-                            _logger.LogError("Invalid password provided.");
-                            return (-3, "Invalid password provided.", null);
-                        }
+                            _logger.LogError("User associated with email '{Email}' is inactive or locked.", inLoginUserDto.UserEmail);
+                            return (-2, $"User associated with email '{inLoginUserDto.UserEmail}' is inactive or locked. Please activate this user or try again after 15 minutes.", null);
+                        } 
                     }
                     else
                     {
-                        _logger.LogError("User associated with email '{Email}' is inactive.", inLoginUserDto.UserEmail);
-                        return (-2, $"User associated with email '{inLoginUserDto.UserEmail}' is inactive. Please activate this user.", null);
+                        _logger.LogError("User associated with email '{Email}' is locked.", inLoginUserDto.UserEmail);
+                        return (-2, $"User associated with email '{inLoginUserDto.UserEmail}' is locked due to unauthorised access. Try again after 15 minutes.", null);
                     }
                 }
                 else

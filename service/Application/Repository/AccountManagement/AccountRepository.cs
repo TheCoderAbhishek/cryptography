@@ -322,5 +322,69 @@ namespace service.Application.Repository.AccountManagement
                                    ErrorCode.UpdateUserDetailsUnlockUserAsyncError, ConstantData.Txn());
             }
         }
+
+        /// <summary>
+        /// Asynchronously updates the number of failed login attempts for a user.
+        /// </summary>
+        /// <param name="user">The user object containing the email and the updated login attempt count.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <exception cref="CustomException">Thrown when an unexpected error occurs during the update process.</exception>
+        public async Task UpdateFailedLoginAttemptsAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.UpdateFailedLoginAttempts;
+
+                var parameters = new
+                {
+                    user.Email,
+                    user.LoginAttempts
+                };
+
+                await _commonDbHander.AddUpdateDeleteData(query, "User failed login attempt counted successfully.",
+                    "Failed to update login count.",
+                    "",
+                    ErrorCode.UpdateFailedLoginAttemptsAsyncError, ConstantData.Txn(), parameters);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while updating failed login count. {Message}", ex.Message);
+                throw new CustomException("Error occurred while updating failed login count from the account repository.", ex,
+                                   ErrorCode.UpdateFailedLoginAttemptsAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously updates the lock status of a user based on their failed login attempts.
+        /// This method handles the locking and potential unlocking of a user account depending on their `IsLocked` and `LockedUntil` properties.
+        /// </summary>
+        /// <param name="user">The user object containing information about the user's lock status, email, and lock expiration time.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <exception cref="CustomException">Thrown when an unexpected error occurs during the update process.</exception>
+        public async Task UpdateFailedLoginAttemptsLockedUserAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.LockUser;
+
+                var parameters = new
+                {
+                    user.Email,
+                    user.LockedUntil,
+                    user.IsLocked
+                };
+
+                await _commonDbHander.AddUpdateDeleteData(query, "User locked successfully.",
+                    "Failed to lock user.",
+                    "",
+                    ErrorCode.UpdateFailedLoginAttemptsLockedUserAsyncError, ConstantData.Txn(), parameters);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while updating failed login count. {Message}", ex.Message);
+                throw new CustomException("Error occurred while updating failed login count from the account repository.", ex,
+                                   ErrorCode.UpdateFailedLoginAttemptsLockedUserAsyncError, ConstantData.Txn());
+            }
+        }
     }
 }
