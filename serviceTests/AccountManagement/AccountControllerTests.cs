@@ -545,5 +545,107 @@ namespace serviceTests.AccountManagement
             Assert.Equal("An unexpected error occurred while verification of otp.", apiResponse.ErrorMessage);
             Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
         }
+
+        [Fact]
+        public async Task SoftDeleteUserRequestAsync_ValidEmail_Success()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            var baseResponse = new BaseResponse { Status = 1, SuccessMessage = $"User '{email}' soft deleted successfully." };
+
+            _accountServiceMock.Setup(x => x.SoftDeleteUser(email))
+                .ReturnsAsync(baseResponse);
+
+            // Act
+            var result = await _controller.SoftDeleteUserRequestAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Success, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(1, apiResponse.ResponseCode);
+            Assert.Equal($"User '{email}' soft deleted successfully.", apiResponse.SuccessMessage);
+        }
+
+        [Fact]
+        public async Task SoftDeleteUserRequestAsync_UserNotFound_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.SoftDeleteUser(email))
+                .ReturnsAsync(new BaseResponse { Status = -1, ErrorMessage = $"Invalid Email Address Provided. Please Verify '{email}' Email.", ErrorCode = ErrorCode.InvalidEmailError });
+
+            // Act
+            var result = await _controller.SoftDeleteUserRequestAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"Invalid Email Address Provided. Please Verify '{email}' Email.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.SoftDeleteUserRequestAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task SoftDeleteUserRequestAsync_UserAlreadySoftDeleted_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+            var user = new User
+            {
+                Email = email,
+                IsDeleted = true,
+                AutoDeletedOn = DateTime.Now.AddDays(5)
+            };
+
+            _accountServiceMock.Setup(x => x.SoftDeleteUser(email))
+                .ReturnsAsync(new BaseResponse
+                {
+                    Status = -2,
+                    ErrorMessage = $"User is already in soft deletion state. You can restore user before '{user.AutoDeletedOn}'.",
+                    ErrorCode = ErrorCode.UserDeletedStateError
+                });
+
+            // Act
+            var result = await _controller.SoftDeleteUserRequestAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"User is already in soft deletion state. You can restore user before '{user.AutoDeletedOn}'.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.SoftDeleteUserRequestAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task SoftDeleteUserRequestAsync_Exception_ReturnsInternalServerError()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.SoftDeleteUser(email))
+                .ThrowsAsync(new Exception("Some error occurred"));
+
+            // Act
+            var result = await _controller.SoftDeleteUserRequestAsync(email);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(statusCodeResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal("An unexpected error occurred while soft deletion of user.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
+        }
     }
 }
