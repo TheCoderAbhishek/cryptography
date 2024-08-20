@@ -443,5 +443,107 @@ namespace serviceTests.AccountManagement
             Assert.Equal("An unexpected error occurred while generation of otp.", apiResponse.ErrorMessage);
             Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
         }
+
+        [Fact]
+        public async Task VerifyOtpRequestAsync_ValidModel_Success()
+        {
+            // Arrange
+            var inVerifyOtpDto = new InVerifyOtpDto
+            {
+                Email = _faker.Internet.Email(),
+                Otp = _faker.Random.String2(6) // Assuming 6-digit OTP
+            };
+
+            var baseResponse = new BaseResponse { Status = 1, SuccessMessage = "User unlocked successfully." };
+            _accountServiceMock.Setup(x => x.VerifyOtp(inVerifyOtpDto))
+                .ReturnsAsync(baseResponse);
+
+            // Act
+            var result = await _controller.VerifyOtpRequestAsync(inVerifyOtpDto);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Success, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(1, apiResponse.ResponseCode);
+            Assert.Equal("User unlocked successfully.", apiResponse.SuccessMessage);
+            Assert.Equal(1, apiResponse.ReturnValue);
+        }
+
+        [Fact]
+        public async Task VerifyOtpRequestAsync_InvalidModel_BadRequest()
+        {
+            // Arrange
+            _controller.ModelState.AddModelError("Email", "Required");
+
+            // Act
+            var result = await _controller.VerifyOtpRequestAsync(new InVerifyOtpDto());
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(badRequestResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status400BadRequest, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal("Invalid Verification of OTP request data.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.InvalidModelRequestError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task VerifyOtpRequestAsync_ServiceFailure_ReturnsOkWithFailure()
+        {
+            // Arrange
+            var inVerifyOtpDto = new InVerifyOtpDto
+            {
+                Email = _faker.Internet.Email(),
+                Otp = _faker.Random.String2(6)
+            };
+
+            var baseResponse = new BaseResponse { Status = -1, ErrorMessage = "Some error occurred", ErrorCode = ErrorCode.InvalidEmailError };
+            _accountServiceMock.Setup(x => x.VerifyOtp(inVerifyOtpDto))
+                .ReturnsAsync(baseResponse);
+
+            // Act
+            var result = await _controller.VerifyOtpRequestAsync(inVerifyOtpDto);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal("Some error occurred", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.InvalidEmailError, apiResponse.ErrorCode);
+            Assert.Equal(-1, apiResponse.ReturnValue);
+        }
+
+        [Fact]
+        public async Task VerifyOtpRequestAsync_Exception_ReturnsInternalServerError()
+        {
+            // Arrange
+            var inVerifyOtpDto = new InVerifyOtpDto
+            {
+                Email = _faker.Internet.Email(),
+                Otp = _faker.Random.String2(6)
+            };
+
+            _accountServiceMock.Setup(x => x.VerifyOtp(inVerifyOtpDto))
+                .ThrowsAsync(new Exception("Some error occurred"));
+
+            // Act
+            var result = await _controller.VerifyOtpRequestAsync(inVerifyOtpDto);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(statusCodeResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal("An unexpected error occurred while verification of otp.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
+        }
     }
 }
