@@ -1,12 +1,10 @@
-﻿using service.Controllers;
-using service.Core.Entities.AccountManagement;
+﻿using service.Core.Entities.AccountManagement;
 using service.Core.Entities.Utility;
 using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using service.Infrastructure.Dependency;
 using service.Infrastructure.Queries.Account;
-using System.Runtime.InteropServices;
 
 namespace service.Application.Repository.AccountManagement
 {
@@ -17,6 +15,38 @@ namespace service.Application.Repository.AccountManagement
     {
         private readonly ILogger<AccountRepository> _logger = logger;
         private readonly ICommonDbHander _commonDbHander = commonDbHander;
+
+        /// <summary>
+        /// Asynchronously retrieves a user from the database based on their email address.
+        /// </summary>
+        /// <param name="email">The email address of the user to retrieve.</param>
+        /// <returns>A Task that represents the asynchronous operation. The task result contains the User object if found, otherwise null.</returns>
+        /// <exception cref="CustomException">Thrown if an error occurs while retrieving the user details.</exception>
+        public async Task<User?> GetUserEmailAsync(string email)
+        {
+            string query = AccountQueries.GetUserEmail;
+
+            try
+            {
+                var parameter = new
+                {
+                    Email = email
+                };
+
+                User user = await _commonDbHander.GetSingleData<User>(query,
+                    $"Getting user details associated with email {email}",
+                    $"An error occurred while getting user details associated with email {email}",
+                    ErrorCode.GetUserEmailAsyncError, ConstantData.Txn(), parameter);
+
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while getting user details based upon email. {Message}", ex.Message);
+                throw new CustomException("Error getting user details based upon email from the account repository.", ex,
+                                   ErrorCode.GetUserEmailAsyncError, ConstantData.Txn());
+            }
+        }
 
         /// <summary>
         /// Retrieves the ID of a user based on their username and email address.
@@ -225,6 +255,174 @@ namespace service.Application.Repository.AccountManagement
                 _logger.LogError(ex, "An unexpected error occurred while updating OTP details associated with email. {Message}", ex.Message);
                 throw new CustomException("Error updating OTP details associated with email from the account repository.", ex,
                                    ErrorCode.UpdateOtpDetailsAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Retrieves OTP details associated with the specified email address from the database.
+        /// </summary>
+        /// <param name="email">The email address for which to retrieve OTP details.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains an OtpStorage object holding the retrieved OTP details.</returns>
+        /// <exception cref="CustomException">Thrown when an error occurs while fetching OTP details from the database.</exception>
+        public async Task<OtpStorage> GetOtpDetailsEmailAsync(string email)
+        {
+            try
+            {
+                string query = AccountQueries.GetOtpDetails;
+
+                var parameters = new
+                {
+                    @Email = email
+                };
+
+                OtpStorage otpStorage = await _commonDbHander.GetSingleData<OtpStorage>(query, "OTP details fetched successfully.",
+                    "No OTP details found for the provided email.",
+                    ErrorCode.GetOtpDetailsEmailAsyncError, ConstantData.Txn(),
+                    parameters);
+
+                return otpStorage;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while fetching OTP details associated with email. {Message}", ex.Message);
+                throw new CustomException("Error occurred while fetching OTP details associated with email from the account repository.", ex,
+                                   ErrorCode.GetOtpDetailsEmailAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Unlocks a user account in the system by updating their 'IsLocked' status.
+        /// </summary>
+        /// <param name="user">The user object containing the email and the updated 'IsLocked' status (expected to be false to unlock).</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the number of rows affected (1 if successful).</returns>
+        /// <exception cref="CustomException">Thrown when an error occurs during the unlock operation.</exception>
+        public async Task<int> UpdateUserDetailsUnlockUserAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.UnlockUser;
+
+                var parameters = new
+                {
+                    user.IsLocked,
+                    user.Email,
+                };
+
+                await _commonDbHander.AddUpdateDeleteData(query, "User unlocked successfully.",
+                    "Failed to unlock user. User not found or already unlocked.",
+                    "",
+                    ErrorCode.UpdateUserDetailsUnlockUserAsyncError, ConstantData.Txn(), parameters);
+
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while unlocking user with email. {Message}", ex.Message);
+                throw new CustomException("Error occurred while unlocking user with email from the account repository.", ex,
+                                   ErrorCode.UpdateUserDetailsUnlockUserAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously updates the number of failed login attempts for a user.
+        /// </summary>
+        /// <param name="user">The user object containing the email and the updated login attempt count.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <exception cref="CustomException">Thrown when an unexpected error occurs during the update process.</exception>
+        public async Task UpdateFailedLoginAttemptsAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.UpdateFailedLoginAttempts;
+
+                var parameters = new
+                {
+                    user.Email,
+                    user.LoginAttempts,
+                    user.LastLoginDateTime
+                };
+
+                await _commonDbHander.AddUpdateDeleteData(query, "User failed login attempt counted successfully.",
+                    "Failed to update login count.",
+                    "",
+                    ErrorCode.UpdateFailedLoginAttemptsAsyncError, ConstantData.Txn(), parameters);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while updating failed login count. {Message}", ex.Message);
+                throw new CustomException("Error occurred while updating failed login count from the account repository.", ex,
+                                   ErrorCode.UpdateFailedLoginAttemptsAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously updates the lock status of a user based on their failed login attempts.
+        /// This method handles the locking and potential unlocking of a user account depending on their `IsLocked` and `LockedUntil` properties.
+        /// </summary>
+        /// <param name="user">The user object containing information about the user's lock status, email, and lock expiration time.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <exception cref="CustomException">Thrown when an unexpected error occurs during the update process.</exception>
+        public async Task UpdateFailedLoginAttemptsLockedUserAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.LockUser;
+
+                var parameters = new
+                {
+                    user.Email,
+                    user.LockedUntil,
+                    user.IsLocked,
+                    user.LoginAttempts
+                };
+
+                await _commonDbHander.AddUpdateDeleteData(query, "User locked successfully.",
+                    "Failed to lock user.",
+                    "",
+                    ErrorCode.UpdateFailedLoginAttemptsLockedUserAsyncError, ConstantData.Txn(), parameters);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while updating failed login count. {Message}", ex.Message);
+                throw new CustomException("Error occurred while updating failed login count from the account repository.", ex,
+                                   ErrorCode.UpdateFailedLoginAttemptsLockedUserAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously updates the soft delete status of a user.
+        /// </summary>
+        /// <param name="user">The user object containing updated information, including the soft delete status.</param>
+        /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the update.</returns>
+        /// <exception cref="CustomException">Thrown when an unexpected error occurs during the soft deletion process.</exception>
+        public async Task<BaseResponse> UpdateSoftDeleteUserAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.SoftDeleteUser;
+
+                var parameters = new
+                {
+                    user.Email,
+                    user.IsActive,
+                    user.IsDeleted,
+                    user.DeletedStatus,
+                    user.UpdatedOn,
+                    user.DeletedOn,
+                    user.AutoDeletedOn
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, $"User '{user.Email}' soft deleted successfully.",
+                    $"Failed to soft delete '{user.Email}' user.",
+                    "",
+                    ErrorCode.UpdateFailedLoginAttemptsLockedUserAsyncError, ConstantData.Txn(), parameters);
+                return baseResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while soft deletion of user. {Message}", ex.Message);
+                throw new CustomException("Error occurred while soft deletion of user from the account repository.", ex,
+                                   ErrorCode.UpdateSoftDeleteUserAsyncError, ConstantData.Txn());
             }
         }
     }

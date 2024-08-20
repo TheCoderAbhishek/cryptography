@@ -64,6 +64,79 @@ namespace service.Application.Service.AccountManagement
         #endregion
 
         /// <summary>
+        /// Handles the login process for a client.
+        /// </summary>
+        /// <param name="inLoginUserDto">The login data containing the user's email and password.</param>
+        /// <returns>A tuple containing:
+        ///     - An integer status code indicating the login result (1 for success, 0 for invalid email, -2 for invalid password, -1 for unexpected error).
+        ///     - A message describing the login result.
+        ///     - The User object if the login is successful, otherwise null.
+        /// </returns>
+        public async Task<(int, string, User?)> LoginUser(InLoginUserDto inLoginUserDto)
+        {
+            try
+            {
+                User? user = await _accountRepository.GetUserEmailAsync(inLoginUserDto.UserEmail!);
+
+                if (user != null)
+                {
+                    if (user.IsLocked == true && user.LockedUntil < DateTime.Now)
+                    {
+                        user.IsLocked = false;
+                        user.LockedUntil = null;
+                        await _accountRepository.UpdateFailedLoginAttemptsLockedUserAsync(user);
+                    }
+
+                    if (user.IsActive == true && user.IsLocked == false && (user.LockedUntil < DateTime.Now || user.LockedUntil == null))
+                    {
+                        string providedHashedPassword = HashPassword(inLoginUserDto.UserPassword!, user.Salt!);
+
+                        if (providedHashedPassword == user.Password)
+                        {
+                            _logger.LogInformation("User logged in successfully with email {Email}", inLoginUserDto.UserEmail);
+                            user.LoginAttempts = 0;
+                            user.LastLoginDateTime = DateTime.Now;
+                            await _accountRepository.UpdateFailedLoginAttemptsAsync(user);
+                            return (1, $"User logged in successfully with email {inLoginUserDto.UserEmail}", user);
+                        }
+                        else
+                        {
+                            _logger.LogError("Invalid password provided.");
+                            user.LoginAttempts++;
+                            if (user.LoginAttempts < 3)
+                            {
+                                await _accountRepository.UpdateFailedLoginAttemptsAsync(user);
+                                return (-3, $"Invalid password provided. '{3 - user.LoginAttempts}' attempts left.", null);
+                            }
+                            else
+                            {
+                                user.LockedUntil = DateTime.Now.AddMinutes(15);
+                                user.IsLocked = true;
+                                await _accountRepository.UpdateFailedLoginAttemptsLockedUserAsync(user);
+                                return (-3, $"Invalid password provided. Account locked for 15 minutes.", null);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError("User associated with email '{Email}' is inactive or locked.", inLoginUserDto.UserEmail);
+                        return (-2, $"User associated with email '{inLoginUserDto.UserEmail}' is inactive or locked. Please activate this user or try again after 15 minutes.", null);
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid email {Email} provided.", inLoginUserDto.UserEmail);
+                    return (0, "Invalid email provided.", user);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while login user: {Message}", ex.Message);
+                return (-1, "", null);
+            }
+        }
+
+        /// <summary>
         /// Adds a new user to the system.
         /// </summary>
         /// <param name="inAddUserDto">The DTO containing the details of the user to be added.</param>
@@ -227,6 +300,210 @@ namespace service.Application.Service.AccountManagement
                     Status = -1,
                     ErrorMessage = ex.Message,
                     ErrorCode = ErrorCode.OtpGenerationExceptionError
+                };
+                return baseResponse;
+            }
+        }
+
+        /// <summary>
+        /// Verifies the provided OTP (One-Time Password) for the given email address and unlocks the associated user account if successful.
+        /// </summary>
+        /// <param name="inVerifyOtpDto">The data transfer object containing the email and OTP to be verified.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. 
+        /// The task result contains a BaseResponse indicating the success or failure of the verification and any relevant messages.
+        /// </returns>
+        public async Task<BaseResponse> VerifyOtp(InVerifyOtpDto inVerifyOtpDto)
+        {
+            try
+            {
+                int id = await _accountRepository.GetIdEmailAsync(inVerifyOtpDto.Email!);
+
+                if (id > 0)
+                {
+                    OtpStorage otpStorage = await _accountRepository.GetOtpDetailsEmailAsync(inVerifyOtpDto.Email!);
+
+                    if (otpStorage != null)
+                    {
+                        if (otpStorage.Otp == HashPassword(inVerifyOtpDto.Otp!, otpStorage.Salt!))
+                        {
+                            User? user = await _accountRepository.GetUserEmailAsync(inVerifyOtpDto.Email!);
+                            if (user != null)
+                            {
+                                user.IsLocked = false;
+
+                                int res = await _accountRepository.UpdateUserDetailsUnlockUserAsync(user);
+                                if (res == 1)
+                                {
+                                    _logger.LogInformation("User '{Email}' unlocked successfully.", user.Email);
+
+                                    BaseResponse baseResponse = new()
+                                    {
+                                        Status = 1,
+                                        SuccessMessage = $"User '{user.Email}' unlocked successfully."
+                                    };
+                                    return baseResponse;
+                                }
+                                else
+                                {
+                                    _logger.LogError("Internal error occurred while unlocking user '{Email}'", inVerifyOtpDto.Email!);
+
+                                    BaseResponse baseResponse = new()
+                                    {
+                                        Status = -4,
+                                        ErrorMessage = $"Internal error occurred while unlocking '{inVerifyOtpDto.Email!}' User. Please try again.",
+                                        ErrorCode = ErrorCode.UserNotFoundError
+                                    };
+                                    return baseResponse;
+                                }
+                            }
+                            else
+                            {
+                                _logger.LogError("Unable to find user '{Email}'", inVerifyOtpDto.Email!);
+
+                                BaseResponse baseResponse = new()
+                                {
+                                    Status = -4,
+                                    ErrorMessage = $"Unable to find '{inVerifyOtpDto.Email!}' User.",
+                                    ErrorCode = ErrorCode.UserNotFoundError
+                                };
+                                return baseResponse;
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogError("Invalid OTP Provided for user '{Email}'", inVerifyOtpDto.Email!);
+
+                            BaseResponse baseResponse = new()
+                            {
+                                Status = -3,
+                                ErrorMessage = $"Invalid OTP Provided for '{inVerifyOtpDto.Email!}' User. Please Check OTP Again.",
+                                ErrorCode = ErrorCode.InvalidOtpNEmailError
+                            };
+                            return baseResponse;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError("Invalid Email Address Provided. {Email}", inVerifyOtpDto.Email!);
+
+                        BaseResponse baseResponse = new()
+                        {
+                            Status = -2,
+                            ErrorMessage = $"Invalid OTP Provided for '{inVerifyOtpDto.Email!}' Email. Please Generate a new OTP.",
+                            ErrorCode = ErrorCode.InvalidOtpNEmailError
+                        };
+                        return baseResponse;
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid Email Address Provided. {Email}", inVerifyOtpDto.Email!);
+
+                    BaseResponse baseResponse = new()
+                    {
+                        Status = -1,
+                        ErrorMessage = $"Invalid Email Address Provided. Please Verify '{inVerifyOtpDto.Email!}' Email.",
+                        ErrorCode = ErrorCode.InvalidEmailError
+                    };
+                    return baseResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while OTP verification: {Message}", ex.Message);
+                BaseResponse baseResponse = new()
+                {
+                    Status = 0,
+                    ErrorMessage = ex.Message,
+                    ErrorCode = ErrorCode.OtpGenerationExceptionError
+                };
+                return baseResponse;
+            }
+        }
+
+        /// <summary>
+        /// Soft deletes a user by their email.
+        /// </summary>
+        /// <param name="email">The user's email.</param>
+        /// <returns>A BaseResponse indicating success or failure, with relevant status codes and messages.</returns>
+        public async Task<BaseResponse> SoftDeleteUser(string email)
+        {
+            try
+            {
+                User? user = await _accountRepository.GetUserEmailAsync(email);
+
+                if (user != null)
+                {
+                    if (user.IsDeleted == false)
+                    {
+                        user.IsActive = false;
+                        user.IsDeleted = true;
+                        user.DeletedStatus = DeletedState.SoftDeleted;
+                        user.UpdatedOn = DateTime.Now;
+                        user.DeletedOn = DateTime.Now;
+                        user.AutoDeletedOn = DateTime.Now.AddDays(30);
+                        BaseResponse baseResponse = await _accountRepository.UpdateSoftDeleteUserAsync(user);
+
+                        if (baseResponse.Status > 0)
+                        {
+                            _logger.LogInformation("User '{Email}' soft deleted successfully.", email);
+
+                            baseResponse = new()
+                            {
+                                Status = 1,
+                                SuccessMessage = $"User '{email}' soft deleted successfully."
+                            };
+                            return baseResponse;
+                        }
+                        else
+                        {
+                            _logger.LogError("Error occurred while soft deletion of '{Email}' user.", email);
+
+                            baseResponse = new()
+                            {
+                                Status = -3,
+                                ErrorMessage = $"Error occurred while soft deletion of '{user.AutoDeletedOn}' user.",
+                                ErrorCode = ErrorCode.UserDeletedStateError
+                            };
+                            return baseResponse;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError("User is already in soft deletion state. {Email}", email);
+
+                        BaseResponse baseResponse = new()
+                        {
+                            Status = -2,
+                            ErrorMessage = $"User is already in soft deletion state. You can restore user before '{user.AutoDeletedOn}'.",
+                            ErrorCode = ErrorCode.UserDeletedStateError
+                        };
+                        return baseResponse;
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid Email Address Provided. {Email}", email);
+
+                    BaseResponse baseResponse = new()
+                    {
+                        Status = -1,
+                        ErrorMessage = $"Invalid Email Address Provided. Please Verify '{email}' Email.",
+                        ErrorCode = ErrorCode.InvalidEmailError
+                    };
+                    return baseResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while soft deletion of user: {Message}", ex.Message);
+
+                BaseResponse baseResponse = new()
+                {
+                    Status = 0,
+                    ErrorMessage = ex.Message,
+                    ErrorCode = ErrorCode.SoftDeleteUserExceptionError
                 };
                 return baseResponse;
             }

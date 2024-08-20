@@ -31,6 +31,15 @@ SELECT * FROM [cryptography].[dbo].[User];
 -- Truncate and reset identity `User`
 TRUNCATE TABLE [cryptography].[dbo].[User];
 
+-- Unlock User Query
+UPDATE [cryptography].[dbo].[User] SET IsLocked=1 WHERE Id = 1;
+
+UPDATE [cryptography].[dbo].[User] SET LoginAttempts=0, IsLocked=0, LockedUntil=NULL WHERE Id = 1;
+
+UPDATE [cryptography].[dbo].[User] SET LockedUntil=NULL, IsLocked=0, LoginAttempts=0 WHERE Id = 1;
+
+UPDATE [cryptography].[dbo].[User] SET LockedUntil='2024-08-19 22:30:22.240' WHERE Id = 1;
+
 -- Dummy Data in `User` table
 INSERT INTO [cryptography].[dbo].[User] (
     UserId, Name, UserName, Email, Password, IsAdmin, IsActive, IsLocked, 
@@ -68,6 +77,12 @@ DROP TABLE [cryptography].[dbo].[OtpStorage];
 -- Add new column in table `OtpStorage`
 ALTER TABLE [cryptography].[dbo].[OtpStorage]
 ADD OtpUseCase INT;
+
+-- Update Record SQL Query
+UPDATE [cryptography].[dbo].[OtpStorage] SET ValidUntil='2024-08-14 19:00:54.183' WHERE Id=1;
+
+-- Update Record SQL Query
+UPDATE [cryptography].[dbo].[OtpStorage] SET ValidUntil='2024-08-14 19:00:54.183' WHERE Id=1;
 
 -- Update Record SQL Query
 UPDATE [cryptography].[dbo].[OtpStorage] SET ValidUntil='2024-08-14 19:00:54.183' WHERE Id=1;

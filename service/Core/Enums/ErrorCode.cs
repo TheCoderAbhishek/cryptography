@@ -60,7 +60,72 @@
         /// <summary>
         /// Error code indicating error occurred while updating OTP details.
         /// </summary>
-        public const string UpdateOtpDetailsAsyncError = "ERR-1000-010";
+        public const string UpdateOtpDetailsAsyncError = "ERR-1000-011";
+
+        /// <summary>
+        /// Error code indicating error occurred while getting user details by email.
+        /// </summary>
+        public const string GetUserEmailAsyncError = "ERR-1000-012";
+
+        /// <summary>
+        /// Error code indicating error occurred while login user.
+        /// </summary>
+        public const string LoginUserError = "ERR-1000-013";
+
+        /// <summary>
+        /// Error code indicating invalid email provide while verifying OTP.
+        /// </summary>
+        public const string InvalidEmailError = "ERR-1000-014";
+
+        /// <summary>
+        /// Error code indicating unable to fetch OTP details associated with email.
+        /// </summary>
+        public const string GetOtpDetailsEmailAsyncError = "ERR-1000-015";
+
+        /// <summary>
+        /// Error code indicating unable to find OTP associated with Email.
+        /// </summary>
+        public const string InvalidOtpNEmailError = "ERR-1000-016";
+
+        /// <summary>
+        /// Error code indicating unable to unlock user.
+        /// </summary>
+        public const string UpdateUserDetailsUnlockUserAsyncError = "ERR-1000-017";
+
+        /// <summary>
+        /// Error code indicating user not found associated with email.
+        /// </summary>
+        public const string UserNotFoundError = "ERR-1000-018";
+
+        /// <summary>
+        /// Error code indicating unable to update attempt count
+        /// </summary>
+        public const string UpdateFailedLoginAttemptsAsyncError = "ERR-1000-019";
+
+        /// <summary>
+        /// Error code indicating unable to locked in a user due to multiple unauthorised requests.
+        /// </summary>
+        public const string UpdateFailedLoginAttemptsLockedUserAsyncError = "ERR-1000-020";
+
+        /// <summary>
+        /// Error code indicating exception catched while soft deletion of user.
+        /// </summary>
+        public const string SoftDeleteUserExceptionError = "ERR-1000-021";
+
+        /// <summary>
+        /// Error code indicating user is already in soft deletion state.
+        /// </summary>
+        public const string UserDeletedStateError = "ERR-1000-022";
+
+        /// <summary>
+        /// Error code indicating soft delete user error.
+        /// </summary>
+        public const string UpdateSoftDeleteUserAsyncError = "ERR-1000-023";
+
+        /// <summary>
+        /// Error code indicating failed soft delete user request.
+        /// </summary>
+        public const string SoftDeleteUserRequestAsyncError = "ERR-1000-024";
 
 
         /// <summary>

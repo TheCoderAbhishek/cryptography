@@ -4,3 +4,5 @@
 /service/bin
 /service/logs
 /service/.cr
+/serviceTests/bin
+/serviceTests/obj

@@ -9,6 +9,13 @@ namespace service.Core.Interfaces.AccountManagement
     public interface IAccountRepository
     {
         /// <summary>
+        /// Asynchronously retrieves a user from the database based on their email address.
+        /// </summary>
+        /// <param name="email">The email address of the user to retrieve.</param>
+        /// <returns>A Task that represents the asynchronous operation. The task result contains the User object if found, otherwise null.</returns>
+        Task<User?> GetUserEmailAsync(string email);
+
+        /// <summary>
         /// Gets a user's ID based on their username and email.
         /// </summary>
         /// <param name="userName">The username of the user.</param>
@@ -49,5 +56,40 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="otpStorage">The entity for which to update OTP details.</param>
         /// <returns>A Task representing the asynchronous operation.</returns>
         Task<BaseResponse> UpdateOtpDetailsAsync(OtpStorage otpStorage);
+
+        /// <summary>
+        /// Retrieves OTP details associated with the specified email address.
+        /// </summary>
+        /// <param name="email">The email address for which to retrieve OTP details.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains an OtpStorage object holding the retrieved OTP details, or null if no details were found.</returns>
+        Task<OtpStorage> GetOtpDetailsEmailAsync(string email);
+
+        /// <summary>
+        /// Updates user details and unlocks the specified user in the system.
+        /// </summary>
+        /// <param name="user">The user object containing the updated details and unlock status.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the number of rows affected by the update operation.</returns>
+        Task<int> UpdateUserDetailsUnlockUserAsync(User user);
+
+        /// <summary>
+        /// Updates the number of failed login attempts.
+        /// </summary>
+        /// <param name="user">The updated number of failed login attempts.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task UpdateFailedLoginAttemptsAsync(User user);
+
+        /// <summary>
+        /// Asynchronously updates the failed login attempts for a locked user and potentially unlocks them if applicable.
+        /// </summary>
+        /// <param name="user">The user object containing information about the locked user, including their login attempts.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task UpdateFailedLoginAttemptsLockedUserAsync(User user);
+
+        /// <summary>
+        /// Updates the soft delete status of a user.
+        /// </summary>
+        /// <param name="user">The User object containing the updated information, including the soft delete status.</param>
+        /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the update.</returns>
+        Task<BaseResponse> UpdateSoftDeleteUserAsync(User user);
     }
 }
