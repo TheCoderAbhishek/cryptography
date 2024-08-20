@@ -59,5 +59,10 @@
         /// SQL query to locked a user.
         /// </summary>
         public const string LockUser = "UPDATE [cryptography].[dbo].[User] SET IsLocked = @IsLocked, LockedUntil = @LockedUntil, LoginAttempts = @LoginAttempts WHERE Email = @Email";
+
+        /// <summary>
+        /// SQL query to soft delete user.
+        /// </summary>
+        public const string SoftDeleteUser = "UPDATE [cryptography].[dbo].[User] SET IsActive = @IsActive, IsDeleted = @IsDeleted, DeletedStatus = @DeletedStatus, UpdatedOn = @UpdatedOn, DeletedOn = @DeletedOn, AutoDeletedOn = @AutoDeletedOn WHERE Email = @Email";
     }
 }

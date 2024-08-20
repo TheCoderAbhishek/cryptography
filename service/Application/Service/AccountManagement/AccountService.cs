@@ -421,5 +421,92 @@ namespace service.Application.Service.AccountManagement
                 return baseResponse;
             }
         }
+
+        /// <summary>
+        /// Soft deletes a user by their email.
+        /// </summary>
+        /// <param name="email">The user's email.</param>
+        /// <returns>A BaseResponse indicating success or failure, with relevant status codes and messages.</returns>
+        public async Task<BaseResponse> SoftDeleteUser(string email)
+        {
+            try
+            {
+                User? user = await _accountRepository.GetUserEmailAsync(email);
+
+                if (user != null)
+                {
+                    if (user.IsDeleted == false)
+                    {
+                        user.IsActive = false;
+                        user.IsDeleted = true;
+                        user.DeletedStatus = DeletedState.SoftDeleted;
+                        user.UpdatedOn = DateTime.Now;
+                        user.DeletedOn = DateTime.Now;
+                        user.AutoDeletedOn = DateTime.Now.AddDays(30);
+                        BaseResponse baseResponse = await _accountRepository.UpdateSoftDeleteUserAsync(user);
+
+                        if (baseResponse.Status > 0)
+                        {
+                            _logger.LogInformation("User '{Email}' soft deleted successfully.", email);
+
+                            baseResponse = new()
+                            {
+                                Status = 1,
+                                SuccessMessage = $"User '{email}' soft deleted successfully."
+                            };
+                            return baseResponse;
+                        }
+                        else
+                        {
+                            _logger.LogError("Error occurred while soft deletion of '{Email}' user.", email);
+
+                            baseResponse = new()
+                            {
+                                Status = -3,
+                                ErrorMessage = $"Error occurred while soft deletion of '{user.AutoDeletedOn}' user.",
+                                ErrorCode = ErrorCode.UserDeletedStateError
+                            };
+                            return baseResponse;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError("User is already in soft deletion state. {Email}", email);
+
+                        BaseResponse baseResponse = new()
+                        {
+                            Status = -2,
+                            ErrorMessage = $"User is already in soft deletion state. You can restore user before '{user.AutoDeletedOn}'.",
+                            ErrorCode = ErrorCode.UserDeletedStateError
+                        };
+                        return baseResponse;
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid Email Address Provided. {Email}", email);
+
+                    BaseResponse baseResponse = new()
+                    {
+                        Status = -1,
+                        ErrorMessage = $"Invalid Email Address Provided. Please Verify '{email}' Email.",
+                        ErrorCode = ErrorCode.InvalidEmailError
+                    };
+                    return baseResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while soft deletion of user: {Message}", ex.Message);
+
+                BaseResponse baseResponse = new()
+                {
+                    Status = 0,
+                    ErrorMessage = ex.Message,
+                    ErrorCode = ErrorCode.SoftDeleteUserExceptionError
+                };
+                return baseResponse;
+            }
+        }
     }
 }

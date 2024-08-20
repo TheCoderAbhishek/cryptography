@@ -42,5 +42,12 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="inVerifyOtpDto">The data transfer object containing the email and OTP to be verified.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the verification.</returns>
         Task<BaseResponse> VerifyOtp(InVerifyOtpDto inVerifyOtpDto);
+
+        /// <summary>
+        /// Soft deletes a user associated with the provided email address.
+        /// </summary>
+        /// <param name="email">The email address of the user to soft delete.</param>
+        /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the operation.</returns>
+        Task<BaseResponse> SoftDeleteUser(string email);
     }
 }

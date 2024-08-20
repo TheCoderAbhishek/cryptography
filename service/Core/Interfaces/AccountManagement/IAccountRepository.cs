@@ -84,5 +84,12 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="user">The user object containing information about the locked user, including their login attempts.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task UpdateFailedLoginAttemptsLockedUserAsync(User user);
+
+        /// <summary>
+        /// Updates the soft delete status of a user.
+        /// </summary>
+        /// <param name="user">The User object containing the updated information, including the soft delete status.</param>
+        /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the update.</returns>
+        Task<BaseResponse> UpdateSoftDeleteUserAsync(User user);
     }
 }

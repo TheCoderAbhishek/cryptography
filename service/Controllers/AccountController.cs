@@ -373,8 +373,7 @@ namespace service.Controllers
                     0,
                     errorMessage: "Invalid Verification of OTP request data.",
                     errorCode: ErrorCode.InvalidModelRequestError,
-                    txn: ConstantData.Txn()
-                ));
+                    txn: ConstantData.Txn()));
                 }
             }
             catch (Exception ex)
@@ -386,6 +385,76 @@ namespace service.Controllers
                     StatusCodes.Status500InternalServerError,
                     0,
                     errorMessage: "An unexpected error occurred while verification of otp.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
+        /// Soft deletes a user by email.
+        /// </summary>
+        /// <param name="email">The user's email.</param>
+        /// <returns>An ApiResponse indicating success or failure.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPut]
+        [Route("SoftDeleteUserRequestAsync")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SoftDeleteUserRequestAsync(string email)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    BaseResponse baseResponse = await _accountService.SoftDeleteUser(email);
+                    if (baseResponse.Status > 0)
+                    {
+                        _logger.LogInformation("{Message}", baseResponse.SuccessMessage);
+
+                        return Ok(new ApiResponse<int>(
+                                ApiResponseStatus.Success,
+                                StatusCodes.Status200OK,
+                                1,
+                                successMessage: baseResponse.SuccessMessage,
+                                txn: ConstantData.Txn()));
+                    }
+                    else
+                    {
+                        _logger.LogError("{Message}", baseResponse.ErrorMessage);
+
+                        return Ok(new ApiResponse<int>(
+                                ApiResponseStatus.Failure,
+                                StatusCodes.Status200OK,
+                                0,
+                                errorMessage: baseResponse.ErrorMessage,
+                                errorCode: ErrorCode.SoftDeleteUserRequestAsyncError,
+                                txn: ConstantData.Txn()));
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid Soft Deletion of User request data.");
+
+                    return BadRequest(new ApiResponse<int>(
+                            ApiResponseStatus.Failure,
+                            StatusCodes.Status400BadRequest,
+                            0,
+                            errorMessage: "Invalid soft deletion of user request data.",
+                            errorCode: ErrorCode.InvalidModelRequestError,
+                            txn: ConstantData.Txn()));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while soft deletion of user: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while soft deletion of user.",
                     errorCode: ErrorCode.InternalServerError,
                     txn: ConstantData.Txn()
                 );

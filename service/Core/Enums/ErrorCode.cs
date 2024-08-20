@@ -107,6 +107,26 @@
         /// </summary>
         public const string UpdateFailedLoginAttemptsLockedUserAsyncError = "ERR-1000-020";
 
+        /// <summary>
+        /// Error code indicating exception catched while soft deletion of user.
+        /// </summary>
+        public const string SoftDeleteUserExceptionError = "ERR-1000-021";
+
+        /// <summary>
+        /// Error code indicating user is already in soft deletion state.
+        /// </summary>
+        public const string UserDeletedStateError = "ERR-1000-022";
+
+        /// <summary>
+        /// Error code indicating soft delete user error.
+        /// </summary>
+        public const string UpdateSoftDeleteUserAsyncError = "ERR-1000-023";
+
+        /// <summary>
+        /// Error code indicating failed soft delete user request.
+        /// </summary>
+        public const string SoftDeleteUserRequestAsyncError = "ERR-1000-024";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.

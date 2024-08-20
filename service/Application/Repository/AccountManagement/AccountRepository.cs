@@ -388,5 +388,42 @@ namespace service.Application.Repository.AccountManagement
                                    ErrorCode.UpdateFailedLoginAttemptsLockedUserAsyncError, ConstantData.Txn());
             }
         }
+
+        /// <summary>
+        /// Asynchronously updates the soft delete status of a user.
+        /// </summary>
+        /// <param name="user">The user object containing updated information, including the soft delete status.</param>
+        /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the update.</returns>
+        /// <exception cref="CustomException">Thrown when an unexpected error occurs during the soft deletion process.</exception>
+        public async Task<BaseResponse> UpdateSoftDeleteUserAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.SoftDeleteUser;
+
+                var parameters = new
+                {
+                    user.Email,
+                    user.IsActive,
+                    user.IsDeleted,
+                    user.DeletedStatus,
+                    user.UpdatedOn,
+                    user.DeletedOn,
+                    user.AutoDeletedOn
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, $"User '{user.Email}' soft deleted successfully.",
+                    $"Failed to soft delete '{user.Email}' user.",
+                    "",
+                    ErrorCode.UpdateFailedLoginAttemptsLockedUserAsyncError, ConstantData.Txn(), parameters);
+                return baseResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while soft deletion of user. {Message}", ex.Message);
+                throw new CustomException("Error occurred while soft deletion of user from the account repository.", ex,
+                                   ErrorCode.UpdateSoftDeleteUserAsyncError, ConstantData.Txn());
+            }
+        }
     }
 }
