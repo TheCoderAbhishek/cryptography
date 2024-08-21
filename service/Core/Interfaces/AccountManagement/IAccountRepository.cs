@@ -90,6 +90,6 @@ namespace service.Core.Interfaces.AccountManagement
         /// </summary>
         /// <param name="user">The User object containing the updated information, including the soft delete status.</param>
         /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the update.</returns>
-        Task<BaseResponse> UpdateSoftDeleteUserAsync(User user);
+        Task<BaseResponse> UpdateSoftDeleteRestoreUserAsync(User user);
     }
 }

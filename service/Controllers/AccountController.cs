@@ -462,5 +462,60 @@ namespace service.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
+
+        /// <summary>
+        /// Restores a soft-deleted user account.
+        /// </summary>
+        /// <param name="email">The email address of the user to restore.</param>
+        /// <returns>An ApiResponse indicating the success or failure of the restoration.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPatch]
+        [Route("RestoreSoftDeletedUserAsync")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RestoreSoftDeletedUserAsync(string email)
+        {
+            try
+            {
+                BaseResponse baseResponse = await _accountService.RestoreSoftDeletedUser(email);
+                if (baseResponse.Status > 0)
+                {
+                    _logger.LogInformation("{Message}", baseResponse.SuccessMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Success,
+                            StatusCodes.Status200OK,
+                            1,
+                            successMessage: baseResponse.SuccessMessage,
+                            txn: ConstantData.Txn()));
+                }
+                else
+                {
+                    _logger.LogError("{Message}", baseResponse.ErrorMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Failure,
+                            StatusCodes.Status200OK,
+                            0,
+                            errorMessage: baseResponse.ErrorMessage,
+                            errorCode: ErrorCode.SoftDeleteUserRequestAsyncError,
+                            txn: ConstantData.Txn()));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while restore soft deleted user: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while restore soft deleted user.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
     }
 }

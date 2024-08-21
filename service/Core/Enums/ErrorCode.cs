@@ -127,6 +127,11 @@
         /// </summary>
         public const string SoftDeleteUserRequestAsyncError = "ERR-1000-024";
 
+        /// <summary>
+        /// Error code indicating exception catched while restore soft deleted user.
+        /// </summary>
+        public const string RestoreSoftDeletedUserExceptionError = "ERR-1000-025";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.

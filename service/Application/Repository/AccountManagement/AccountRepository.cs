@@ -395,7 +395,7 @@ namespace service.Application.Repository.AccountManagement
         /// <param name="user">The user object containing updated information, including the soft delete status.</param>
         /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the update.</returns>
         /// <exception cref="CustomException">Thrown when an unexpected error occurs during the soft deletion process.</exception>
-        public async Task<BaseResponse> UpdateSoftDeleteUserAsync(User user)
+        public async Task<BaseResponse> UpdateSoftDeleteRestoreUserAsync(User user)
         {
             try
             {

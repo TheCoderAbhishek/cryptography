@@ -443,7 +443,7 @@ namespace service.Application.Service.AccountManagement
                         user.UpdatedOn = DateTime.Now;
                         user.DeletedOn = DateTime.Now;
                         user.AutoDeletedOn = DateTime.Now.AddDays(30);
-                        BaseResponse baseResponse = await _accountRepository.UpdateSoftDeleteUserAsync(user);
+                        BaseResponse baseResponse = await _accountRepository.UpdateSoftDeleteRestoreUserAsync(user);
 
                         if (baseResponse.Status > 0)
                         {
@@ -504,6 +504,93 @@ namespace service.Application.Service.AccountManagement
                     Status = 0,
                     ErrorMessage = ex.Message,
                     ErrorCode = ErrorCode.SoftDeleteUserExceptionError
+                };
+                return baseResponse;
+            }
+        }
+
+        /// <summary>
+        /// Restores a soft-deleted user account.
+        /// </summary>
+        /// <param name="email">The email address of the user to restore.</param>
+        /// <returns>A BaseResponse indicating the success or failure of the restoration.</returns>
+        public async Task<BaseResponse> RestoreSoftDeletedUser(string email)
+        {
+            try
+            {
+                User? user = await _accountRepository.GetUserEmailAsync(email);
+
+                if (user != null)
+                {
+                    if (user.IsDeleted == true)
+                    {
+                        user.IsActive = true;
+                        user.IsDeleted = false;
+                        user.DeletedStatus = DeletedState.NotDeleted;
+                        user.UpdatedOn = DateTime.Now;
+                        user.DeletedOn = null;
+                        user.AutoDeletedOn = null;
+                        BaseResponse baseResponse = await _accountRepository.UpdateSoftDeleteRestoreUserAsync(user);
+
+                        if (baseResponse.Status > 0)
+                        {
+                            _logger.LogInformation("User '{Email}' restored successfully.", email);
+
+                            baseResponse = new()
+                            {
+                                Status = 1,
+                                SuccessMessage = $"User '{email}' restored successfully."
+                            };
+                            return baseResponse;
+                        }
+                        else
+                        {
+                            _logger.LogError("An error occurred while restoring the soft-deleted user '{Email}'.", email);
+
+                            baseResponse = new()
+                            {
+                                Status = -3,
+                                ErrorMessage = $"An error occurred while restoring the soft-deleted user '{email}'.",
+                                ErrorCode = ErrorCode.UserDeletedStateError
+                            };
+                            return baseResponse;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("The user '{Email}' is already active.", email);
+
+                        BaseResponse baseResponse = new()
+                        {
+                            Status = -2,
+                            ErrorMessage = $"The user '{email}' is already active.",
+                            ErrorCode = ErrorCode.UserDeletedStateError
+                        };
+                        return baseResponse;
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Invalid email address provided: '{Email}'", email);
+
+                    BaseResponse baseResponse = new()
+                    {
+                        Status = -1,
+                        ErrorMessage = $"Invalid email address provided. Please verify '{email}'.",
+                        ErrorCode = ErrorCode.InvalidEmailError
+                    };
+                    return baseResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while restoring the soft-deleted user: {Message}", ex.Message);
+
+                BaseResponse baseResponse = new()
+                {
+                    Status = 0,
+                    ErrorMessage = "An unexpected error occurred while restoring the user. Please try again later or contact support.",
+                    ErrorCode = ErrorCode.RestoreSoftDeletedUserExceptionError
                 };
                 return baseResponse;
             }

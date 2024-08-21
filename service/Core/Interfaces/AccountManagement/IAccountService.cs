@@ -49,5 +49,12 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="email">The email address of the user to soft delete.</param>
         /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the operation.</returns>
         Task<BaseResponse> SoftDeleteUser(string email);
+
+        /// <summary>
+        /// Restores a soft-deleted user account.
+        /// </summary>
+        /// <param name="email">The email address of the user to restore.</param>
+        /// <returns>A Task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the restoration.</returns>
+        Task<BaseResponse> RestoreSoftDeletedUser(string email);
     }
 }
