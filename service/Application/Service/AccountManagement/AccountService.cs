@@ -595,5 +595,89 @@ namespace service.Application.Service.AccountManagement
                 return baseResponse;
             }
         }
+
+        /// <summary>
+        /// Enables an active user.
+        /// </summary>
+        /// <param name="email">The email address of the user to enable.</param>
+        /// <returns>A <see cref="BaseResponse"/> indicating the success or failure of the operation.</returns>
+        public async Task<BaseResponse> EnableActiveUser(string email)
+        {
+            try
+            {
+                User? user = await _accountRepository.GetUserEmailAsync(email);
+
+                if (user != null)
+                {
+                    if (user.IsActive == false)
+                    {
+                        user.IsActive = true;
+                        user.UpdatedOn = DateTime.Now;
+
+                        BaseResponse baseResponse = await _accountRepository.EnableDisableUserAsync(user);
+
+                        if (baseResponse.Status > 0)
+                        {
+                            _logger.LogInformation("User '{Email}' enabled successfully.", email);
+
+                            baseResponse = new()
+                            {
+                                Status = 1,
+                                SuccessMessage = $"User '{email}' enabled successfully."
+                            };
+                            return baseResponse;
+                        }
+                        else
+                        {
+                            _logger.LogError("An error occurred while enabling the user '{Email}'.", email);
+
+                            baseResponse = new()
+                            {
+                                Status = -3,
+                                ErrorMessage = $"An error occurred while enabling the user '{email}'.",
+                                ErrorCode = ErrorCode.UserActiveStateError
+                            };
+                            return baseResponse;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("The user '{Email}' is already enabled.", email);
+
+                        BaseResponse baseResponse = new()
+                        {
+                            Status = -2,
+                            ErrorMessage = $"The user '{email}' is already enabled.",
+                            ErrorCode = ErrorCode.UserActiveStateError
+                        };
+                        return baseResponse;
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Invalid email address provided: '{Email}'", email);
+
+                    BaseResponse baseResponse = new()
+                    {
+                        Status = -1,
+                        ErrorMessage = $"Invalid email address provided. Please verify '{email}'.",
+                        ErrorCode = ErrorCode.InvalidEmailError
+                    };
+                    return baseResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while restoring the soft-deleted user: {Message}", ex.Message);
+
+                BaseResponse baseResponse = new()
+                {
+                    Status = 0,
+                    ErrorMessage = "An unexpected error occurred while restoring the user. Please try again later or contact support.",
+                    ErrorCode = ErrorCode.EnableActiveUserExceptionError
+                };
+                return baseResponse;
+            }
+        }
     }
 }

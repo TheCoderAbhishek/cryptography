@@ -132,6 +132,31 @@
         /// </summary>
         public const string RestoreSoftDeletedUserExceptionError = "ERR-1000-025";
 
+        /// <summary>
+        /// Error code indicating query execution failed.
+        /// </summary>
+        public const string EnableDisableUserAsyncError = "ERR-1000-026";
+
+        /// <summary>
+        /// Error code indicating restore soft deleted user failed.
+        /// </summary>
+        public const string RestoreSoftDeletedUserAsyncError = "ERR-1000-027";
+
+        /// <summary>
+        /// Error code indicating enable user request error.
+        /// </summary>
+        public const string EnableUserRequestAsyncError = "ERR-1000-028";
+
+        /// <summary>
+        /// Error code indicating exception occurred while enabling user.
+        /// </summary>
+        public const string EnableActiveUserExceptionError = "ERR-1000-029";
+
+        /// <summary>
+        /// Error code indicating user state is already same as before.
+        /// </summary>
+        public const string UserActiveStateError = "ERR-1000-030";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.

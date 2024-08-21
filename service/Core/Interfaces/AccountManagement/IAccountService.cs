@@ -56,5 +56,12 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="email">The email address of the user to restore.</param>
         /// <returns>A Task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the restoration.</returns>
         Task<BaseResponse> RestoreSoftDeletedUser(string email);
+
+        /// <summary>
+        /// Enables an active user account, presumably restoring full access or privileges.
+        /// </summary>
+        /// <param name="email">The email address of the user to enable.</param>
+        /// <returns>A Task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the operation.</returns>
+        Task<BaseResponse> EnableActiveUser(string email);
     }
 }

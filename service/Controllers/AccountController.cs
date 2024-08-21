@@ -497,7 +497,7 @@ namespace service.Controllers
                             StatusCodes.Status200OK,
                             0,
                             errorMessage: baseResponse.ErrorMessage,
-                            errorCode: ErrorCode.SoftDeleteUserRequestAsyncError,
+                            errorCode: ErrorCode.RestoreSoftDeletedUserAsyncError,
                             txn: ConstantData.Txn()));
                 }
             }
@@ -510,6 +510,61 @@ namespace service.Controllers
                     StatusCodes.Status500InternalServerError,
                     0,
                     errorMessage: "An unexpected error occurred while restore soft deleted user.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
+        /// Enables a previously soft-deleted user account.
+        /// </summary>
+        /// <param name="email">The email address of the user to enable.</param>
+        /// <returns>An ApiResponse indicating the success or failure of the operation.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPut]
+        [Route("EnableUserAsync")]
+        [AllowAnonymous]
+        public async Task<IActionResult> EnableUserAsync(string email)
+        {
+            try
+            {
+                BaseResponse baseResponse = await _accountService.EnableActiveUser(email);
+                if (baseResponse.Status > 0)
+                {
+                    _logger.LogInformation("{Message}", baseResponse.SuccessMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Success,
+                            StatusCodes.Status200OK,
+                            1,
+                            successMessage: baseResponse.SuccessMessage,
+                            txn: ConstantData.Txn()));
+                }
+                else
+                {
+                    _logger.LogError("{Message}", baseResponse.ErrorMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Failure,
+                            StatusCodes.Status200OK,
+                            0,
+                            errorMessage: baseResponse.ErrorMessage,
+                            errorCode: ErrorCode.EnableUserRequestAsyncError,
+                            txn: ConstantData.Txn()));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while enable user: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while enable user.",
                     errorCode: ErrorCode.InternalServerError,
                     txn: ConstantData.Txn()
                 );

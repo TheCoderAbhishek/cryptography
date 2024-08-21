@@ -415,7 +415,7 @@ namespace service.Application.Repository.AccountManagement
                 BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, $"User '{user.Email}' soft deleted successfully.",
                     $"Failed to soft delete '{user.Email}' user.",
                     "",
-                    ErrorCode.UpdateFailedLoginAttemptsLockedUserAsyncError, ConstantData.Txn(), parameters);
+                    ErrorCode.UpdateSoftDeleteUserAsyncError, ConstantData.Txn(), parameters);
                 return baseResponse;
             }
             catch (Exception ex)
@@ -423,6 +423,43 @@ namespace service.Application.Repository.AccountManagement
                 _logger.LogError(ex, "An unexpected error occurred while soft deletion of user. {Message}", ex.Message);
                 throw new CustomException("Error occurred while soft deletion of user from the account repository.", ex,
                                    ErrorCode.UpdateSoftDeleteUserAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Enables or disables a user account.
+        /// </summary>
+        /// <param name="user">The user object containing details to be updated.</param>
+        /// <returns>A BaseResponse indicating the success or failure of the operation.</returns>
+        /// <exception cref="CustomException">Thrown if an unexpected error occurs during the process.</exception>
+        public async Task<BaseResponse> EnableDisableUserAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.EnableDisableUser;
+
+                var parameters = new
+                {
+                    user.Email,
+                    IsActive = user.IsActive ?? false,
+                    user.UpdatedOn
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query,
+                                $"User '{user.Email}' {(user.IsActive == true ? "enabled" : "disabled")} successfully.",
+                                $"Failed to {(user.IsActive == true ? "enable" : "disable")} user '{user.Email}'.",
+                                "",
+                                ErrorCode.EnableDisableUserAsyncError,
+                                ConstantData.Txn(),
+                                parameters);
+
+                return baseResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while enabling or disabling a user. {Message}", ex.Message);
+                throw new CustomException("An error occurred while enabling or disabling a user.", ex,
+                                          ErrorCode.EnableDisableUserAsyncError, ConstantData.Txn());
             }
         }
     }
