@@ -401,7 +401,6 @@ namespace service.Controllers
         [ProducesResponseType(typeof(ApiResponse<int>), 200)]
         [HttpPut]
         [Route("SoftDeleteUserRequestAsync")]
-        [AllowAnonymous]
         public async Task<IActionResult> SoftDeleteUserRequestAsync(string email)
         {
             try
@@ -471,7 +470,6 @@ namespace service.Controllers
         [ProducesResponseType(typeof(ApiResponse<int>), 200)]
         [HttpPatch]
         [Route("RestoreSoftDeletedUserAsync")]
-        [AllowAnonymous]
         public async Task<IActionResult> RestoreSoftDeletedUserAsync(string email)
         {
             try
@@ -526,7 +524,6 @@ namespace service.Controllers
         [ProducesResponseType(typeof(ApiResponse<int>), 200)]
         [HttpPut]
         [Route("EnableUserAsync")]
-        [AllowAnonymous]
         public async Task<IActionResult> EnableUserAsync(string email)
         {
             try
@@ -581,7 +578,6 @@ namespace service.Controllers
         [ProducesResponseType(typeof(ApiResponse<int>), 200)]
         [HttpPatch]
         [Route("DisableUserAsync")]
-        [AllowAnonymous]
         public async Task<IActionResult> DisableUserAsync(string email)
         {
             try
