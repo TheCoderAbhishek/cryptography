@@ -783,7 +783,6 @@ namespace service.Application.Service.AccountManagement
         /// - Status = -2: An error occurred during the hard delete operation.
         /// - Status = 0: An unexpected exception occurred.
         /// </returns>
-
         public async Task<BaseResponse> HardDeleteUser(string email)
         {
             try
