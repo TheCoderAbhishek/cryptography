@@ -98,5 +98,12 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="user">The user to enable or disable.</param>
         /// <returns>A BaseResponse indicating the success or failure of the operation.</returns>
         Task<BaseResponse> EnableDisableUserAsync(User user);
+
+        /// <summary>
+        /// Performs a hard delete of a specified user.
+        /// </summary>
+        /// <param name="user">The user to be deleted.</param>
+        /// <returns>A BaseResponse indicating the success or failure of the deletion.</returns>
+        Task<BaseResponse> HardDeleteUserAsync(User user);
     }
 }

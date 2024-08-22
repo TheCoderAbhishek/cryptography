@@ -93,3 +93,6 @@ UPDATE [cryptography].[dbo].[User] SET IsActive=0 WHERE Id=1;
 -- Fetch all data from 'User' table
 SELECT * FROM [cryptography].[dbo].[User];
 
+-- Delete Record from table
+DELETE FROM [cryptography].[dbo].[User] WHERE Id=2;
+

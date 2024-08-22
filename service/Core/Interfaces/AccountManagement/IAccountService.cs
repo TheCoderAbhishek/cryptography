@@ -70,5 +70,12 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="email">The email address of the user to disable.</param>
         /// <returns>A Task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the operation.</returns>
         Task<BaseResponse> DisableInactiveUser(string email);
+
+        /// <summary>
+        /// Performs a hard deletion of the user associated with the specified email address from the system.
+        /// </summary>
+        /// <param name="email">The email address of the user to be hard deleted.</param>
+        /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the hard deletion.</returns>
+        Task<BaseResponse> HardDeleteUser(string email);
     }
 }

@@ -172,6 +172,21 @@
         /// </summary>
         public const string DisableUserAsyncError = "ERR-1000-033";
 
+        /// <summary>
+        /// Error code indicating query failed while hard deleting user.
+        /// </summary>
+        public const string HardDeleteUserAsyncError = "ERR-1000-034";
+
+        /// <summary>
+        /// Error code indicating exception catched during hard deletion of user.
+        /// </summary>
+        public const string HardDeleteUserExceptionError = "ERR-1000-035";
+
+        /// <summary>
+        /// Error code indicating hard delete user
+        /// </summary>
+        public const string HardDeleteUserError = "ERR-1000-036";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.

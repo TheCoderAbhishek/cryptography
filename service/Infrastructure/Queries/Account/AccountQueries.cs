@@ -69,5 +69,10 @@
         /// SQL query to enable or disable user state.
         /// </summary>
         public const string EnableDisableUser = "UPDATE [cryptography].[dbo].[User] SET IsActive = @IsActive, UpdatedOn = @UpdatedOn WHERE Email = @Email";
+
+        /// <summary>
+        /// SQl query to hard delete user.
+        /// </summary>
+        public const string HardDeleteUser = "DELETE FROM [cryptography].[dbo].[User] WHERE Email = @Email";
     }
 }

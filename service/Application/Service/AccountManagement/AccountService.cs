@@ -771,5 +771,78 @@ namespace service.Application.Service.AccountManagement
                 return baseResponse;
             }
         }
+
+        /// <summary>
+        /// Performs a hard deletion of a user identified by their email address.
+        /// </summary>
+        /// <param name="email">The email address of the user to be hard deleted.</param>
+        /// <returns>
+        /// A Task that represents the asynchronous operation and returns a BaseResponse indicating the outcome:
+        /// - Status > 0: User hard deleted successfully.
+        /// - Status = -1: Invalid email address provided.
+        /// - Status = -2: An error occurred during the hard delete operation.
+        /// - Status = 0: An unexpected exception occurred.
+        /// </returns>
+
+        public async Task<BaseResponse> HardDeleteUser(string email)
+        {
+            try
+            {
+                User? user = await _accountRepository.GetUserEmailAsync(email);
+
+                if (user != null)
+                {
+                    BaseResponse baseResponse = await _accountRepository.HardDeleteUserAsync(user);
+
+                    if (baseResponse.Status > 0)
+                    {
+                        _logger.LogInformation("User '{Email}' hard deleted successfully.", email);
+
+                        baseResponse = new()
+                        {
+                            Status = 1,
+                            SuccessMessage = $"User '{email}' hard deleted successfully."
+                        };
+                        return baseResponse;
+                    }
+                    else
+                    {
+                        _logger.LogError("An error occurred while hard deleting the user '{Email}'.", email);
+
+                        baseResponse = new()
+                        {
+                            Status = -2,
+                            ErrorMessage = $"An error occurred while hard deleting the user '{email}'.",
+                            ErrorCode = ErrorCode.HardDeleteUserError
+                        };
+                        return baseResponse;
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Invalid email address provided: '{Email}'", email);
+
+                    BaseResponse baseResponse = new()
+                    {
+                        Status = -1,
+                        ErrorMessage = $"Invalid email address provided. Please verify '{email}'.",
+                        ErrorCode = ErrorCode.InvalidEmailError
+                    };
+                    return baseResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while hard deleting user: {Message}", ex.Message);
+
+                BaseResponse baseResponse = new()
+                {
+                    Status = 0,
+                    ErrorMessage = "An unexpected error occurred while hard deleting the user. Please try again later or contact support.",
+                    ErrorCode = ErrorCode.HardDeleteUserExceptionError
+                };
+                return baseResponse;
+            }
+        }
     }
 }

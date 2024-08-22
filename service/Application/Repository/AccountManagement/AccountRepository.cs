@@ -462,5 +462,40 @@ namespace service.Application.Repository.AccountManagement
                                           ErrorCode.EnableDisableUserAsyncError, ConstantData.Txn());
             }
         }
+
+        /// <summary>
+        /// Performs a hard deletion of the specified user from the system.
+        /// </summary>
+        /// <param name="user">The user object to be deleted.</param>
+        /// <returns>A BaseResponse indicating the success or failure of the operation.</returns>
+        /// <exception cref="CustomException">Thrown when an error occurs during the hard deletion process.</exception>
+        public async Task<BaseResponse> HardDeleteUserAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.HardDeleteUser;
+
+                var parameters = new
+                {
+                    user.Email
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query,
+                                $"User with email: {user.Email} hard deleted successfully",
+                                $"Failed to hard delete user {user.Email}",
+                                "",
+                                ErrorCode.HardDeleteUserAsyncError,
+                                ConstantData.Txn(),
+                                parameters);
+
+                return baseResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while hard deleting a user. {Message}", ex.Message);
+                throw new CustomException("An error occurred while hard deleting a user.", ex,
+                                          ErrorCode.HardDeleteUserAsyncError, ConstantData.Txn());
+            }
+        }
     }
 }
