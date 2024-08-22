@@ -61,8 +61,18 @@
         public const string LockUser = "UPDATE [cryptography].[dbo].[User] SET IsLocked = @IsLocked, LockedUntil = @LockedUntil, LoginAttempts = @LoginAttempts WHERE Email = @Email";
 
         /// <summary>
-        /// SQL query to soft delete user.
+        /// SQL query to soft delete or restore user.
         /// </summary>
         public const string SoftDeleteUser = "UPDATE [cryptography].[dbo].[User] SET IsActive = @IsActive, IsDeleted = @IsDeleted, DeletedStatus = @DeletedStatus, UpdatedOn = @UpdatedOn, DeletedOn = @DeletedOn, AutoDeletedOn = @AutoDeletedOn WHERE Email = @Email";
+
+        /// <summary>
+        /// SQL query to enable or disable user state.
+        /// </summary>
+        public const string EnableDisableUser = "UPDATE [cryptography].[dbo].[User] SET IsActive = @IsActive, UpdatedOn = @UpdatedOn WHERE Email = @Email";
+
+        /// <summary>
+        /// SQl query to hard delete user.
+        /// </summary>
+        public const string HardDeleteUser = "DELETE FROM [cryptography].[dbo].[User] WHERE Email = @Email";
     }
 }

@@ -401,7 +401,6 @@ namespace service.Controllers
         [ProducesResponseType(typeof(ApiResponse<int>), 200)]
         [HttpPut]
         [Route("SoftDeleteUserRequestAsync")]
-        [AllowAnonymous]
         public async Task<IActionResult> SoftDeleteUserRequestAsync(string email)
         {
             try
@@ -455,6 +454,223 @@ namespace service.Controllers
                     StatusCodes.Status500InternalServerError,
                     0,
                     errorMessage: "An unexpected error occurred while soft deletion of user.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
+        /// Restores a soft-deleted user account.
+        /// </summary>
+        /// <param name="email">The email address of the user to restore.</param>
+        /// <returns>An ApiResponse indicating the success or failure of the restoration.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPatch]
+        [Route("RestoreSoftDeletedUserAsync")]
+        public async Task<IActionResult> RestoreSoftDeletedUserAsync(string email)
+        {
+            try
+            {
+                BaseResponse baseResponse = await _accountService.RestoreSoftDeletedUser(email);
+                if (baseResponse.Status > 0)
+                {
+                    _logger.LogInformation("{Message}", baseResponse.SuccessMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Success,
+                            StatusCodes.Status200OK,
+                            1,
+                            successMessage: baseResponse.SuccessMessage,
+                            txn: ConstantData.Txn()));
+                }
+                else
+                {
+                    _logger.LogError("{Message}", baseResponse.ErrorMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Failure,
+                            StatusCodes.Status200OK,
+                            0,
+                            errorMessage: baseResponse.ErrorMessage,
+                            errorCode: ErrorCode.RestoreSoftDeletedUserAsyncError,
+                            txn: ConstantData.Txn()));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while restore soft deleted user: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while restore soft deleted user.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
+        /// Enables a previously soft-deleted user account.
+        /// </summary>
+        /// <param name="email">The email address of the user to enable.</param>
+        /// <returns>An ApiResponse indicating the success or failure of the operation.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPut]
+        [Route("EnableUserAsync")]
+        public async Task<IActionResult> EnableUserAsync(string email)
+        {
+            try
+            {
+                BaseResponse baseResponse = await _accountService.EnableActiveUser(email);
+                if (baseResponse.Status > 0)
+                {
+                    _logger.LogInformation("{Message}", baseResponse.SuccessMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Success,
+                            StatusCodes.Status200OK,
+                            1,
+                            successMessage: baseResponse.SuccessMessage,
+                            txn: ConstantData.Txn()));
+                }
+                else
+                {
+                    _logger.LogError("{Message}", baseResponse.ErrorMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Failure,
+                            StatusCodes.Status200OK,
+                            0,
+                            errorMessage: baseResponse.ErrorMessage,
+                            errorCode: ErrorCode.EnableUserRequestAsyncError,
+                            txn: ConstantData.Txn()));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while enable user: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while enable user.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
+        /// Disables a user asynchronously.
+        /// </summary>
+        /// <param name="email">User's email.</param>
+        /// <returns>An ApiResponse indicating success or failure with appropriate status codes.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPatch]
+        [Route("DisableUserAsync")]
+        public async Task<IActionResult> DisableUserAsync(string email)
+        {
+            try
+            {
+                BaseResponse baseResponse = await _accountService.DisableInactiveUser(email);
+                if (baseResponse.Status > 0)
+                {
+                    _logger.LogInformation("{Message}", baseResponse.SuccessMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Success,
+                            StatusCodes.Status200OK,
+                            1,
+                            successMessage: baseResponse.SuccessMessage,
+                            txn: ConstantData.Txn()));
+                }
+                else
+                {
+                    _logger.LogError("{Message}", baseResponse.ErrorMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Failure,
+                            StatusCodes.Status200OK,
+                            0,
+                            errorMessage: baseResponse.ErrorMessage,
+                            errorCode: ErrorCode.DisableUserAsyncError,
+                            txn: ConstantData.Txn()));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while disable user: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while disable user.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
+        /// Handles the HTTP DELETE request to hard delete a user by email.
+        /// </summary>
+        /// <param name="email">The email address of the user to be hard deleted.</param>
+        /// <returns>An ApiResponse indicating the success or failure of the operation.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpDelete]
+        [Route("HardDeleteUserAsync")]
+        public async Task<IActionResult> HardDeleteUserAsync(string email)
+        {
+            try
+            {
+                BaseResponse baseResponse = await _accountService.HardDeleteUser(email);
+
+                if (baseResponse.Status > 0)
+                {
+                    _logger.LogInformation("{Message}", baseResponse.SuccessMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Success,
+                            StatusCodes.Status200OK,
+                            1,
+                            successMessage: baseResponse.SuccessMessage,
+                            txn: ConstantData.Txn()));
+                }
+                else
+                {
+                    _logger.LogError("{Message}", baseResponse.ErrorMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Failure,
+                            StatusCodes.Status200OK,
+                            0,
+                            errorMessage: baseResponse.ErrorMessage,
+                            errorCode: ErrorCode.HardDeleteUserAsyncError,
+                            txn: ConstantData.Txn()));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while hard deleting user: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while hard deleting user.",
                     errorCode: ErrorCode.InternalServerError,
                     txn: ConstantData.Txn()
                 );

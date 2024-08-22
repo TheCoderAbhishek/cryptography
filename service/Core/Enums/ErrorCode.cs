@@ -127,6 +127,66 @@
         /// </summary>
         public const string SoftDeleteUserRequestAsyncError = "ERR-1000-024";
 
+        /// <summary>
+        /// Error code indicating exception catched while restore soft deleted user.
+        /// </summary>
+        public const string RestoreSoftDeletedUserExceptionError = "ERR-1000-025";
+
+        /// <summary>
+        /// Error code indicating query execution failed.
+        /// </summary>
+        public const string EnableDisableUserAsyncError = "ERR-1000-026";
+
+        /// <summary>
+        /// Error code indicating restore soft deleted user failed.
+        /// </summary>
+        public const string RestoreSoftDeletedUserAsyncError = "ERR-1000-027";
+
+        /// <summary>
+        /// Error code indicating enable user request error.
+        /// </summary>
+        public const string EnableUserRequestAsyncError = "ERR-1000-028";
+
+        /// <summary>
+        /// Error code indicating exception occurred while enabling user.
+        /// </summary>
+        public const string EnableActiveUserExceptionError = "ERR-1000-029";
+
+        /// <summary>
+        /// Error code indicating user state is already same as before.
+        /// </summary>
+        public const string UserActiveStateError = "ERR-1000-030";
+
+        /// <summary>
+        /// Error code indicating exception occurred while disabling user.
+        /// </summary>
+        public const string DisableInactiveUserExceptionError = "ERR-1000-031";
+
+        /// <summary>
+        /// Error code indicating user is already in deactivate state.
+        /// </summary>
+        public const string UserDeactivateStateError = "ERR-1000-032";
+
+        /// <summary>
+        /// Error code indicating disable user.
+        /// </summary>
+        public const string DisableUserAsyncError = "ERR-1000-033";
+
+        /// <summary>
+        /// Error code indicating query failed while hard deleting user.
+        /// </summary>
+        public const string HardDeleteUserAsyncError = "ERR-1000-034";
+
+        /// <summary>
+        /// Error code indicating exception catched during hard deletion of user.
+        /// </summary>
+        public const string HardDeleteUserExceptionError = "ERR-1000-035";
+
+        /// <summary>
+        /// Error code indicating hard delete user
+        /// </summary>
+        public const string HardDeleteUserError = "ERR-1000-036";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.

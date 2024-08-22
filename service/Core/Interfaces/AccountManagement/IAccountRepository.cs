@@ -90,6 +90,20 @@ namespace service.Core.Interfaces.AccountManagement
         /// </summary>
         /// <param name="user">The User object containing the updated information, including the soft delete status.</param>
         /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the update.</returns>
-        Task<BaseResponse> UpdateSoftDeleteUserAsync(User user);
+        Task<BaseResponse> UpdateSoftDeleteRestoreUserAsync(User user);
+
+        /// <summary>
+        /// Enables or disables a user.
+        /// </summary>
+        /// <param name="user">The user to enable or disable.</param>
+        /// <returns>A BaseResponse indicating the success or failure of the operation.</returns>
+        Task<BaseResponse> EnableDisableUserAsync(User user);
+
+        /// <summary>
+        /// Performs a hard delete of a specified user.
+        /// </summary>
+        /// <param name="user">The user to be deleted.</param>
+        /// <returns>A BaseResponse indicating the success or failure of the deletion.</returns>
+        Task<BaseResponse> HardDeleteUserAsync(User user);
     }
 }

@@ -395,7 +395,7 @@ namespace service.Application.Repository.AccountManagement
         /// <param name="user">The user object containing updated information, including the soft delete status.</param>
         /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the update.</returns>
         /// <exception cref="CustomException">Thrown when an unexpected error occurs during the soft deletion process.</exception>
-        public async Task<BaseResponse> UpdateSoftDeleteUserAsync(User user)
+        public async Task<BaseResponse> UpdateSoftDeleteRestoreUserAsync(User user)
         {
             try
             {
@@ -415,7 +415,7 @@ namespace service.Application.Repository.AccountManagement
                 BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, $"User '{user.Email}' soft deleted successfully.",
                     $"Failed to soft delete '{user.Email}' user.",
                     "",
-                    ErrorCode.UpdateFailedLoginAttemptsLockedUserAsyncError, ConstantData.Txn(), parameters);
+                    ErrorCode.UpdateSoftDeleteUserAsyncError, ConstantData.Txn(), parameters);
                 return baseResponse;
             }
             catch (Exception ex)
@@ -423,6 +423,78 @@ namespace service.Application.Repository.AccountManagement
                 _logger.LogError(ex, "An unexpected error occurred while soft deletion of user. {Message}", ex.Message);
                 throw new CustomException("Error occurred while soft deletion of user from the account repository.", ex,
                                    ErrorCode.UpdateSoftDeleteUserAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Enables or disables a user account.
+        /// </summary>
+        /// <param name="user">The user object containing details to be updated.</param>
+        /// <returns>A BaseResponse indicating the success or failure of the operation.</returns>
+        /// <exception cref="CustomException">Thrown if an unexpected error occurs during the process.</exception>
+        public async Task<BaseResponse> EnableDisableUserAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.EnableDisableUser;
+
+                var parameters = new
+                {
+                    user.Email,
+                    IsActive = user.IsActive ?? false,
+                    user.UpdatedOn
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query,
+                                $"User '{user.Email}' {(user.IsActive == true ? "enabled" : "disabled")} successfully.",
+                                $"Failed to {(user.IsActive == true ? "enable" : "disable")} user '{user.Email}'.",
+                                "",
+                                ErrorCode.EnableDisableUserAsyncError,
+                                ConstantData.Txn(),
+                                parameters);
+
+                return baseResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while enabling or disabling a user. {Message}", ex.Message);
+                throw new CustomException("An error occurred while enabling or disabling a user.", ex,
+                                          ErrorCode.EnableDisableUserAsyncError, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Performs a hard deletion of the specified user from the system.
+        /// </summary>
+        /// <param name="user">The user object to be deleted.</param>
+        /// <returns>A BaseResponse indicating the success or failure of the operation.</returns>
+        /// <exception cref="CustomException">Thrown when an error occurs during the hard deletion process.</exception>
+        public async Task<BaseResponse> HardDeleteUserAsync(User user)
+        {
+            try
+            {
+                string query = AccountQueries.HardDeleteUser;
+
+                var parameters = new
+                {
+                    user.Email
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query,
+                                $"User with email: {user.Email} hard deleted successfully",
+                                $"Failed to hard delete user {user.Email}",
+                                "",
+                                ErrorCode.HardDeleteUserAsyncError,
+                                ConstantData.Txn(),
+                                parameters);
+
+                return baseResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while hard deleting a user. {Message}", ex.Message);
+                throw new CustomException("An error occurred while hard deleting a user.", ex,
+                                          ErrorCode.HardDeleteUserAsyncError, ConstantData.Txn());
             }
         }
     }

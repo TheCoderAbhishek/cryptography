@@ -49,5 +49,33 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="email">The email address of the user to soft delete.</param>
         /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the operation.</returns>
         Task<BaseResponse> SoftDeleteUser(string email);
+
+        /// <summary>
+        /// Restores a soft-deleted user account.
+        /// </summary>
+        /// <param name="email">The email address of the user to restore.</param>
+        /// <returns>A Task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the restoration.</returns>
+        Task<BaseResponse> RestoreSoftDeletedUser(string email);
+
+        /// <summary>
+        /// Enables an active user account, presumably restoring full access or privileges.
+        /// </summary>
+        /// <param name="email">The email address of the user to enable.</param>
+        /// <returns>A Task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the operation.</returns>
+        Task<BaseResponse> EnableActiveUser(string email);
+
+        /// <summary>
+        /// Disables an inactive user based on their email address.
+        /// </summary>
+        /// <param name="email">The email address of the user to disable.</param>
+        /// <returns>A Task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the operation.</returns>
+        Task<BaseResponse> DisableInactiveUser(string email);
+
+        /// <summary>
+        /// Performs a hard deletion of the user associated with the specified email address from the system.
+        /// </summary>
+        /// <param name="email">The email address of the user to be hard deleted.</param>
+        /// <returns>A Task that represents the asynchronous operation and returns a BaseResponse indicating the success or failure of the hard deletion.</returns>
+        Task<BaseResponse> HardDeleteUser(string email);
     }
 }

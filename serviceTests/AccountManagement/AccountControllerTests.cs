@@ -545,5 +545,486 @@ namespace serviceTests.AccountManagement
             Assert.Equal("An unexpected error occurred while verification of otp.", apiResponse.ErrorMessage);
             Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
         }
+
+        [Fact]
+        public async Task SoftDeleteUserRequestAsync_ValidEmail_Success()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            var baseResponse = new BaseResponse { Status = 1, SuccessMessage = $"User '{email}' soft deleted successfully." };
+
+            _accountServiceMock.Setup(x => x.SoftDeleteUser(email))
+                .ReturnsAsync(baseResponse);
+
+            // Act
+            var result = await _controller.SoftDeleteUserRequestAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Success, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(1, apiResponse.ResponseCode);
+            Assert.Equal($"User '{email}' soft deleted successfully.", apiResponse.SuccessMessage);
+        }
+
+        [Fact]
+        public async Task SoftDeleteUserRequestAsync_UserNotFound_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.SoftDeleteUser(email))
+                .ReturnsAsync(new BaseResponse { Status = -1, ErrorMessage = $"Invalid Email Address Provided. Please Verify '{email}' Email.", ErrorCode = ErrorCode.InvalidEmailError });
+
+            // Act
+            var result = await _controller.SoftDeleteUserRequestAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"Invalid Email Address Provided. Please Verify '{email}' Email.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.SoftDeleteUserRequestAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task SoftDeleteUserRequestAsync_UserAlreadySoftDeleted_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+            var user = new User
+            {
+                Email = email,
+                IsDeleted = true,
+                AutoDeletedOn = DateTime.Now.AddDays(5)
+            };
+
+            _accountServiceMock.Setup(x => x.SoftDeleteUser(email))
+                .ReturnsAsync(new BaseResponse
+                {
+                    Status = -2,
+                    ErrorMessage = $"User is already in soft deletion state. You can restore user before '{user.AutoDeletedOn}'.",
+                    ErrorCode = ErrorCode.UserDeletedStateError
+                });
+
+            // Act
+            var result = await _controller.SoftDeleteUserRequestAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"User is already in soft deletion state. You can restore user before '{user.AutoDeletedOn}'.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.SoftDeleteUserRequestAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task SoftDeleteUserRequestAsync_Exception_ReturnsInternalServerError()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.SoftDeleteUser(email))
+                .ThrowsAsync(new Exception("Some error occurred"));
+
+            // Act
+            var result = await _controller.SoftDeleteUserRequestAsync(email);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(statusCodeResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal("An unexpected error occurred while soft deletion of user.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task RestoreSoftDeletedUserAsync_ValidEmail_Success()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            var baseResponse = new BaseResponse { Status = 1, SuccessMessage = $"User '{email}' restored successfully." };
+
+            _accountServiceMock.Setup(x => x.RestoreSoftDeletedUser(email))
+                .ReturnsAsync(baseResponse);
+
+            // Act
+            var result = await _controller.RestoreSoftDeletedUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Success, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(1, apiResponse.ResponseCode);
+            Assert.Equal($"User '{email}' restored successfully.", apiResponse.SuccessMessage);
+        }
+
+        [Fact]
+        public async Task RestoreSoftDeletedUserAsync_InvalidEmail_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = "invalid-email"; // Deliberately invalid email
+
+            _accountServiceMock.Setup(x => x.RestoreSoftDeletedUser(email))
+                .ReturnsAsync(new BaseResponse { Status = -1, ErrorMessage = $"Invalid email address provided. Please verify '{email}'.", ErrorCode = ErrorCode.InvalidEmailError });
+
+            // Act
+            var result = await _controller.RestoreSoftDeletedUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"Invalid email address provided. Please verify '{email}'.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.RestoreSoftDeletedUserAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task RestoreSoftDeletedUserAsync_UserAlreadyActive_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.RestoreSoftDeletedUser(email))
+                .ReturnsAsync(new BaseResponse
+                {
+                    Status = -2,
+                    ErrorMessage = $"The user '{email}' is already active.",
+                    ErrorCode = ErrorCode.RestoreSoftDeletedUserAsyncError
+                });
+
+            // Act
+            var result = await _controller.RestoreSoftDeletedUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"The user '{email}' is already active.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.RestoreSoftDeletedUserAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task RestoreSoftDeletedUserAsync_Exception_ReturnsInternalServerError()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.RestoreSoftDeletedUser(email))
+                .ThrowsAsync(new Exception("Some error occurred"));
+
+            // Act
+            var result = await _controller.RestoreSoftDeletedUserAsync(email);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(statusCodeResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal("An unexpected error occurred while restore soft deleted user.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task EnableUserAsync_ValidEmail_Success()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            var baseResponse = new BaseResponse { Status = 1, SuccessMessage = $"User '{email}' enabled successfully." };
+
+            _accountServiceMock.Setup(x => x.EnableActiveUser(email))
+                .ReturnsAsync(baseResponse);
+
+            // Act
+            var result = await _controller.EnableUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Success, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(1, apiResponse.ResponseCode);
+            Assert.Equal($"User '{email}' enabled successfully.", apiResponse.SuccessMessage);
+        }
+
+        [Fact]
+        public async Task EnableUserAsync_InvalidEmail_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = "invalid-email"; // Deliberately invalid email
+
+            _accountServiceMock.Setup(x => x.EnableActiveUser(email))
+                .ReturnsAsync(new BaseResponse { Status = -1, ErrorMessage = $"Invalid email address provided. Please verify '{email}'.", ErrorCode = ErrorCode.InvalidEmailError });
+
+            // Act
+            var result = await _controller.EnableUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"Invalid email address provided. Please verify '{email}'.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.EnableUserRequestAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task EnableUserAsync_UserAlreadyEnabled_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.EnableActiveUser(email))
+                .ReturnsAsync(new BaseResponse
+                {
+                    Status = -2,
+                    ErrorMessage = $"The user '{email}' is already enabled.",
+                    ErrorCode = ErrorCode.UserActiveStateError
+                });
+
+            // Act
+            var result = await _controller.EnableUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"The user '{email}' is already enabled.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.EnableUserRequestAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task EnableUserAsync_Exception_ReturnsInternalServerError()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.EnableActiveUser(email))
+                .ThrowsAsync(new Exception("Some error occurred"));
+
+            // Act
+            var result = await _controller.EnableUserAsync(email);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(statusCodeResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal("An unexpected error occurred while enable user.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task DisableUserAsync_ValidEmail_Success()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            var baseResponse = new BaseResponse { Status = 1, SuccessMessage = $"User '{email}' disabled successfully." };
+
+            _accountServiceMock.Setup(x => x.DisableInactiveUser(email))
+                .ReturnsAsync(baseResponse);
+
+            // Act
+            var result = await _controller.DisableUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Success, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(1, apiResponse.ResponseCode);
+            Assert.Equal($"User '{email}' disabled successfully.", apiResponse.SuccessMessage);
+        }
+
+        [Fact]
+        public async Task DisableUserAsync_InvalidEmail_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = "invalid-email"; // Deliberately invalid email
+
+            _accountServiceMock.Setup(x => x.DisableInactiveUser(email))
+                .ReturnsAsync(new BaseResponse { Status = -1, ErrorMessage = $"Invalid email address provided. Please verify '{email}'.", ErrorCode = ErrorCode.InvalidEmailError });
+
+            // Act
+            var result = await _controller.DisableUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"Invalid email address provided. Please verify '{email}'.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.DisableUserAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task DisableUserAsync_UserAlreadyDisabled_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.DisableInactiveUser(email))
+                .ReturnsAsync(new BaseResponse
+                {
+                    Status = -2,
+                    ErrorMessage = $"The user '{email}' is already disabled.",
+                    ErrorCode = ErrorCode.UserDeactivateStateError
+                });
+
+            // Act
+            var result = await _controller.DisableUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"The user '{email}' is already disabled.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.DisableUserAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task DisableUserAsync_Exception_ReturnsInternalServerError()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.DisableInactiveUser(email))
+                .ThrowsAsync(new Exception("Some error occurred"));
+
+            // Act
+            var result = await _controller.DisableUserAsync(email);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(statusCodeResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal("An unexpected error occurred while disable user.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task HardDeleteUserAsync_ValidEmail_Success()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            var baseResponse = new BaseResponse { Status = 1, SuccessMessage = $"User '{email}' hard deleted successfully." };
+
+            _accountServiceMock.Setup(x => x.HardDeleteUser(email))
+                .ReturnsAsync(baseResponse);
+
+            // Act
+            var result = await _controller.HardDeleteUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Success, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(1, apiResponse.ResponseCode);
+            Assert.Equal($"User '{email}' hard deleted successfully.", apiResponse.SuccessMessage);
+        }
+
+        [Fact]
+        public async Task HardDeleteUserAsync_InvalidEmail_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = "invalid-email"; // Deliberately invalid email
+
+            _accountServiceMock.Setup(x => x.HardDeleteUser(email))
+                .ReturnsAsync(new BaseResponse { Status = -1, ErrorMessage = $"Invalid email address provided. Please verify '{email}'.", ErrorCode = ErrorCode.InvalidEmailError });
+
+            // Act
+            var result = await _controller.HardDeleteUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"Invalid email address provided. Please verify '{email}'.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.HardDeleteUserAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task HardDeleteUserAsync_UserNotFound_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.HardDeleteUser(email))
+                .ReturnsAsync(new BaseResponse { Status = -1, ErrorMessage = $"Invalid email address provided. Please verify '{email}'.", ErrorCode = ErrorCode.InvalidEmailError }); // Assuming this is what your service would return
+
+            // Act
+            var result = await _controller.HardDeleteUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result); // Since you're returning Ok even on service failure
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"Invalid email address provided. Please verify '{email}'.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.HardDeleteUserAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task HardDeleteUserAsync_Exception_ReturnsInternalServerError()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.HardDeleteUser(email))
+                .ThrowsAsync(new Exception("Some error occurred"));
+
+            // Act
+            var result = await _controller.HardDeleteUserAsync(email);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(statusCodeResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal("An unexpected error occurred while hard deleting user.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
+        }
     }
 }
