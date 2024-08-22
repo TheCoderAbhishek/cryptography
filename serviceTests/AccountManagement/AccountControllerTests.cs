@@ -839,5 +839,101 @@ namespace serviceTests.AccountManagement
             Assert.Equal("An unexpected error occurred while enable user.", apiResponse.ErrorMessage);
             Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
         }
+
+        [Fact]
+        public async Task DisableUserAsync_ValidEmail_Success()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            var baseResponse = new BaseResponse { Status = 1, SuccessMessage = $"User '{email}' disabled successfully." };
+
+            _accountServiceMock.Setup(x => x.DisableInactiveUser(email))
+                .ReturnsAsync(baseResponse);
+
+            // Act
+            var result = await _controller.DisableUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Success, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(1, apiResponse.ResponseCode);
+            Assert.Equal($"User '{email}' disabled successfully.", apiResponse.SuccessMessage);
+        }
+
+        [Fact]
+        public async Task DisableUserAsync_InvalidEmail_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = "invalid-email"; // Deliberately invalid email
+
+            _accountServiceMock.Setup(x => x.DisableInactiveUser(email))
+                .ReturnsAsync(new BaseResponse { Status = -1, ErrorMessage = $"Invalid email address provided. Please verify '{email}'.", ErrorCode = ErrorCode.InvalidEmailError });
+
+            // Act
+            var result = await _controller.DisableUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"Invalid email address provided. Please verify '{email}'.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.DisableUserAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task DisableUserAsync_UserAlreadyDisabled_ReturnsOkWithFailure()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.DisableInactiveUser(email))
+                .ReturnsAsync(new BaseResponse
+                {
+                    Status = -2,
+                    ErrorMessage = $"The user '{email}' is already disabled.",
+                    ErrorCode = ErrorCode.UserDeactivateStateError
+                });
+
+            // Act
+            var result = await _controller.DisableUserAsync(email);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal($"The user '{email}' is already disabled.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.DisableUserAsyncError, apiResponse.ErrorCode);
+        }
+
+        [Fact]
+        public async Task DisableUserAsync_Exception_ReturnsInternalServerError()
+        {
+            // Arrange
+            string email = _faker.Internet.Email();
+
+            _accountServiceMock.Setup(x => x.DisableInactiveUser(email))
+                .ThrowsAsync(new Exception("Some error occurred"));
+
+            // Act
+            var result = await _controller.DisableUserAsync(email);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+
+            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(statusCodeResult.Value);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
+            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
+            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.Equal("An unexpected error occurred while disable user.", apiResponse.ErrorMessage);
+            Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
+        }
     }
 }
