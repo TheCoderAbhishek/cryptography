@@ -157,6 +157,21 @@
         /// </summary>
         public const string UserActiveStateError = "ERR-1000-030";
 
+        /// <summary>
+        /// Error code indicating exception occurred while disabling user.
+        /// </summary>
+        public const string DisableInactiveUserExceptionError = "ERR-1000-031";
+
+        /// <summary>
+        /// Error code indicating user is already in deactivate state.
+        /// </summary>
+        public const string UserDeactivateStateError = "ERR-1000-032";
+
+        /// <summary>
+        /// Error code indicating disable user.
+        /// </summary>
+        public const string DisableUserAsyncError = "ERR-1000-033";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred.

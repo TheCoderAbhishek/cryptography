@@ -63,5 +63,12 @@ namespace service.Core.Interfaces.AccountManagement
         /// <param name="email">The email address of the user to enable.</param>
         /// <returns>A Task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the operation.</returns>
         Task<BaseResponse> EnableActiveUser(string email);
+
+        /// <summary>
+        /// Disables an inactive user based on their email address.
+        /// </summary>
+        /// <param name="email">The email address of the user to disable.</param>
+        /// <returns>A Task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the operation.</returns>
+        Task<BaseResponse> DisableInactiveUser(string email);
     }
 }

@@ -572,5 +572,60 @@ namespace service.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
+
+        /// <summary>
+        /// Disables a user asynchronously.
+        /// </summary>
+        /// <param name="email">User's email.</param>
+        /// <returns>An ApiResponse indicating success or failure with appropriate status codes.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPatch]
+        [Route("DisableUserAsync")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DisableUserAsync(string email)
+        {
+            try
+            {
+                BaseResponse baseResponse = await _accountService.DisableInactiveUser(email);
+                if (baseResponse.Status > 0)
+                {
+                    _logger.LogInformation("{Message}", baseResponse.SuccessMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Success,
+                            StatusCodes.Status200OK,
+                            1,
+                            successMessage: baseResponse.SuccessMessage,
+                            txn: ConstantData.Txn()));
+                }
+                else
+                {
+                    _logger.LogError("{Message}", baseResponse.ErrorMessage);
+
+                    return Ok(new ApiResponse<int>(
+                            ApiResponseStatus.Failure,
+                            StatusCodes.Status200OK,
+                            0,
+                            errorMessage: baseResponse.ErrorMessage,
+                            errorCode: ErrorCode.DisableUserAsyncError,
+                            txn: ConstantData.Txn()));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while disable user: {Message}", ex.Message);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    0,
+                    errorMessage: "An unexpected error occurred while disable user.",
+                    errorCode: ErrorCode.InternalServerError,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
     }
 }

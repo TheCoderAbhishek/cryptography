@@ -668,13 +668,105 @@ namespace service.Application.Service.AccountManagement
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while restoring the soft-deleted user: {Message}", ex.Message);
+                _logger.LogError(ex, "An error occurred while enabling user: {Message}", ex.Message);
 
                 BaseResponse baseResponse = new()
                 {
                     Status = 0,
-                    ErrorMessage = "An unexpected error occurred while restoring the user. Please try again later or contact support.",
+                    ErrorMessage = "An unexpected error occurred while enabling the user. Please try again later or contact support.",
                     ErrorCode = ErrorCode.EnableActiveUserExceptionError
+                };
+                return baseResponse;
+            }
+        }
+
+        /// <summary>
+        /// Disables an inactive user based on their email address.
+        /// </summary>
+        /// <param name="email">The email address of the user to disable.</param>
+        /// <returns>
+        /// A Task that represents the asynchronous operation. The task result contains a BaseResponse indicating the success or failure of the operation.
+        /// Possible BaseResponse outcomes:
+        /// * Status = 1: User disabled successfully.
+        /// * Status = -1: Invalid email address provided.
+        /// * Status = -2: The user is already disabled.
+        /// * Status = -3: An error occurred while disabling the user.
+        /// * Status = 0: An unexpected error occurred.
+        /// </returns>
+        public async Task<BaseResponse> DisableInactiveUser(string email)
+        {
+            try
+            {
+                User? user = await _accountRepository.GetUserEmailAsync(email);
+
+                if (user != null)
+                {
+                    if (user.IsActive == true)
+                    {
+                        user.IsActive = false;
+                        user.UpdatedOn = DateTime.Now;
+
+                        BaseResponse baseResponse = await _accountRepository.EnableDisableUserAsync(user);
+
+                        if (baseResponse.Status > 0)
+                        {
+                            _logger.LogInformation("User '{Email}' disabled successfully.", email);
+
+                            baseResponse = new()
+                            {
+                                Status = 1,
+                                SuccessMessage = $"User '{email}' disabled successfully."
+                            };
+                            return baseResponse;
+                        }
+                        else
+                        {
+                            _logger.LogError("An error occurred while disabling the user '{Email}'.", email);
+
+                            baseResponse = new()
+                            {
+                                Status = -3,
+                                ErrorMessage = $"An error occurred while disabling the user '{email}'.",
+                                ErrorCode = ErrorCode.UserDeactivateStateError
+                            };
+                            return baseResponse;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("The user '{Email}' is already disabled.", email);
+
+                        BaseResponse baseResponse = new()
+                        {
+                            Status = -2,
+                            ErrorMessage = $"The user '{email}' is already disabled.",
+                            ErrorCode = ErrorCode.UserDeactivateStateError
+                        };
+                        return baseResponse;
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Invalid email address provided: '{Email}'", email);
+
+                    BaseResponse baseResponse = new()
+                    {
+                        Status = -1,
+                        ErrorMessage = $"Invalid email address provided. Please verify '{email}'.",
+                        ErrorCode = ErrorCode.InvalidEmailError
+                    };
+                    return baseResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while disabling user: {Message}", ex.Message);
+
+                BaseResponse baseResponse = new()
+                {
+                    Status = 0,
+                    ErrorMessage = "An unexpected error occurred while disabling the user. Please try again later or contact support.",
+                    ErrorCode = ErrorCode.DisableInactiveUserExceptionError
                 };
                 return baseResponse;
             }
