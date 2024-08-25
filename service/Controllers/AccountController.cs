@@ -44,6 +44,48 @@ namespace service.Controllers
         #endregion
 
         /// <summary>
+        /// Generates an RSA 4096-bit key pair using OpenSSL.
+        /// </summary>
+        /// <returns>An action result containing the generated RSA public and private keys.</returns>
+        [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+        [HttpGet]
+        [Route("GenerateRsaKeyPairAsync")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GenerateRsaKeyPairAsync()
+        {
+            var (publicKey, privateKey) = await _accountService.GenerateRsaKeyPairAsync();
+
+            if (string.IsNullOrEmpty(publicKey) || string.IsNullOrEmpty(privateKey))
+            {
+                _logger.LogError("Failed to generate RSA key pair.");
+
+                var response = new ApiResponse<object>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status200OK, // Use 200 even for failures
+                    0,
+                    errorMessage: "Failed to generate RSA key pair.",
+                    errorCode: ErrorCode.GenerateRsaKeyPairError,
+                    txn: ConstantData.Txn()
+                );
+
+                return Ok(response); // Return Ok with the ApiResponse
+            }
+
+            var responseDto = new { PublicKey = publicKey, PrivateKey = privateKey };
+
+            var successResponse = new ApiResponse<object>(
+                ApiResponseStatus.Success,
+                StatusCodes.Status200OK,
+                1,
+                successMessage: "RSA key pair generated successfully.",
+                txn: ConstantData.Txn(),
+                returnValue: responseDto
+            );
+
+            return Ok(successResponse);
+        }
+
+        /// <summary>
         /// Handles the login process for a user and returns an API response.
         /// </summary>
         /// <param name="inLoginUserDto">The login data containing the user's credentials.</param>

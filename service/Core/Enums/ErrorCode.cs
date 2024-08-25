@@ -208,6 +208,11 @@
         /// </summary>
         public const string BadRequestError = "ERR-1000-903";
 
+        /// <summary>
+        /// Error code indicating key pair generation
+        /// </summary>
+        public const string GenerateRsaKeyPairError = "ERR-1000-904";
+
 
         /// <summary>
         /// Error indicating unknown error
