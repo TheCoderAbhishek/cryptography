@@ -7,6 +7,8 @@ using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace service.Controllers
 {
@@ -41,13 +43,28 @@ namespace service.Controllers
 
             return claims;
         }
+
+        /// <summary>
+        /// Decrypts an encrypted password using a provided RSA private key.
+        /// </summary>
+        /// <param name="encryptedPassword">The password in its encrypted, Base64-encoded form.</param>
+        /// <param name="privateKey">The XML representation of the RSA private key used for decryption.</param>
+        /// <returns>The decrypted password as a plain text string.</returns>
+        private static string DecryptPassword(string encryptedPassword, string privateKey)
+        {
+            using var rsa = RSA.Create();
+            rsa.FromXmlString(privateKey); // Load the private key
+            var encryptedBytes = Convert.FromBase64String(encryptedPassword);
+            var decryptedBytes = rsa.Decrypt(encryptedBytes, RSAEncryptionPadding.OaepSHA256);
+            return Encoding.UTF8.GetString(decryptedBytes);
+        }
         #endregion
 
         /// <summary>
         /// Generates an RSA 4096-bit key pair using OpenSSL.
         /// </summary>
         /// <returns>An action result containing the generated RSA public and private keys.</returns>
-        [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
         [HttpGet]
         [Route("GenerateRsaKeyPairAsync")]
         [AllowAnonymous]
@@ -61,17 +78,17 @@ namespace service.Controllers
 
                 var response = new ApiResponse<object>(
                     ApiResponseStatus.Failure,
-                    StatusCodes.Status200OK, // Use 200 even for failures
+                    StatusCodes.Status200OK,
                     0,
                     errorMessage: "Failed to generate RSA key pair.",
                     errorCode: ErrorCode.GenerateRsaKeyPairError,
                     txn: ConstantData.Txn()
                 );
 
-                return Ok(response); // Return Ok with the ApiResponse
+                return Ok(response);
             }
 
-            var responseDto = new { PublicKey = publicKey, PrivateKey = privateKey };
+            HttpContext.Session.SetString("PrivateKey", privateKey);
 
             var successResponse = new ApiResponse<object>(
                 ApiResponseStatus.Success,
@@ -79,7 +96,7 @@ namespace service.Controllers
                 1,
                 successMessage: "RSA key pair generated successfully.",
                 txn: ConstantData.Txn(),
-                returnValue: responseDto
+                returnValue: publicKey
             );
 
             return Ok(successResponse);
@@ -105,6 +122,21 @@ namespace service.Controllers
             {
                 if (ModelState.IsValid)
                 {
+                    // Retrieve the private key from secure storage
+                    var privateKey = HttpContext.Session.GetString("PrivateKey");
+
+                    if (string.IsNullOrEmpty(privateKey))
+                    {
+                        _logger.LogError("Private key not found.");
+                        return StatusCode(StatusCodes.Status500InternalServerError, "Private key not found.");
+                    }
+
+                    // Decrypt the password using the private key
+                    var decryptedPassword = DecryptPassword(inLoginUserDto.UserPassword!, privateKey);
+
+                    // Replace the encrypted password with the decrypted one
+                    inLoginUserDto.UserPassword = decryptedPassword;
+
                     var (success, message, user) = await _accountService.LoginUser(inLoginUserDto);
 
                     if (success <= 0)

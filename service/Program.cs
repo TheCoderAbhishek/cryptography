@@ -98,6 +98,17 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 #endregion
 
+#region Session Management
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromSeconds(10);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+}); 
+#endregion
+
 #region CORS Policy settings
 builder.Services.AddCors(options =>
 {
@@ -118,6 +129,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseSession();
 
 app.UseCors("AllowSpecificOrigin");
 
