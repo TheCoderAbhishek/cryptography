@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using service.Core.Dto.AccountManagement;
 using service.Core.Entities.AccountManagement;
 using service.Core.Entities.Utility;
@@ -18,11 +19,12 @@ namespace service.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class AccountController(ILogger<AccountController> logger, IJwtTokenGenerator jwtTokenGenerator, IAccountService accountService) : ControllerBase
+    public class AccountController(ILogger<AccountController> logger, IJwtTokenGenerator jwtTokenGenerator, IAccountService accountService, IDistributedCache cache) : ControllerBase
     {
         private readonly ILogger<AccountController> _logger = logger;
         private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
         private readonly IAccountService _accountService = accountService;
+        private readonly IDistributedCache _cache = cache;
 
         #region Private Helper Methods for Account Controller
         /// <summary>
@@ -53,9 +55,17 @@ namespace service.Controllers
         private static string DecryptPassword(string encryptedPassword, string privateKey)
         {
             using var rsa = RSA.Create();
-            rsa.FromXmlString(privateKey); // Load the private key
+
+            // Ensure the private key is in PEM format and import it
+            rsa.ImportFromPem(privateKey.ToCharArray());
+
+            // Convert the base64-encoded encrypted password to a byte array
             var encryptedBytes = Convert.FromBase64String(encryptedPassword);
-            var decryptedBytes = rsa.Decrypt(encryptedBytes, RSAEncryptionPadding.OaepSHA256);
+
+            // Decrypt the bytes using the private key with PKCS#1 v1.5 padding
+            var decryptedBytes = rsa.Decrypt(encryptedBytes, RSAEncryptionPadding.Pkcs1);
+
+            // Convert the decrypted bytes back to a string
             return Encoding.UTF8.GetString(decryptedBytes);
         }
         #endregion
@@ -88,7 +98,14 @@ namespace service.Controllers
                 return Ok(response);
             }
 
-            HttpContext.Session.SetString("PrivateKey", privateKey);
+            // Store private key in distributed cache with a suitable key
+            var cacheKey = "PrivateKey";
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            };
+
+            await _cache.SetStringAsync(cacheKey, privateKey, cacheOptions);
 
             var successResponse = new ApiResponse<object>(
                 ApiResponseStatus.Success,
@@ -122,8 +139,9 @@ namespace service.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    // Retrieve the private key from secure storage
-                    var privateKey = HttpContext.Session.GetString("PrivateKey");
+                    // Retrieve the private key from distributed cache
+                    var cacheKey = "PrivateKey";
+                    var privateKey = await _cache.GetStringAsync(cacheKey);
 
                     if (string.IsNullOrEmpty(privateKey))
                     {

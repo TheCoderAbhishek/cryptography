@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -22,6 +23,9 @@ builder.Host.UseSerilog((context, configuration) =>
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Add distributed memory cache (you can switch to Redis or SQL Server as needed)
+builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -98,17 +102,6 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 #endregion
 
-#region Session Management
-builder.Services.AddDistributedMemoryCache();
-
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromSeconds(10);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-}); 
-#endregion
-
 #region CORS Policy settings
 builder.Services.AddCors(options =>
 {
@@ -129,8 +122,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseSession();
 
 app.UseCors("AllowSpecificOrigin");
 

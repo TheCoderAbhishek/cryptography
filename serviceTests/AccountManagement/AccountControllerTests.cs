@@ -1,6 +1,7 @@
 ﻿using Bogus;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
 using service.Controllers;
@@ -18,6 +19,7 @@ namespace serviceTests.AccountManagement
         private readonly Mock<ILogger<AccountController>> _loggerMock;
         private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock;
         private readonly Mock<IAccountService> _accountServiceMock;
+        private readonly Mock<IDistributedCache> _cache;
         private readonly AccountController _controller;
         private readonly Faker _faker;
 
@@ -26,7 +28,7 @@ namespace serviceTests.AccountManagement
             _loggerMock = new Mock<ILogger<AccountController>>();
             _jwtTokenGeneratorMock = new Mock<IJwtTokenGenerator>();
             _accountServiceMock = new Mock<IAccountService>();
-            _controller = new AccountController(_loggerMock.Object, _jwtTokenGeneratorMock.Object, _accountServiceMock.Object);
+            _controller = new AccountController(_loggerMock.Object, _jwtTokenGeneratorMock.Object, _accountServiceMock.Object, _cache.Object);
             _faker = new Faker();
         }
 
