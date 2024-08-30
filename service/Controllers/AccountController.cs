@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using service.Core.Dto.AccountManagement;
 using service.Core.Entities.AccountManagement;
 using service.Core.Entities.Utility;
@@ -7,6 +8,8 @@ using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace service.Controllers
 {
@@ -16,11 +19,12 @@ namespace service.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class AccountController(ILogger<AccountController> logger, IJwtTokenGenerator jwtTokenGenerator, IAccountService accountService) : ControllerBase
+    public class AccountController(ILogger<AccountController> logger, IJwtTokenGenerator jwtTokenGenerator, IAccountService accountService, IDistributedCache cache) : ControllerBase
     {
         private readonly ILogger<AccountController> _logger = logger;
         private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
         private readonly IAccountService _accountService = accountService;
+        private readonly IDistributedCache _cache = cache;
 
         #region Private Helper Methods for Account Controller
         /// <summary>
@@ -41,7 +45,79 @@ namespace service.Controllers
 
             return claims;
         }
+
+        /// <summary>
+        /// Decrypts an encrypted password using a provided RSA private key.
+        /// </summary>
+        /// <param name="encryptedPassword">The password in its encrypted, Base64-encoded form.</param>
+        /// <param name="privateKey">The XML representation of the RSA private key used for decryption.</param>
+        /// <returns>The decrypted password as a plain text string.</returns>
+        private static string DecryptPassword(string encryptedPassword, string privateKey)
+        {
+            using var rsa = RSA.Create();
+
+            // Ensure the private key is in PEM format and import it
+            rsa.ImportFromPem(privateKey.ToCharArray());
+
+            // Convert the base64-encoded encrypted password to a byte array
+            var encryptedBytes = Convert.FromBase64String(encryptedPassword);
+
+            // Decrypt the bytes using the private key with PKCS#1 v1.5 padding
+            var decryptedBytes = rsa.Decrypt(encryptedBytes, RSAEncryptionPadding.Pkcs1);
+
+            // Convert the decrypted bytes back to a string
+            return Encoding.UTF8.GetString(decryptedBytes);
+        }
         #endregion
+
+        /// <summary>
+        /// Generates an RSA 4096-bit key pair using OpenSSL.
+        /// </summary>
+        /// <returns>An action result containing the generated RSA public and private keys.</returns>
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+        [HttpGet]
+        [Route("GenerateRsaKeyPairAsync")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GenerateRsaKeyPairAsync()
+        {
+            var (publicKey, privateKey) = await _accountService.GenerateRsaKeyPairAsync();
+
+            if (string.IsNullOrEmpty(publicKey) || string.IsNullOrEmpty(privateKey))
+            {
+                _logger.LogError("Failed to generate RSA key pair.");
+
+                var response = new ApiResponse<object>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status200OK,
+                    0,
+                    errorMessage: "Failed to generate RSA key pair.",
+                    errorCode: ErrorCode.GenerateRsaKeyPairError,
+                    txn: ConstantData.Txn()
+                );
+
+                return Ok(response);
+            }
+
+            // Store private key in distributed cache with a suitable key
+            var cacheKey = "PrivateKey";
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            };
+
+            await _cache.SetStringAsync(cacheKey, privateKey, cacheOptions);
+
+            var successResponse = new ApiResponse<object>(
+                ApiResponseStatus.Success,
+                StatusCodes.Status200OK,
+                1,
+                successMessage: "RSA key pair generated successfully.",
+                txn: ConstantData.Txn(),
+                returnValue: publicKey
+            );
+
+            return Ok(successResponse);
+        }
 
         /// <summary>
         /// Handles the login process for a user and returns an API response.
@@ -63,6 +139,22 @@ namespace service.Controllers
             {
                 if (ModelState.IsValid)
                 {
+                    // Retrieve the private key from distributed cache
+                    var cacheKey = "PrivateKey";
+                    var privateKey = await _cache.GetStringAsync(cacheKey);
+
+                    if (string.IsNullOrEmpty(privateKey))
+                    {
+                        _logger.LogError("Private key not found.");
+                        return StatusCode(StatusCodes.Status500InternalServerError, "Private key not found.");
+                    }
+
+                    // Decrypt the password using the private key
+                    var decryptedPassword = DecryptPassword(inLoginUserDto.UserPassword!, privateKey);
+
+                    // Replace the encrypted password with the decrypted one
+                    inLoginUserDto.UserPassword = decryptedPassword;
+
                     var (success, message, user) = await _accountService.LoginUser(inLoginUserDto);
 
                     if (success <= 0)

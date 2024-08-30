@@ -5,6 +5,7 @@ using service.Core.Entities.Utility;
 using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -62,6 +63,60 @@ namespace service.Application.Service.AccountManagement
             return Guid.NewGuid().ToString();
         }
         #endregion
+
+        /// <summary>
+        /// Generates an RSA 4096 key pair using OpenSSL.
+        /// </summary>
+        /// <returns> A tuple containing the public key and private key as strings. </returns>
+        public async Task<(string PublicKey, string PrivateKey)> GenerateRsaKeyPairAsync()
+        {
+            string publicKey = string.Empty;
+            string privateKey = string.Empty;
+
+            await Task.Run(() =>
+            {
+                // Generate RSA Private Key
+                var privateKeyProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "openssl",
+                        Arguments = "genrsa 4096",
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+
+                privateKeyProcess.Start();
+                privateKey = privateKeyProcess.StandardOutput.ReadToEnd();
+                privateKeyProcess.WaitForExit();
+
+                // Generate RSA Public Key from the Private Key
+                var publicKeyProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "openssl",
+                        Arguments = "rsa -pubout",
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+
+                publicKeyProcess.Start();
+                using (var writer = publicKeyProcess.StandardInput)
+                {
+                    writer.Write(privateKey);
+                }
+                publicKey = publicKeyProcess.StandardOutput.ReadToEnd();
+                publicKeyProcess.WaitForExit();
+            });
+
+            return (publicKey, privateKey);
+        }
 
         /// <summary>
         /// Handles the login process for a client.

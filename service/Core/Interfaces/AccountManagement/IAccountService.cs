@@ -10,6 +10,12 @@ namespace service.Core.Interfaces.AccountManagement
     public interface IAccountService
     {
         /// <summary>
+        /// Generates an RSA 4096 key pair using OpenSSL.
+        /// </summary>
+        /// <returns> A tuple containing the public key and private key as strings. </returns>
+        Task<(string PublicKey, string PrivateKey)> GenerateRsaKeyPairAsync();
+
+        /// <summary>
         /// Asynchronously attempts to login a client using the provided credentials.
         /// </summary>
         /// <param name="inLoginUserDto">A DTO containing login credentials.</param>
