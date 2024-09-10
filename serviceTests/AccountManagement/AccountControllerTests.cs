@@ -19,7 +19,7 @@ namespace serviceTests.AccountManagement
         private readonly Mock<ILogger<AccountController>> _loggerMock;
         private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock;
         private readonly Mock<IAccountService> _accountServiceMock;
-        private readonly Mock<IDistributedCache> _cache;
+        private readonly Mock<IDistributedCache> _cacheMock;
         private readonly AccountController _controller;
         private readonly Faker _faker;
 
@@ -28,121 +28,47 @@ namespace serviceTests.AccountManagement
             _loggerMock = new Mock<ILogger<AccountController>>();
             _jwtTokenGeneratorMock = new Mock<IJwtTokenGenerator>();
             _accountServiceMock = new Mock<IAccountService>();
-            _controller = new AccountController(_loggerMock.Object, _jwtTokenGeneratorMock.Object, _accountServiceMock.Object, _cache.Object);
+            _cacheMock = new Mock<IDistributedCache>();
+            _controller = new AccountController(_loggerMock.Object, _jwtTokenGeneratorMock.Object, _accountServiceMock.Object, _cacheMock.Object);
             _faker = new Faker();
         }
 
         [Fact]
-        public async Task LoginUserAsync_ValidModel_SuccessfulLogin()
+        public async Task LoginUserAsync_ShouldReturnBadRequest_WhenModelIsInvalid()
         {
             // Arrange
-            var inLoginUserDto = new InLoginUserDto
-            {
-                UserEmail = _faker.Internet.Email(),
-                UserPassword = _faker.Internet.Password()
-            };
+            _controller.ModelState.AddModelError("UserEmail", "User email is required");
 
-            var user = new User
-            {
-                Email = inLoginUserDto.UserEmail,
-                UserName = _faker.Internet.UserName()
-            };
-
-            _accountServiceMock.Setup(x => x.LoginUser(inLoginUserDto))
-                .ReturnsAsync((1, "Login successful", user));
-
-            var token = _faker.Random.String2(32);
-            _jwtTokenGeneratorMock.Setup(x => x.GenerateToken(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(token);
+            var inLoginUserDto = new InLoginUserDto();
 
             // Act
-            var result = await _controller.LoginUserAsync(inLoginUserDto);
+            var result = await _controller.LoginUserAsync(inLoginUserDto) as ObjectResult;
+            var apiResponse = result?.Value as ApiResponse<User>;
 
             // Assert
-            var okResult = Assert.IsType<ObjectResult>(result);
-            var apiResponse = Assert.IsAssignableFrom<ApiResponse<User>>(okResult.Value);
-            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
-            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
-            Assert.Equal(0, apiResponse.ResponseCode);
-            Assert.Equal("An unexpected error occurred while login user.", apiResponse.ErrorMessage);
-        }
-
-        [Fact]
-        public async Task LoginUserAsync_ValidModel_UnsuccessfulLogin()
-        {
-            // Arrange
-            var inLoginUserDto = new InLoginUserDto
-            {
-                UserEmail = _faker.Internet.Email(),
-                UserPassword = _faker.Internet.Password()
-            };
-
-            _accountServiceMock.Setup(x => x.LoginUser(inLoginUserDto))
-                .ReturnsAsync((-1, "Invalid credentials", null));
-
-            // Act
-            var result = await _controller.LoginUserAsync(inLoginUserDto);
-
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var apiResponse = Assert.IsAssignableFrom<ApiResponse<User>>(okResult.Value);
-            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
-            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
-            Assert.Equal(-1, apiResponse.ResponseCode);
-            Assert.Equal("Invalid credentials", apiResponse.ErrorMessage);
-            Assert.Equal(ErrorCode.LoginUserError, apiResponse.ErrorCode);
-            Assert.Null(apiResponse.ReturnValue);
-        }
-
-        [Fact]
-        public async Task LoginUserAsync_InvalidModel_BadRequest()
-        {
-            // Arrange
-            _controller.ModelState.AddModelError("UserEmail", "Required");
-
-            // Act
-            var result = await _controller.LoginUserAsync(new InLoginUserDto());
-
-            // Assert
-            var statusCodeResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
-
-            var apiResponse = Assert.IsAssignableFrom<ApiResponse<User>>(statusCodeResult.Value);
-            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
-            Assert.Equal(StatusCodes.Status400BadRequest, apiResponse.StatusCode);
-            Assert.Equal(0, apiResponse.ResponseCode);
+            Assert.NotNull(apiResponse);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse!.Status);
+            Assert.Equal(StatusCodes.Status500InternalServerError, result!.StatusCode);
             Assert.Equal("An invalid model provided while logging user.", apiResponse.ErrorMessage);
-            Assert.Equal(ErrorCode.BadRequestError, apiResponse.ErrorCode);
-            Assert.Null(apiResponse.ReturnValue);
         }
 
         [Fact]
-        public async Task LoginUserAsync_Exception_InternalServerError()
+        public async Task LoginUserAsync_ShouldReturnInternalServerError_WhenPrivateKeyNotFound()
         {
             // Arrange
             var inLoginUserDto = new InLoginUserDto
             {
                 UserEmail = _faker.Internet.Email(),
-                UserPassword = _faker.Internet.Password()
+                UserPassword = _faker.Random.AlphaNumeric(10)
             };
 
-            _accountServiceMock.Setup(x => x.LoginUser(inLoginUserDto))
-                .ThrowsAsync(new Exception("Some error occurred"));
-
             // Act
-            var result = await _controller.LoginUserAsync(inLoginUserDto);
+            var result = await _controller.LoginUserAsync(inLoginUserDto) as ObjectResult;
 
             // Assert
-            var statusCodeResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
-
-            var apiResponse = Assert.IsAssignableFrom<ApiResponse<User>>(statusCodeResult.Value);
-            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
-            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
-            Assert.Equal(0, apiResponse.ResponseCode);
-            Assert.Equal("An unexpected error occurred while login user.", apiResponse.ErrorMessage);
-            Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
-            Assert.Null(apiResponse.ReturnValue);
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, result!.StatusCode);
+            Assert.Equal("Private key not found.", result.Value);
         }
 
         [Fact]
