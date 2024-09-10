@@ -247,6 +247,22 @@ namespace service.Controllers
         {
             try
             {
+                // Retrieve the private key from distributed cache
+                var cacheKey = "PrivateKey";
+                var privateKey = await _cache.GetStringAsync(cacheKey);
+
+                if (string.IsNullOrEmpty(privateKey))
+                {
+                    _logger.LogError("Private key not found.");
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Private key not found.");
+                }
+
+                // Decrypt the password using the private key
+                var decryptedPassword = DecryptPassword(inAddUserDto.Password!, privateKey);
+
+                // Replace the encrypted password with the decrypted one
+                inAddUserDto.Password = decryptedPassword;
+
                 var (statusCode, userId) = await _accountService.AddNewUser(inAddUserDto);
 
                 if (userId > 0 && statusCode == 1)
