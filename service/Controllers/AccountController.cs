@@ -410,7 +410,7 @@ namespace service.Controllers
                         txn: ConstantData.Txn()
                     );
 
-                    return BadRequest(apiResponse);
+                    return Ok(apiResponse);
                 }
             }
             catch (Exception ex)
