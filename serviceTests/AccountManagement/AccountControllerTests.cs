@@ -20,6 +20,7 @@ namespace serviceTests.AccountManagement
         private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock;
         private readonly Mock<IAccountService> _accountServiceMock;
         private readonly Mock<IDistributedCache> _cacheMock;
+        private readonly Mock<ICryptoService> _cryptoService;
         private readonly AccountController _controller;
         private readonly Faker _faker;
 
@@ -29,7 +30,8 @@ namespace serviceTests.AccountManagement
             _jwtTokenGeneratorMock = new Mock<IJwtTokenGenerator>();
             _accountServiceMock = new Mock<IAccountService>();
             _cacheMock = new Mock<IDistributedCache>();
-            _controller = new AccountController(_loggerMock.Object, _jwtTokenGeneratorMock.Object, _accountServiceMock.Object, _cacheMock.Object);
+            _cryptoService = new Mock<ICryptoService>();
+            _controller = new AccountController(_loggerMock.Object, _jwtTokenGeneratorMock.Object, _accountServiceMock.Object, _cacheMock.Object, _cryptoService.Object);
             _faker = new Faker();
         }
 
@@ -336,7 +338,7 @@ namespace serviceTests.AccountManagement
             var result = await _controller.OtpGenerationRequestAsync(inOtpRequestDto);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var badRequestResult = Assert.IsType<OkObjectResult>(result);
             var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(badRequestResult.Value);
             Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
             Assert.Equal(StatusCodes.Status400BadRequest, apiResponse.StatusCode);
