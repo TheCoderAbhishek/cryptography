@@ -19,12 +19,13 @@ namespace service.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class AccountController(ILogger<AccountController> logger, IJwtTokenGenerator jwtTokenGenerator, IAccountService accountService, IDistributedCache cache) : ControllerBase
+    public class AccountController(ILogger<AccountController> logger, IJwtTokenGenerator jwtTokenGenerator, IAccountService accountService, IDistributedCache cache, ICryptoService cryptoService) : ControllerBase
     {
         private readonly ILogger<AccountController> _logger = logger;
         private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
         private readonly IAccountService _accountService = accountService;
         private readonly IDistributedCache _cache = cache;
+        private readonly ICryptoService _cryptoService = cryptoService;
 
         #region Private Helper Methods for Account Controller
         /// <summary>
@@ -44,29 +45,6 @@ namespace service.Controllers
             }
 
             return claims;
-        }
-
-        /// <summary>
-        /// Decrypts an encrypted password using a provided RSA private key.
-        /// </summary>
-        /// <param name="encryptedPassword">The password in its encrypted, Base64-encoded form.</param>
-        /// <param name="privateKey">The XML representation of the RSA private key used for decryption.</param>
-        /// <returns>The decrypted password as a plain text string.</returns>
-        private static string DecryptPassword(string encryptedPassword, string privateKey)
-        {
-            using var rsa = RSA.Create();
-
-            // Ensure the private key is in PEM format and import it
-            rsa.ImportFromPem(privateKey.ToCharArray());
-
-            // Convert the base64-encoded encrypted password to a byte array
-            var encryptedBytes = Convert.FromBase64String(encryptedPassword);
-
-            // Decrypt the bytes using the private key with PKCS#1 v1.5 padding
-            var decryptedBytes = rsa.Decrypt(encryptedBytes, RSAEncryptionPadding.Pkcs1);
-
-            // Convert the decrypted bytes back to a string
-            return Encoding.UTF8.GetString(decryptedBytes);
         }
         #endregion
 
@@ -150,7 +128,7 @@ namespace service.Controllers
                     }
 
                     // Decrypt the password using the private key
-                    var decryptedPassword = DecryptPassword(inLoginUserDto.UserPassword!, privateKey);
+                    var decryptedPassword = _cryptoService.DecryptPassword(inLoginUserDto.UserPassword!, privateKey);
 
                     // Replace the encrypted password with the decrypted one
                     inLoginUserDto.UserPassword = decryptedPassword;
@@ -258,7 +236,7 @@ namespace service.Controllers
                 }
 
                 // Decrypt the password using the private key
-                var decryptedPassword = DecryptPassword(inAddUserDto.Password!, privateKey);
+                var decryptedPassword = _cryptoService.DecryptPassword(inAddUserDto.Password!, privateKey);
 
                 // Replace the encrypted password with the decrypted one
                 inAddUserDto.Password = decryptedPassword;
@@ -410,7 +388,7 @@ namespace service.Controllers
                         txn: ConstantData.Txn()
                     );
 
-                    return BadRequest(apiResponse);
+                    return Ok(apiResponse);
                 }
             }
             catch (Exception ex)
