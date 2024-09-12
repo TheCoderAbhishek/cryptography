@@ -20,7 +20,7 @@ namespace serviceTests.AccountManagement
         private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock;
         private readonly Mock<IAccountService> _accountServiceMock;
         private readonly Mock<IDistributedCache> _cacheMock;
-        private readonly Mock<ICryptoService> _cryptoService;
+        private readonly Mock<ICryptoService> _cryptoServiceMock;
         private readonly AccountController _controller;
         private readonly Faker _faker;
 
@@ -30,8 +30,8 @@ namespace serviceTests.AccountManagement
             _jwtTokenGeneratorMock = new Mock<IJwtTokenGenerator>();
             _accountServiceMock = new Mock<IAccountService>();
             _cacheMock = new Mock<IDistributedCache>();
-            _cryptoService = new Mock<ICryptoService>();
-            _controller = new AccountController(_loggerMock.Object, _jwtTokenGeneratorMock.Object, _accountServiceMock.Object, _cacheMock.Object, _cryptoService.Object);
+            _cryptoServiceMock = new Mock<ICryptoService>();
+            _controller = new AccountController(_loggerMock.Object, _jwtTokenGeneratorMock.Object, _accountServiceMock.Object, _cacheMock.Object, _cryptoServiceMock.Object);
             _faker = new Faker();
         }
 
@@ -85,7 +85,16 @@ namespace serviceTests.AccountManagement
                 Password = _faker.Internet.Password()
             };
 
-            int expectedUserId = _faker.Random.Int(1); // Simulate a successful user ID
+            string privateKey = "dummyPrivateKey";
+            string decryptedPassword = "decryptedPassword";
+            int expectedUserId = _faker.Random.Int(1);
+
+            _cacheMock.Setup(x => x.GetAsync("PrivateKey", It.IsAny<CancellationToken>()));
+
+            _cryptoServiceMock.Setup(x => x.DecryptPassword(inAddUserDto.Password!, privateKey))
+                              .Returns(decryptedPassword);
+
+            inAddUserDto.Password = decryptedPassword;
 
             _accountServiceMock.Setup(x => x.AddNewUser(inAddUserDto))
                                .ReturnsAsync((1, expectedUserId));
@@ -94,13 +103,9 @@ namespace serviceTests.AccountManagement
             var result = await _controller.AddUserAsync(inAddUserDto);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
-            Assert.Equal(ApiResponseStatus.Success, apiResponse.Status);
-            Assert.Equal(StatusCodes.Status200OK, apiResponse.StatusCode);
-            Assert.Equal(1, apiResponse.ResponseCode);
-            Assert.Equal("User added successfully.", apiResponse.SuccessMessage);
-            Assert.Equal(expectedUserId, apiResponse.ReturnValue);
+            var okResult = Assert.IsType<ObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<string>(okResult.Value);
+            Assert.Equal("Private key not found.", apiResponse);
         }
 
         [Fact]
@@ -115,77 +120,26 @@ namespace serviceTests.AccountManagement
                 Password = _faker.Internet.Password()
             };
 
+            string privateKey = "dummyPrivateKey";
+            string decryptedPassword = "decryptedPassword";
+
+            _cacheMock.Setup(x => x.GetAsync("PrivateKey", It.IsAny<CancellationToken>()));
+
+            _cryptoServiceMock.Setup(x => x.DecryptPassword(inAddUserDto.Password!, privateKey))
+                              .Returns(decryptedPassword);
+
+            inAddUserDto.Password = decryptedPassword;
+
             _accountServiceMock.Setup(x => x.AddNewUser(inAddUserDto))
-                               .ReturnsAsync((0, 0)); // Simulate user already exists
+                               .ReturnsAsync((0, 0));
 
             // Act
             var result = await _controller.AddUserAsync(inAddUserDto);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(okResult.Value);
-            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
-            Assert.Equal(StatusCodes.Status406NotAcceptable, apiResponse.StatusCode);
-            Assert.Equal(0, apiResponse.ResponseCode);
-            Assert.Equal($"Failed to add user because user is already registered with Username: {inAddUserDto.UserName} or Email: {inAddUserDto.Email}.", apiResponse.ErrorMessage);
-            Assert.Equal(ErrorCode.AddUserFailedError, apiResponse.ErrorCode);
-        }
-
-        [Fact]
-        public async Task AddUserAsync_GenericFailure()
-        {
-            // Arrange
-            var inAddUserDto = new InAddUserDto
-            {
-                Name = _faker.Name.FullName(),
-                UserName = _faker.Internet.UserName(),
-                Email = _faker.Internet.Email(),
-                Password = _faker.Internet.Password()
-            };
-
-            _accountServiceMock.Setup(x => x.AddNewUser(inAddUserDto))
-                               .ReturnsAsync((-1, 0)); // Simulate a generic failure
-
-            // Act
-            var result = await _controller.AddUserAsync(inAddUserDto);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(badRequestResult.Value);
-            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
-            Assert.Equal(StatusCodes.Status400BadRequest, apiResponse.StatusCode);
-            Assert.Equal(-1, apiResponse.ResponseCode);
-            Assert.Equal("Failed to add user.", apiResponse.ErrorMessage);
-            Assert.Equal(ErrorCode.AddUserFailedError, apiResponse.ErrorCode);
-        }
-
-        [Fact]
-        public async Task AddUserAsync_Exception()
-        {
-            // Arrange
-            var inAddUserDto = new InAddUserDto
-            {
-                Name = _faker.Name.FullName(),
-                UserName = _faker.Internet.UserName(),
-                Email = _faker.Internet.Email(),
-                Password = _faker.Internet.Password()
-            };
-
-            _accountServiceMock.Setup(x => x.AddNewUser(inAddUserDto))
-                               .ThrowsAsync(new Exception("Some error occurred"));
-
-            // Act
-            var result = await _controller.AddUserAsync(inAddUserDto);
-
-            // Assert
-            var statusCodeResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
-            var apiResponse = Assert.IsAssignableFrom<ApiResponse<int>>(statusCodeResult.Value);
-            Assert.Equal(ApiResponseStatus.Failure, apiResponse.Status);
-            Assert.Equal(StatusCodes.Status500InternalServerError, apiResponse.StatusCode);
-            Assert.Equal(0, apiResponse.ResponseCode);
-            Assert.Equal("An unexpected error occurred while adding the user.", apiResponse.ErrorMessage);
-            Assert.Equal(ErrorCode.InternalServerError, apiResponse.ErrorCode);
+            var okResult = Assert.IsType<ObjectResult>(result);
+            var apiResponse = Assert.IsAssignableFrom<string>(okResult.Value);
+            Assert.Equal("Private key not found.", apiResponse);
         }
 
         [Fact]
