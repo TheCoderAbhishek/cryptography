@@ -155,13 +155,23 @@ namespace service.Controllers
                     {
                         _logger.LogInformation("{Message}", message);
 
+                        // Generate the JWT token
                         var token = _jwtTokenGenerator.GenerateToken(user!.UserId!.ToString(), user!.Email!, user!.UserName!);
+
+                        // Set HttpOnly cookie
+                        var cookieOptions = new CookieOptions
+                        {
+                            HttpOnly = true,
+                            Secure = true,
+                            SameSite = SameSiteMode.Strict
+                        };
+                        HttpContext.Response.Cookies.Append("AuthToken", token, cookieOptions);
 
                         var claims = ExtractClaimsFromToken(token);
 
                         var responseDto = new LoginResponseDto
                         {
-                            Token = token,
+                            Token = token,  // Return the token in response if needed
                             User = user,
                             Claims = claims
                         };
