@@ -96,3 +96,29 @@ SELECT * FROM [cryptography].[dbo].[User];
 -- Delete Record from table
 DELETE FROM [cryptography].[dbo].[User] WHERE Id=2;
 
+-- Query to create a [tblUsers] table
+CREATE TABLE [cryptography].[dbo].[tblUsers] (
+    Id                INT IDENTITY(1,1) PRIMARY KEY,
+    UserId            NVARCHAR(40) NOT NULL,
+    Name              NVARCHAR(255) NOT NULL,
+    UserName          NVARCHAR(32) NOT NULL,
+    Email             NVARCHAR(255) NOT NULL,
+    Password          NVARCHAR(512) NOT NULL,
+    IsAdmin           BIT NOT NULL,
+    IsActive          BIT NOT NULL,
+    IsLocked          BIT NOT NULL,
+    IsDeleted         BIT NOT NULL,
+    LoginAttempts     INT NOT NULL,
+    DeletedStatus     INT NOT NULL,
+    CreatedOn         DATETIME NOT NULL DEFAULT GETDATE(),
+    UpdatedOn         DATETIME NULL,
+    DeletedOn         DATETIME NULL,
+    AutoDeletedOn     DATETIME NULL,
+    LastLoginDateTime DATETIME NULL,
+    LockedUntil       DATETIME NULL,
+    RoleId            INT NOT NULL,
+    Salt              NVARCHAR(100) NOT NULL
+);
+
+-- View all data from `[tblUsers]` table
+SELECT * FROM [cryptography].[dbo].[tblUsers];
