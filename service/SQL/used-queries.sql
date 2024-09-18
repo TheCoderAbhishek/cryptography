@@ -130,3 +130,6 @@ VALUES
 
 -- View all data from `[tblUsers]` table
 SELECT * FROM [cryptography].[dbo].[tblUsers];
+
+-- Truncate and reset identity `[tblUsers]`
+TRUNCATE TABLE [cryptography].[dbo].[tblUsers];
