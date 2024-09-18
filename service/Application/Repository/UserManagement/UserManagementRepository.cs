@@ -1,4 +1,6 @@
-﻿using service.Core.Entities.AccountManagement;
+﻿using Microsoft.Data.SqlClient;
+using service.Core.Entities.AccountManagement;
+using service.Core.Entities.Utility;
 using service.Core.Enums;
 using service.Core.Interfaces.UserManagement;
 using service.Core.Interfaces.Utility;
@@ -36,6 +38,58 @@ namespace service.Application.Repository.UserManagement
                 _logger.LogError(ex, "An unexpected error occurred while fetching users. {Message}", ex.Message);
                 throw new CustomException("Error fetching users from the account repository.", ex,
                                    ErrorCode.GetUsersAsyncException, ConstantData.Txn());
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<int> CreateNewUserAsync(User user)
+        {
+            string query = UserManagementQueries._createNewUser;
+
+            try
+            {
+                var parameters = new
+                {
+                    user.UserId,
+                    user.Name,
+                    user.UserName,
+                    user.Email,
+                    user.Password,
+                    user.IsAdmin,
+                    user.IsActive,
+                    user.IsLocked,
+                    user.IsDeleted,
+                    user.LoginAttempts,
+                    user.DeletedStatus,
+                    user.CreatedOn,
+                    user.UpdatedOn,
+                    user.DeletedOn,
+                    user.AutoDeletedOn,
+                    user.LastLoginDateTime,
+                    user.LockedUntil,
+                    user.RoleId,
+                    user.Salt
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddDataReturnLatestId(query,
+                    "New user added successfully.",
+                    "An error occurred while adding the new user. Please try again.",
+                    "A user with the same username or email already exists.",
+                    ErrorCode.CreateNewUserAsyncError,
+                    ConstantData.Txn(), parameters);
+
+                return baseResponse.Status;
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "SQL error occurred while inserting user with UserId {UserId}. {Message}", user.UserId, sqlEx.Message);
+                throw new CustomException("SQL error while adding user.", sqlEx, ErrorCode.CreateNewUserAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while inserting user in table. {Message}", ex.Message);
+                throw new CustomException("Error inserting user from the account repository.", ex,
+                                   ErrorCode.CreateNewUserAsyncException, ConstantData.Txn());
             }
         }
     }

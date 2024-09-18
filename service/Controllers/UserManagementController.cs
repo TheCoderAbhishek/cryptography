@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using service.Core.Dto.UserManagement;
 using service.Core.Entities.AccountManagement;
 using service.Core.Enums;
 using service.Core.Interfaces.UserManagement;
@@ -52,6 +53,14 @@ namespace service.Controllers
             }
 
             return StatusCode(response.StatusCode, response);
+        }
+
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPost]
+        [Route("CreateNewUserAsync")]
+        public async Task<IActionResult> CreateNewUserAsync(InCreateUser inCreateUser)
+        {
+            return Ok();
         }
     }
 }

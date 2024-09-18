@@ -12,5 +12,12 @@ namespace service.Core.Interfaces.UserManagement
         /// </summary>
         /// <returns>A task representing the asynchronous operation, containing a list of users.</returns>
         Task<List<User>> GetUsersAsync();
+
+        /// <summary>
+        /// Creates a new user asynchronously.
+        /// </summary>
+        /// <param name="user">The user object to create.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is the ID of the newly created user.</returns>
+        Task<int> CreateNewUserAsync(User user);
     }
 }

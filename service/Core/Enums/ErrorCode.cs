@@ -243,6 +243,21 @@
         /// </summary>
         public const string UserManagementNoUsersError = "ERR-2000-004";
 
+        /// <summary>
+        /// Error code indicating exception occurred while inserting new user in table.
+        /// </summary>
+        public const string CreateNewUserAsyncException = "ERR-2000-005";
+
+        /// <summary>
+        /// Error code indicating error occurred while inserting new user details.
+        /// </summary>
+        public const string CreateNewUserAsyncError = "ERR-2000-006";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while inserting new user in table.
+        /// </summary>
+        public const string CreateNewUserAsyncSqlException = "ERR-2000-007";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred in User Management.
