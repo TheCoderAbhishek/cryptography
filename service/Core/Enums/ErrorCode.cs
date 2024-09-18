@@ -220,5 +220,60 @@
         public const string UnknownError = "ERR-1000-999";
 
         #endregion
+
+        #region Error Codes for User Management from `ERR-2000-001` to `ERR-1000-999`
+
+        /// <summary>
+        /// Error code indicating a error occurred while getting list of users.
+        /// </summary>
+        public const string GetUsersAsyncError = "ERR-2000-001";
+
+        /// <summary>
+        /// Exception code for errors encountered during the GetUsersAsync operation.
+        /// </summary>
+        public const string GetUsersAsyncException = "ERR-2000-002";
+
+        /// <summary>
+        /// Error code for general errors during user retrieval.
+        /// </summary>
+        public const string GetUsersError = "ERR-2000-003";
+
+        /// <summary>
+        /// Error code indicating that no users were found during a user management operation.
+        /// </summary>
+        public const string UserManagementNoUsersError = "ERR-2000-004";
+
+
+        /// <summary>
+        /// Error code indicating a validation error occurred in User Management.
+        /// </summary>
+        public const string UserManagementModelValidationError = "ERR-2000-900";
+
+        /// <summary>
+        /// Error code indicating a internal server error in User Management.
+        /// </summary>
+        public const string UserManagementInternalServerError = "ERR-2000-901";
+
+        /// <summary>
+        /// Error code indicating a model is in invalid state in User Management.
+        /// </summary>
+        public const string UserManagementInvalidModelRequestError = "ERR-2000-902";
+
+        /// <summary>
+        /// Error code indicating a bad request in User Management.
+        /// </summary>
+        public const string UserManagementBadRequestError = "ERR-2000-903";
+
+        /// <summary>
+        /// Error code indicating key pair generation in User Management.
+        /// </summary>
+        public const string UserManagementGenerateRsaKeyPairError = "ERR-2000-904";
+
+        /// <summary>
+        /// Error indicating unknown error in User Management.
+        /// </summary>
+        public const string UserManagementUnknownError = "ERR-2000-999";
+
+        #endregion
     }
 }

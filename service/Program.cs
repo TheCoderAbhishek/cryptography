@@ -4,11 +4,13 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using service.Application.Repository.AccountManagement;
+using service.Application.Repository.UserManagement;
 using service.Application.Repository.Utility;
 using service.Application.Service.AccountManagement;
 using service.Application.Service.Utility;
 using service.Application.Utility;
 using service.Core.Interfaces.AccountManagement;
+using service.Core.Interfaces.UserManagement;
 using service.Core.Interfaces.Utility;
 using service.Infrastructure.Dependency;
 using System.Data;
@@ -45,6 +47,8 @@ builder.Services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
 builder.Services.AddScoped<IEmailOtpService, EmailOtpService>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IUserManagementRepository, UserManagementRepository>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 #endregion Dependency Injection Container
 
 #region Swagger

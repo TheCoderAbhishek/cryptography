@@ -120,5 +120,13 @@ CREATE TABLE [cryptography].[dbo].[tblUsers] (
     Salt              NVARCHAR(100) NOT NULL
 );
 
+-- Insert dummy data in [tblUsers] table
+INSERT INTO [cryptography].[dbo].[tblUsers]
+(UserId, Name, UserName, Email, Password, IsAdmin, IsActive, IsLocked, IsDeleted, LoginAttempts, DeletedStatus, CreatedOn, RoleId, Salt)
+VALUES
+('user1', 'John Doe', 'johndoe', 'johndoe@example.com', 'hashed_password_1', 0, 1, 0, 0, 0, 0, GETDATE(), 1, 'salt1'),
+('user2', 'Jane Smith', 'janesmith', 'janesmith@example.com', 'hashed_password_2', 0, 1, 0, 0, 0, 0, GETDATE(), 2, 'salt2'),
+('user3', 'Admin User', 'admin', 'admin@example.com', 'hashed_password_3', 1, 1, 0, 0, 0, 0, GETDATE(), 3, 'salt3');
+
 -- View all data from `[tblUsers]` table
 SELECT * FROM [cryptography].[dbo].[tblUsers];
