@@ -133,3 +133,6 @@ SELECT * FROM [cryptography].[dbo].[tblUsers];
 
 -- Truncate and reset identity `[tblUsers]`
 TRUNCATE TABLE [cryptography].[dbo].[tblUsers];
+
+-- Update role of registered user.
+UPDATE [cryptography].[dbo].[tblUsers] SET RoleId=0 WHERE Id=1;

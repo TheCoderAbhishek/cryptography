@@ -12,7 +12,6 @@ namespace service.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class UserManagementController(ILogger<UserManagementController> logger, IUserManagementService userManagementService) : ControllerBase
     {
         private readonly ILogger<UserManagementController> _logger = logger;
@@ -55,12 +54,83 @@ namespace service.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        /// <summary>
+        /// Creates a new user.
+        /// </summary>
+        /// <param name="inCreateUser">The user information to create.</param>
+        /// <returns>The ID of the newly created user.</returns>
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
         [HttpPost]
         [Route("CreateNewUserAsync")]
         public async Task<IActionResult> CreateNewUserAsync(InCreateUser inCreateUser)
         {
-            return Ok();
+            try
+            {
+                _logger.LogInformation("Starting CreateNewUserAsync for user: {UserEmail}", inCreateUser.Email);
+
+                var (statusCode, message) = await _userManagementService.CreateNewUser(inCreateUser);
+
+                if (statusCode == 1)
+                {
+                    _logger.LogInformation("User created successfully: {UserEmail}", inCreateUser.Email);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        statusCode,
+                        successMessage: "User created successfully.",
+                        txn: ConstantData.Txn(),
+                        returnValue: message
+                    );
+
+                    return Ok(response);
+                }
+                else if (statusCode == 0)
+                {
+                    _logger.LogError("Failed to create user: {UserEmail}", inCreateUser.Email);
+
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status406NotAcceptable,
+                        statusCode,
+                        errorMessage: "Failed to create user.",
+                        errorCode: ErrorCode.CreateNewUserAsyncError,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return Ok(response);
+                }
+                else
+                {
+                    _logger.LogError("Exception occurred while creating user: {UserEmail}", inCreateUser.Email);
+
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        statusCode,
+                        errorMessage: "Exception occurred while creating user.",
+                        errorCode: ErrorCode.CreateNewUserAsyncException,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return BadRequest(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unhandled exception occurred while creating user: {UserEmail}", inCreateUser.Email);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    responseCode: -1,
+                    errorMessage: "An unexpected error occurred.",
+                    errorCode: ErrorCode.CreateNewUserAsyncUnhandledException,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
         }
     }
 }

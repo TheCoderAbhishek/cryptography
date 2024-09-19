@@ -258,6 +258,11 @@
         /// </summary>
         public const string CreateNewUserAsyncSqlException = "ERR-2000-007";
 
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while creating new user.
+        /// </summary>
+        public const string CreateNewUserAsyncUnhandledException = "ERR-2000-008";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred in User Management.
