@@ -42,6 +42,7 @@ builder.Services.AddScoped<IDbConnection>(sp =>
 
 #region Dependency Injection Container
 builder.Services.AddScoped<ICommonDbHander, CommonDbHander>();
+builder.Services.AddHttpClient<IWebRequestHandler, WebRequestHandler>();
 builder.Services.AddScoped<ICryptoService, CryptoService>();
 builder.Services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
 builder.Services.AddScoped<IEmailOtpService, EmailOtpService>();
