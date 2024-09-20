@@ -136,3 +136,17 @@ TRUNCATE TABLE [cryptography].[dbo].[tblUsers];
 
 -- Update role of registered user.
 UPDATE [cryptography].[dbo].[tblUsers] SET RoleId=0 WHERE Id=1;
+
+-- Select User Details based upon Email or Username
+SELECT 
+    CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM [cryptography].[dbo].[tblUsers] 
+            WHERE Email = 'ap5747811@gmail.com'
+        ) THEN 1
+        WHEN EXISTS (
+            SELECT 1 FROM [cryptography].[dbo].[tblUsers] 
+            WHERE Username = 'ap574781'
+        ) THEN 2
+        ELSE 0
+    END AS DuplicateStatus;

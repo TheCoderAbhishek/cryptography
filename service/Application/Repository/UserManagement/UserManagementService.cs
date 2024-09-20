@@ -94,6 +94,20 @@ namespace service.Application.Repository.UserManagement
         {
             try
             {
+                int duplicateRecord = await _userManagementRepository.GetUserDetailsMailUsernameAsync(inCreateUser.Email!, inCreateUser.UserName!);
+
+                if (duplicateRecord == 1)
+                {
+                    _logger.LogWarning("Duplicate email found: {Email}", inCreateUser.Email);
+                    return (2, "Email address already exists.");
+                }
+
+                if (duplicateRecord == 2)
+                {
+                    _logger.LogWarning("Duplicate username found: {UserName}", inCreateUser.UserName);
+                    return (3, "Username already exists.");
+                }
+
                 var salt = GetGenerateSalt();
                 var hashedPassword = HashPassword(inCreateUser.Password!, salt);
 

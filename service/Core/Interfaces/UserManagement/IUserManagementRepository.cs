@@ -19,5 +19,13 @@ namespace service.Core.Interfaces.UserManagement
         /// <param name="user">The user object to create.</param>
         /// <returns>A task that represents the asynchronous operation. The task result is the ID of the newly created user.</returns>
         Task<int> CreateNewUserAsync(User user);
+
+        /// <summary>
+        /// Retrieves user details based on the provided email and username.
+        /// </summary>
+        /// <param name="email">The email address of the user.</param>
+        /// <param name="username">The username of the user.</param>
+        /// <returns>A task that represents the asynchronous operation. The result of the task is an integer indicating the success or failure of the operation.</returns>
+        Task<int> GetUserDetailsMailUsernameAsync(string email, string username);
     }
 }

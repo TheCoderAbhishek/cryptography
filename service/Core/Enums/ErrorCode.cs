@@ -263,6 +263,26 @@
         /// </summary>
         public const string CreateNewUserAsyncUnhandledException = "ERR-2000-008";
 
+        /// <summary>
+        /// Error code indicating error occurred while getting user details based upon email or username.
+        /// </summary>
+        public const string GetUserDetailsMailUsernameAsyncError = "ERR-2000-009";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while getting user details based upon email or username.
+        /// </summary>
+        public const string GetUserDetailsMailUsernameAsyncSqlException = "ERR-2000-010";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while getting user details based upon email or username.
+        /// </summary>
+        public const string GetUserDetailsMailUsernameAsyncException = "ERR-2000-011";
+
+        /// <summary>
+        /// Error code indicating duplicate record found in table.
+        /// </summary>
+        public const string GetUserDetailsMailUsernameAsyncDuplicateError = "ERR-2000-012";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred in User Management.

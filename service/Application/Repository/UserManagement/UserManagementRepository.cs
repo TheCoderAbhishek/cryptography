@@ -92,5 +92,38 @@ namespace service.Application.Repository.UserManagement
                                    ErrorCode.CreateNewUserAsyncException, ConstantData.Txn());
             }
         }
+
+        /// <inheritdoc />
+        public async Task<int> GetUserDetailsMailUsernameAsync(string email, string username)
+        {
+            string query = UserManagementQueries._getUserDetailsMailUsernameAsync;
+
+            try
+            {
+                var parameters = new
+                {
+                    @Email = email,
+                    @Username = username
+                };
+
+                int res = await _commonDbHander.GetSingleData<int>(query, "User details retrieved successfully.",
+                    "Error retrieving user details.",
+                    ErrorCode.GetUserDetailsMailUsernameAsyncError,
+                    ConstantData.Txn(), parameters);
+
+                return res;
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Database error occurred while retrieving user details for email '{Email}' and username '{Username}'.", email, username);
+                throw new CustomException("Database error while retrieving user details.", sqlEx, ErrorCode.GetUserDetailsMailUsernameAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while retrieving user details for email '{Email}' and username '{Username}'.", email, username);
+                throw new CustomException("Error retrieving user details from the account repository.", ex,
+                    ErrorCode.GetUserDetailsMailUsernameAsyncException, ConstantData.Txn());
+            }
+        }
     }
 }

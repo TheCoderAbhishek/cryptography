@@ -1,1 +1,4 @@
-INSERT INTO [cryptography].[dbo].[tblUsers] (UserId, Name, UserName, Email, Password, IsAdmin, IsActive, IsLocked, IsDeleted, LoginAttempts, DeletedStatus, CreatedOn, RoleId, Salt) VALUES (@UserId, @Name, @UserName, @Email, @Password, @IsAdmin, @IsActive, @IsLocked, @IsDeleted, @LoginAttempts, @DeletedStatus, @CreatedOn, @RoleId, @Salt)
+SELECT CASE WHEN EXISTS (SELECT 1 FROM [cryptography].[dbo].[tblUsers] WHERE Email = @Email) THEN 1
+        WHEN EXISTS (SELECT 1 FROM [cryptography].[dbo].[tblUsers] WHERE Username = @Username) THEN 2
+        ELSE 0
+		END AS DuplicateStatus;

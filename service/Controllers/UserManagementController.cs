@@ -85,6 +85,21 @@ namespace service.Controllers
 
                     return Ok(response);
                 }
+                else if (statusCode > 1)
+                {
+                    _logger.LogError("Failed to create user: {UserEmail} because {Message}", inCreateUser.Email, message);
+
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status302Found,
+                        statusCode,
+                        errorMessage: message,
+                        errorCode: ErrorCode.GetUserDetailsMailUsernameAsyncDuplicateError,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return Ok(response);
+                }
                 else if (statusCode == 0)
                 {
                     _logger.LogError("Failed to create user: {UserEmail}", inCreateUser.Email);
