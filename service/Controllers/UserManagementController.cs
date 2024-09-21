@@ -12,6 +12,7 @@ namespace service.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UserManagementController(ILogger<UserManagementController> logger, IUserManagementService userManagementService) : ControllerBase
     {
         private readonly ILogger<UserManagementController> _logger = logger;
