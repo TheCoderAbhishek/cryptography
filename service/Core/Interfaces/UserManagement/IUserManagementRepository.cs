@@ -14,6 +14,12 @@ namespace service.Core.Interfaces.UserManagement
         Task<List<User>> GetUsersAsync();
 
         /// <summary>
+        /// Gets a list of soft deleted users asynchronously.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation, containing a list of users.</returns>
+        Task<List<User>> GetDeletedUsersAsync();
+
+        /// <summary>
         /// Creates a new user asynchronously.
         /// </summary>
         /// <param name="user">The user object to create.</param>

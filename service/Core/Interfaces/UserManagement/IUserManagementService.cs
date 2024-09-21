@@ -15,6 +15,12 @@ namespace service.Core.Interfaces.UserManagement
         Task<(int, List<User>)> GetAllUsers();
 
         /// <summary>
+        /// Retrieves a list of soft deleted users and the total count of users.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a tuple with the total count of soft deleted users as the first element and a list of soft deleted users as the second element.</returns>
+        Task<(int, List<User>)> GetSoftDeletedUsers();
+
+        /// <summary>
         /// Creates a new user in the system.
         /// </summary>
         /// <param name="inCreateUser">An object containing the user's information for creation.</param>

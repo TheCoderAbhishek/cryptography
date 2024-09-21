@@ -8,7 +8,12 @@
         /// <summary>
         /// SQL query string to retrieve all users from the User table.
         /// </summary>
-        public const string GetAllUsers = @"SELECT * FROM [cryptography].[dbo].[tblUsers]";
+        public const string _getAllUsers = @"SELECT * FROM [cryptography].[dbo].[tblUsers] WHERE IsDeleted=0";
+
+        /// <summary>
+        /// SQL query string to retrieve deleted users from the tblUsers table.
+        /// </summary>
+        public const string _getSoftDeletedUsers = @"SELECT * FROM [cryptography].[dbo].[tblUsers] WHERE IsDeleted=1";
 
         /// <summary>
         /// SQL query string to insert new user details in table.

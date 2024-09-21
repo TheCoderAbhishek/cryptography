@@ -155,3 +155,7 @@ SELECT
 UPDATE [cryptography].[dbo].[tblUsers]
 SET IsLocked = CASE WHEN IsLocked = 1 THEN 0 ELSE 1 END
 WHERE id = 1;
+
+-- Update deleted status
+UPDATE [cryptography].[dbo].[tblUsers]
+SET IsDeleted = 1 WHERE id=1;

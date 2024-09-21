@@ -86,6 +86,33 @@ namespace service.Application.Repository.UserManagement
         }
 
         /// <summary>
+        /// Retrieves a list of soft-deleted users from the database.
+        /// </summary>
+        /// <returns>A list of soft-deleted User objects, or null if an error occurred.</returns>
+        public async Task<(int, List<User>)> GetSoftDeletedUsers()
+        {
+            try
+            {
+                List<User> user = await _userManagementRepository.GetDeletedUsersAsync();
+                if (user == null || user.Count == 0)
+                {
+                    _logger.LogError("No soft deleted users found.");
+                    return (0, user)!;
+                }
+                else
+                {
+                    _logger.LogInformation("List of soft deleted users retrieved successfully.");
+                    return (1, user);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving soft deleted users: {Message}", ex.Message);
+                return (-1, null)!;
+            }
+        }
+
+        /// <summary>
         /// Creates a new user in the system.
         /// </summary>
         /// <param name="inCreateUser">An object containing the details of the new user.</param>

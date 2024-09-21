@@ -56,6 +56,43 @@ namespace service.Controllers
         }
 
         /// <summary>
+        /// Getting All Data from of soft deleted Users Table.
+        /// </summary>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(ApiResponse<List<User>>), 200)]
+        [HttpGet]
+        [Route("GetDeletedUsersAsync")]
+        public async Task<IActionResult> GetDeletedUsersAsync()
+        {
+            _logger.LogInformation("Fetching all soft deleted users.");
+
+            var (status, users) = await _userManagementService.GetSoftDeletedUsers();
+
+            ApiResponse<List<User>> response;
+            switch (status)
+            {
+                case 1:
+                    _logger.LogInformation("Soft deleted users retrieved successfully.");
+                    response = new ApiResponse<List<User>>(ApiResponseStatus.Success, StatusCodes.Status200OK, 1, successMessage: "Soft deleted users retrieved successfully.", txn: ConstantData.Txn(), returnValue: users);
+                    break;
+                case 0:
+                    _logger.LogWarning("No soft deleted users found.");
+                    response = new ApiResponse<List<User>>(ApiResponseStatus.Failure, StatusCodes.Status200OK, 0, errorMessage: "No soft deleted users found", errorCode: ErrorCode.UserManagementNoUsersError, txn: ConstantData.Txn());
+                    break;
+                case -1:
+                    _logger.LogError("An error occurred while retrieving soft deleted users.");
+                    response = new ApiResponse<List<User>>(ApiResponseStatus.Failure, StatusCodes.Status500InternalServerError, -1, errorMessage: "An error occurred while retrieving soft deleted users.", errorCode: ErrorCode.GetDeletedUsersError, txn: ConstantData.Txn());
+                    break;
+                default:
+                    _logger.LogError("Unknown status.");
+                    response = new ApiResponse<List<User>>(ApiResponseStatus.Failure, StatusCodes.Status500InternalServerError, -1, errorMessage: "Unknown status", errorCode: ErrorCode.UserManagementUnknownError, txn: ConstantData.Txn());
+                    break;
+            }
+
+            return StatusCode(response.StatusCode, response);
+        }
+
+        /// <summary>
         /// Creates a new user.
         /// </summary>
         /// <param name="inCreateUser">The user information to create.</param>

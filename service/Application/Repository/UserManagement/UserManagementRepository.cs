@@ -20,7 +20,7 @@ namespace service.Application.Repository.UserManagement
         /// <inheritdoc />
         public async Task<List<User>> GetUsersAsync()
         {
-            string query = UserManagementQueries.GetAllUsers;
+            string query = UserManagementQueries._getAllUsers;
 
             try
             {
@@ -33,11 +33,45 @@ namespace service.Application.Repository.UserManagement
                 }
                 return users!;
             }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Database error occurred while fetching all users.");
+                throw new CustomException("Database error while fetching all users", sqlEx, ErrorCode.GetUsersAsyncException, ConstantData.Txn());
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An unexpected error occurred while fetching users. {Message}", ex.Message);
                 throw new CustomException("Error fetching users from the account repository.", ex,
                                    ErrorCode.GetUsersAsyncException, ConstantData.Txn());
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<List<User>> GetDeletedUsersAsync()
+        {
+            string query = UserManagementQueries._getSoftDeletedUsers;
+
+            try
+            {
+                List<User> users = await _commonDbHander.GetData<User>(query, "Fetched soft deleted users successfully",
+                                                            "Error fetching soft deleted users", ErrorCode.GetDeletedUsersAsyncError, ConstantData.Txn());
+
+                if (users == null || users.Count == 0)
+                {
+                    _logger.LogWarning("No soft deleted users found in the database.");
+                }
+                return users!;
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Database error occurred while fetching soft deleted users.");
+                throw new CustomException("Database error while fetching soft deleted users", sqlEx, ErrorCode.LockUnlockUserAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while fetching soft deleted users. {Message}", ex.Message);
+                throw new CustomException("Error fetching soft deleted users from the account repository.", ex,
+                                   ErrorCode.GetDeletedUsersAsyncException, ConstantData.Txn());
             }
         }
 

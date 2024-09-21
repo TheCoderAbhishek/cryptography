@@ -303,6 +303,26 @@
         /// </summary>
         public const string LockUnlockUserAsyncUnhandledException = "ERR-2000-016";
 
+        /// <summary>
+        /// Error code indicating error occurred while getting deleted users
+        /// </summary>
+        public const string GetDeletedUsersAsyncError = "ERR-2000-017";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while fetching soft deleted users.
+        /// </summary>
+        public const string GetDeletedUsersAsyncSqlException = "ERR-2000-018";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while fetching soft deleted users.
+        /// </summary>
+        public const string GetDeletedUsersAsyncException = "ERR-2000-019";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string GetDeletedUsersError = "ERR-2000-020";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred in User Management.
