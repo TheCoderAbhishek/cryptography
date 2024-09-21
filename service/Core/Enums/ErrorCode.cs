@@ -283,6 +283,26 @@
         /// </summary>
         public const string GetUserDetailsMailUsernameAsyncDuplicateError = "ERR-2000-012";
 
+        /// <summary>
+        /// Error code indicating error occurred while locking or unlocking user.
+        /// </summary>
+        public const string LockUnlockUserAsyncError = "ERR-2000-013";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while locking or unlocking user.
+        /// </summary>
+        public const string LockUnlockUserAsyncSqlException = "ERR-2000-014";
+
+        /// <summary>
+        /// Error code indicating exception occurred while locking or unlocking user.
+        /// </summary>
+        public const string LockUnlockUserAsyncException = "ERR-2000-015";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while locking/unlocking user.
+        /// </summary>
+        public const string LockUnlockUserAsyncUnhandledException = "ERR-2000-016";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred in User Management.

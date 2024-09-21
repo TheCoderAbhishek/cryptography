@@ -148,5 +148,37 @@ namespace service.Application.Repository.UserManagement
                 return (-1, $"{ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Locks or unlocks a user based on their ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to lock or unlock.</param>
+        /// <returns>
+        /// A tuple containing the status code and a message indicating the success or failure of the operation.
+        /// The status code is 1 if the user was successfully locked/unlocked, 0 if the operation failed, or -1 if an unexpected error occurred.
+        /// </returns>
+        public async Task<(int, string)> LockUnlockUser(int id)
+        {
+            try
+            {
+                int result = await _userManagementRepository.LockUnlockUserAsync(id);
+
+                if (result > 0)
+                {
+                    _logger.LogInformation("User with ID {Id} was successfully locked/unlocked.", id);
+                    return (result, "User successfully locked/unlocked.");
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to lock/unlock user with ID {Id}.", id);
+                    return (0, $"Failed to lock/unlock user.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving users: {Message}", ex.Message);
+                return (-1, $"{ex.Message}");
+            }
+        }
     }
 }

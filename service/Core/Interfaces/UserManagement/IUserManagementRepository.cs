@@ -27,5 +27,17 @@ namespace service.Core.Interfaces.UserManagement
         /// <param name="username">The username of the user.</param>
         /// <returns>A task that represents the asynchronous operation. The result of the task is an integer indicating the success or failure of the operation.</returns>
         Task<int> GetUserDetailsMailUsernameAsync(string email, string username);
+
+        /// <summary>
+        /// Locks or unlocks a user based on their ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to lock or unlock.</param>
+        /// <returns>
+        /// The status code indicating the success or failure of the operation.
+        /// 1: User successfully locked/unlocked.
+        /// 0: User not found.
+        /// -1: An unexpected error occurred.
+        /// </returns>
+        Task<int> LockUnlockUserAsync(int id);
     }
 }

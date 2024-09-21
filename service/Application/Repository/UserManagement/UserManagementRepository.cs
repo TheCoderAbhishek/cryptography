@@ -125,5 +125,38 @@ namespace service.Application.Repository.UserManagement
                     ErrorCode.GetUserDetailsMailUsernameAsyncException, ConstantData.Txn());
             }
         }
+
+        /// <inheritdoc />
+        public async Task<int> LockUnlockUserAsync(int id)
+        {
+            string query = UserManagementQueries._lockUnlockUser;
+            try
+            {
+                var parameters = new
+                {
+                    @Id = id,
+                    @UpdatedOn = DateTime.Now,
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, "User lock/unlock successful.",
+                    "Error while locking/unlocking user.",
+                    "Duplicate record found.",
+                    ErrorCode.LockUnlockUserAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                return baseResponse.Status;
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Database error occurred while locking/unlocking user.");
+                throw new CustomException("Database error while locking/unlocking user.", sqlEx, ErrorCode.LockUnlockUserAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while locking/unlocking user.");
+                throw new CustomException("Error locking/unlocking user from the account repository.", ex, ErrorCode.LockUnlockUserAsyncException, ConstantData.Txn());
+            }
+        }
     }
 }

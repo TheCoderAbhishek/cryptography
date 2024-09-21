@@ -150,3 +150,8 @@ SELECT
         ) THEN 2
         ELSE 0
     END AS DuplicateStatus;
+
+-- Update Lock or Unlock status
+UPDATE [cryptography].[dbo].[tblUsers]
+SET IsLocked = CASE WHEN IsLocked = 1 THEN 0 ELSE 1 END
+WHERE id = 1;

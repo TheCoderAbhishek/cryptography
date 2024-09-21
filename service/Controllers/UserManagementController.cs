@@ -148,5 +148,80 @@ namespace service.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
+
+        /// <summary>
+        /// Locks or unlocks a user based on their ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to lock or unlock.</param>
+        /// <returns>
+        /// An API response indicating the success or failure of the operation.
+        /// If successful, the response contains the status code 200 and the updated status of the user.
+        /// If the user is not found, the response contains the status code 404 and an error message.
+        /// If an exception occurs, the response contains the status code 400 or 500 and an error message.
+        /// </returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPut]
+        [Route("LockUnlockUserAsync/{id}")]
+        public async Task<IActionResult> LockUnlockUserAsync(int id)
+        {
+            try
+            {
+                var (statusCode, message) = await _userManagementService.LockUnlockUser(id);
+
+                if (statusCode == 1)
+                {
+                    _logger.LogInformation("User {Id} successfully locked/unlocked.", id);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        statusCode,
+                        successMessage: message,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else if (statusCode == 0)
+                {
+                    _logger.LogError("User {Id} not found.", id);
+                    return NotFound(new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status404NotFound,
+                        statusCode,
+                        errorMessage: message,
+                        errorCode: ErrorCode.LockUnlockUserAsyncError,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else
+                {
+                    _logger.LogError("Exception occurred while locking/unlocking user: {Id}", id);
+
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        statusCode,
+                        errorMessage: "Exception occurred while locking/unlocking user.",
+                        errorCode: ErrorCode.LockUnlockUserAsyncException,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return BadRequest(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unhandled exception occurred while locking/unlocking user: {Id}", id);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    responseCode: -1,
+                    errorMessage: "An unexpected error occurred.",
+                    errorCode: ErrorCode.LockUnlockUserAsyncUnhandledException,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
     }
 }
