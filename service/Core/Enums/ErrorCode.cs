@@ -319,9 +319,44 @@
         public const string GetDeletedUsersAsyncException = "ERR-2000-019";
 
         /// <summary>
-        /// 
+        /// Error code indicating error occurred while getting deleted users list.
         /// </summary>
         public const string GetDeletedUsersError = "ERR-2000-020";
+
+        /// <summary>
+        /// Error code indicating error occurred while soft deleting user.
+        /// </summary>
+        public const string SoftDeleteUserAsyncError = "ERR-2000-021";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while soft deleting user.
+        /// </summary>
+        public const string SoftDeleteUserAsyncSqlException = "ERR-2000-022";
+
+        /// <summary>
+        /// Error code indicating exception occurred while soft deleting user.
+        /// </summary>
+        public const string SoftDeleteUserAsyncException = "ERR-2000-023";
+
+        /// <summary>
+        /// Error code indicating error occurred while getting user details.
+        /// </summary>
+        public const string GetUserDetailsByIdAsyncError = "ERR-2000-024";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while getting user details.
+        /// </summary>
+        public const string GetUserDetailsByIdAsyncSqlException = "ERR-2000-025";
+
+        /// <summary>
+        /// Error code indicating unhandled eexception occurred while getting user details.
+        /// </summary>
+        public const string GetUserDetailsByIdAsyncException = "ERR-2000-026";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while soft deleting user during API call.
+        /// </summary>
+        public const string SoftDeleteUserAsyncUnhandledException = "ERR-2000-027";
 
 
         /// <summary>

@@ -218,8 +218,8 @@ namespace service.Controllers
                 }
                 else if (statusCode == 0)
                 {
-                    _logger.LogError("User {Id} not found.", id);
-                    return NotFound(new ApiResponse<int>(
+                    _logger.LogError("{Message}", message);
+                    return Ok(new ApiResponse<int>(
                         ApiResponseStatus.Failure,
                         StatusCodes.Status404NotFound,
                         statusCode,
@@ -254,6 +254,88 @@ namespace service.Controllers
                     responseCode: -1,
                     errorMessage: "An unexpected error occurred.",
                     errorCode: ErrorCode.LockUnlockUserAsyncUnhandledException,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
+        /// Soft deletes a user with the specified ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to soft delete.</param>
+        /// <returns>An API response indicating the result of the operation.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPatch]
+        [Route("SoftDeleteUserAsync/{id}")]
+        public async Task<IActionResult> SoftDeleteUserAsync(int id)
+        {
+            try
+            {
+                var (statusCode, message) = await _userManagementService.SoftDeleteUser(id);
+
+                if (statusCode == 1)
+                {
+                    _logger.LogInformation("User {Id} successfully soft deleted.", id);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        statusCode,
+                        successMessage: message,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else if (statusCode == 0)
+                {
+                    _logger.LogError("{Message}", message);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status404NotFound,
+                        statusCode,
+                        errorMessage: message,
+                        errorCode: ErrorCode.SoftDeleteUserAsyncError,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else if (statusCode > 1)
+                {
+                    _logger.LogError("{Message}", message);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status302Found,
+                        statusCode,
+                        errorMessage: message,
+                        errorCode: ErrorCode.SoftDeleteUserAsyncError,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else
+                {
+                    _logger.LogError("Exception occurred while soft deleting user: {Id}", id);
+
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        statusCode,
+                        errorMessage: "Exception occurred while soft deleting user.",
+                        errorCode: ErrorCode.SoftDeleteUserAsyncException,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return BadRequest(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unhandled exception occurred while soft deletion of user: {Id}", id);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    responseCode: -1,
+                    errorMessage: "An unexpected error occurred.",
+                    errorCode: ErrorCode.SoftDeleteUserAsyncUnhandledException,
                     txn: ConstantData.Txn()
                 );
 

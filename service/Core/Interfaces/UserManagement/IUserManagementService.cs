@@ -36,5 +36,12 @@ namespace service.Core.Interfaces.UserManagement
         /// The status code is 1 if the user was successfully locked/unlocked, 0 if the user was not found, or -1 if an unexpected error occurred.
         /// </returns>
         Task<(int, string)> LockUnlockUser(int id);
+
+        /// <summary>
+        /// Soft delete an user based on their ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to soft delete.</param>
+        /// <returns>A tuple to return status and message.</returns>
+        Task<(int, string)> SoftDeleteUser(int id);
     }
 }

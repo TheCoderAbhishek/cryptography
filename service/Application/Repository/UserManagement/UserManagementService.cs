@@ -207,5 +207,55 @@ namespace service.Application.Repository.UserManagement
                 return (-1, $"{ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Soft deletes a user with the specified ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to soft delete.</param>
+        /// <returns>A tuple containing the result of the operation and a message indicating success or failure.
+        /// The first element of the tuple is an integer representing the number of affected rows.
+        /// The second element is a string containing the operation result message.
+        /// </returns>
+        public async Task<(int, string)> SoftDeleteUser(int id)
+        {
+            try
+            {
+                User user = await _userManagementRepository.GetUserDetailsByIdAsync(id);
+
+                if (user != null)
+                {
+                    if (user.IsDeleted == false)
+                    {
+                        int result = await _userManagementRepository.SoftDeleteUserAsync(id);
+
+                        if (result > 0)
+                        {
+                            _logger.LogInformation("User with ID {Id} was successfully soft deleted.", id);
+                            return (result, "User successfully soft deleted.");
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to soft delete user with ID {Id}.", id);
+                            return (0, $"Failed to soft delete user.");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to soft delete user with ID {Id} because user already in soft deleted state.", id);
+                        return (2, $"Failed to soft delete user because user already in soft deleted state.");
+                    } 
+                }
+                else
+                {
+                    _logger.LogError("Invalid {Id} id provided for user.", id);
+                    return (3, "Failed to retrieve user details from table.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while soft deleting user: {Message}", ex.Message);
+                return (-1, $"{ex.Message}");
+            }
+        }
     }
 }

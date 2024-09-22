@@ -76,6 +76,36 @@ namespace service.Application.Repository.UserManagement
         }
 
         /// <inheritdoc />
+        public async Task<User> GetUserDetailsByIdAsync(int id)
+        {
+            string query = UserManagementQueries._getUserDetailsUponId;
+
+            try
+            {
+                var parameters = new
+                {
+                    @Id = id
+                };
+
+                return await _commonDbHander.GetSingleData<User>(query, "User details fetched successfully.",
+                    "Error occurred while fetching user details.",
+                    ErrorCode.GetUserDetailsByIdAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Database error occurred while getting user details.");
+                throw new CustomException("Database error while getting user details.", sqlEx, ErrorCode.GetUserDetailsByIdAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while getting user details.");
+                throw new CustomException("Error getting user details from the account repository.", ex, ErrorCode.GetUserDetailsByIdAsyncException, ConstantData.Txn());
+            }
+        }
+
+        /// <inheritdoc />
         public async Task<int> CreateNewUserAsync(User user)
         {
             string query = UserManagementQueries._createNewUser;
@@ -190,6 +220,44 @@ namespace service.Application.Repository.UserManagement
             {
                 _logger.LogError(ex, "An unexpected error occurred while locking/unlocking user.");
                 throw new CustomException("Error locking/unlocking user from the account repository.", ex, ErrorCode.LockUnlockUserAsyncException, ConstantData.Txn());
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<int> SoftDeleteUserAsync(int id)
+        {
+            string query = UserManagementQueries._softDeleteUser;
+
+            try
+            {
+                var parameters = new
+                {
+                    @Id = id,
+                    @IsDeleted = 1,
+                    @DeletedStatus = 1,
+                    @UpdatedOn = DateTime.Now,
+                    @DeletedOn = DateTime.Now,
+                    @AutoDeletedOn = DateTime.Now.AddDays(30),
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, "User soft deletion successful.",
+                    "Error while soft detion user.",
+                    "",
+                    ErrorCode.SoftDeleteUserAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                return baseResponse.Status;
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Database error occurred while soft deleting user.");
+                throw new CustomException("Database error while soft deleting user.", sqlEx, ErrorCode.SoftDeleteUserAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while soft deleting user.");
+                throw new CustomException("Error soft deleting user from the account repository.", ex, ErrorCode.SoftDeleteUserAsyncException, ConstantData.Txn());
             }
         }
     }

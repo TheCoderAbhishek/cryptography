@@ -158,4 +158,4 @@ WHERE id = 1;
 
 -- Update deleted status
 UPDATE [cryptography].[dbo].[tblUsers]
-SET IsDeleted = 1 WHERE id=1;
+SET IsDeleted = 0 WHERE id=1;

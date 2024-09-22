@@ -20,6 +20,13 @@ namespace service.Core.Interfaces.UserManagement
         Task<List<User>> GetDeletedUsersAsync();
 
         /// <summary>
+        /// Gets user details associated with specific ID.
+        /// </summary>
+        /// <param name="id">The ID of the user.</param>
+        /// <returns>A task returns the User entity with user details.</returns>
+        Task<User> GetUserDetailsByIdAsync(int id);
+
+        /// <summary>
         /// Creates a new user asynchronously.
         /// </summary>
         /// <param name="user">The user object to create.</param>
@@ -45,5 +52,12 @@ namespace service.Core.Interfaces.UserManagement
         /// -1: An unexpected error occurred.
         /// </returns>
         Task<int> LockUnlockUserAsync(int id);
+
+        /// <summary>
+        /// Soft deletes a user with the specified ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to soft delete.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        Task<int> SoftDeleteUserAsync(int id);
     }
 }
