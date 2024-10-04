@@ -358,6 +358,26 @@
         /// </summary>
         public const string SoftDeleteUserAsyncUnhandledException = "ERR-2000-027";
 
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while updating user details.
+        /// </summary>
+        public const string UpdateUserDetailsAsyncUnhandledException = "ERR-2000-028";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while updating user details.
+        /// </summary>
+        public const string UpdateUserDetailsAsyncSqlException = "ERR-2000-029";
+
+        /// <summary>
+        /// Error code indicating exception occurred while updating user details.
+        /// </summary>
+        public const string UpdateUserDetailsAsyncException = "ERR-2000-030";
+
+        /// <summary>
+        /// Error code indicating updating user details.
+        /// </summary>
+        public const string UpdateUserDetailsAsyncError = "ERR-2000-031";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred in User Management.

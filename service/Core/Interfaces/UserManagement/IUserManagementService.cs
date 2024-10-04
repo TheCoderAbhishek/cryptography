@@ -43,5 +43,12 @@ namespace service.Core.Interfaces.UserManagement
         /// <param name="id">The ID of the user to soft delete.</param>
         /// <returns>A tuple to return status and message.</returns>
         Task<(int, string)> SoftDeleteUser(int id);
+
+        /// <summary>
+        /// Updates the user details based on the provided input.
+        /// </summary>
+        /// <param name="inUpdateUserDetails">The input object containing the updated user details.</param>
+        /// <returns>A tuple containing the updated user ID and a success message.</returns>
+        Task<(int, string)> UpdateUserDetails(InUpdateUserDetails inUpdateUserDetails);
     }
 }

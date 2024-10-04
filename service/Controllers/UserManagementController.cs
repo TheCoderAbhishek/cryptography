@@ -342,5 +342,87 @@ namespace service.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
+
+        /// <summary>
+        /// Updates user details asynchronously.
+        /// </summary>
+        /// <param name="inUpdateUserDetails">The input object containing the updated user details.</param>
+        /// <returns>An HTTP response indicating the outcome of the update operation.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPut]
+        [Route("UpdateUserDetailsAsync")]
+        public async Task<IActionResult> UpdateUserDetailsAsync(InUpdateUserDetails inUpdateUserDetails)
+        {
+            try
+            {
+                var (statusCode, message) = await _userManagementService.UpdateUserDetails(inUpdateUserDetails);
+
+                if (statusCode == 1)
+                {
+                    _logger.LogInformation("User details update successfully.");
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        statusCode,
+                        successMessage: message,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else if (statusCode == 0)
+                {
+                    _logger.LogError("{Message}", message);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status404NotFound,
+                        statusCode,
+                        errorMessage: message,
+                        errorCode: ErrorCode.UpdateUserDetailsAsyncError,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else if (statusCode > 1)
+                {
+                    _logger.LogError("{Message}", message);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status302Found,
+                        statusCode,
+                        errorMessage: message,
+                        errorCode: ErrorCode.UpdateUserDetailsAsyncError,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else
+                {
+                    _logger.LogError("Exception occurred while updating user details.");
+
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        statusCode,
+                        errorMessage: "Exception occurred while updating user details.",
+                        errorCode: ErrorCode.UpdateUserDetailsAsyncException,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return BadRequest(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unhandled exception occurred while updating user details.");
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    responseCode: -1,
+                    errorMessage: "An unexpected error occurred.",
+                    errorCode: ErrorCode.UpdateUserDetailsAsyncUnhandledException,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
     }
 }

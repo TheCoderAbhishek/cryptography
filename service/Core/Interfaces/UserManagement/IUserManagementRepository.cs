@@ -1,4 +1,5 @@
-﻿using service.Core.Entities.AccountManagement;
+﻿using service.Core.Dto.UserManagement;
+using service.Core.Entities.AccountManagement;
 
 namespace service.Core.Interfaces.UserManagement
 {
@@ -59,5 +60,12 @@ namespace service.Core.Interfaces.UserManagement
         /// <param name="id">The ID of the user to soft delete.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         Task<int> SoftDeleteUserAsync(int id);
+
+        /// <summary>
+        /// Asynchronously updates user details based on the provided input.
+        /// </summary>
+        /// <param name="inUpdateUserDetails">The input object containing the updated user details.</param>
+        /// <returns>A task representing the asynchronous operation. The task result indicates the number of rows affected by the update.</returns>
+        Task<int> UpdateUserDetailsAsync(InUpdateUserDetails inUpdateUserDetails);
     }
 }

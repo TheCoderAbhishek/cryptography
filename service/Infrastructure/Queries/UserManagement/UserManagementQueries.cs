@@ -48,5 +48,12 @@
         public const string _softDeleteUser = @"UPDATE [cryptography].[dbo].[tblUsers]" +
                                                 " SET IsDeleted = @IsDeleted, DeletedStatus = @DeletedStatus, UpdatedOn = @UpdatedOn, DeletedOn = @DeletedOn, AutoDeletedOn = @AutoDeletedOn" +
                                                 " WHERE Id = @Id;";
+
+        /// <summary>
+        /// SQL query string for updating user details in the database.
+        /// </summary>
+        public const string _updateUserDetails = @"UPDATE [cryptography].[dbo].[tblUsers]" +
+                                                " SET Name = @Name, UserName = @UserName, Email = @Email, UpdatedOn = @UpdatedOn" +
+                                                " WHERE Id = @Id;";
     }
 }

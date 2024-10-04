@@ -257,5 +257,48 @@ namespace service.Application.Repository.UserManagement
                 return (-1, $"{ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Updates user details in the database asynchronously.
+        /// </summary>
+        /// <param name="inUpdateUserDetails">The input object containing the updated user details.</param>
+        /// <returns>A tuple containing the following information:
+        ///     - `int`: The number of rows affected by the update (0 if no update happened).
+        ///     - `string`: A message indicating the outcome of the update operation.
+        /// </returns>
+        /// <exception cref="Exception">An exception may be thrown if an error occurs during the update process.</exception>
+        public async Task<(int, string)> UpdateUserDetails(InUpdateUserDetails inUpdateUserDetails)
+        {
+            try
+            {
+                User user = await _userManagementRepository.GetUserDetailsByIdAsync(inUpdateUserDetails.Id);
+
+                if (user != null)
+                {
+                    int status = await _userManagementRepository.UpdateUserDetailsAsync(inUpdateUserDetails);
+
+                    if (status > 0)
+                    {
+                        _logger.LogInformation("User details updated successfully.");
+                        return (1, "User details updated successfully.");
+                    }
+                    else
+                    {
+                        _logger.LogError("An error occurred updating user details.");
+                        return (0, "Error occurred while updating user details.");
+                    }
+                }
+                else
+                {
+                    _logger.LogError("An error occurred getting user details.");
+                    return (2, "User not found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating user details: {Message}", ex.Message);
+                return (-1, $"{ex.Message}");
+            }
+        }
     }
 }

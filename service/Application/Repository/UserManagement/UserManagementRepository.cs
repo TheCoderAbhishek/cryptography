@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using service.Core.Dto.UserManagement;
 using service.Core.Entities.AccountManagement;
 using service.Core.Entities.Utility;
 using service.Core.Enums;
@@ -258,6 +259,43 @@ namespace service.Application.Repository.UserManagement
             {
                 _logger.LogError(ex, "An unexpected error occurred while soft deleting user.");
                 throw new CustomException("Error soft deleting user from the account repository.", ex, ErrorCode.SoftDeleteUserAsyncException, ConstantData.Txn());
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<int> UpdateUserDetailsAsync(InUpdateUserDetails inUpdateUserDetails)
+        {
+            string query = UserManagementQueries._updateUserDetails;
+
+            try
+            {
+                var parameters = new
+                {
+                    @Id = inUpdateUserDetails.Id,
+                    @Name = inUpdateUserDetails.Name,
+                    @UserName = inUpdateUserDetails.UserName,
+                    @Email = inUpdateUserDetails.Email,
+                    @UpdatedOn = DateTime.Now,
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, "User details updated successfully.",
+                    "Error while updating user details.",
+                    "",
+                    ErrorCode.UpdateUserDetailsAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                return baseResponse.Status;
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Database error occurred while updating user details.");
+                throw new CustomException("Database error while updating user details.", sqlEx, ErrorCode.UpdateUserDetailsAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while updating user details.");
+                throw new CustomException("Error updating user details from the account repository.", ex, ErrorCode.UpdateUserDetailsAsyncException, ConstantData.Txn());
             }
         }
     }
