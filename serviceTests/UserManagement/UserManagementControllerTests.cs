@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Bogus;
+using Microsoft.Extensions.Logging;
 using Moq;
 using service.Application.Repository.UserManagement;
 using service.Core.Dto.UserManagement;
@@ -12,12 +13,23 @@ namespace serviceTests.UserManagement
         private readonly Mock<IUserManagementRepository> _userManagementRepositoryMock;
         private readonly Mock<ILogger<UserManagementService>> _loggerMock;
         private readonly UserManagementService _userManagementService;
+        private readonly Faker<InUpdateUserDetails> _inUpdateUserDetailsFaker;
+        private readonly Faker<User> _userFaker;
 
         public UserManagementControllerTests()
         {
             _userManagementRepositoryMock = new Mock<IUserManagementRepository>();
             _loggerMock = new Mock<ILogger<UserManagementService>>();
             _userManagementService = new UserManagementService(_loggerMock.Object, _userManagementRepositoryMock.Object);
+            _inUpdateUserDetailsFaker = new Faker<InUpdateUserDetails>()
+                .RuleFor(u => u.Id, f => f.Random.Int(1, 100))
+                .RuleFor(u => u.Email, f => f.Internet.Email())
+                .RuleFor(u => u.UserName, f => f.Internet.UserName());
+
+            _userFaker = new Faker<User>()
+                .RuleFor(u => u.Id, f => f.Random.Int(1, 100))
+                .RuleFor(u => u.Email, f => f.Internet.Email())
+                .RuleFor(u => u.UserName, f => f.Internet.UserName());
         }
 
         #region GetAllUsers Tests
@@ -250,6 +262,237 @@ namespace serviceTests.UserManagement
             Assert.Equal(-1, result.Item1);
             Assert.Contains("Error", result.Item2);
         }
+        #endregion
+
+        #region UpdateUserDetails Tests
+
+        [Fact]
+        public async Task UpdateUserDetails_ShouldUpdateSuccessfully()
+        {
+            // Arrange
+            var inUpdateUserDetails = _inUpdateUserDetailsFaker.Generate();
+            var user = _userFaker.Generate();
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(inUpdateUserDetails.Id))
+                .ReturnsAsync(user);
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsMailUsernameExceptCurrentIdAsync(inUpdateUserDetails.Id, inUpdateUserDetails.Email!, inUpdateUserDetails.UserName!))
+                .ReturnsAsync(0); // No duplicate
+            _userManagementRepositoryMock
+                .Setup(repo => repo.UpdateUserDetailsAsync(inUpdateUserDetails))
+                .ReturnsAsync(1); // Successful update
+
+            // Act
+            var result = await _userManagementService.UpdateUserDetails(inUpdateUserDetails);
+
+            // Assert
+            Assert.Equal(1, result.Item1);
+            Assert.Equal("User details updated successfully.", result.Item2);
+        }
+
+        [Fact]
+        public async Task UpdateUserDetails_ShouldReturnEmailAlreadyExists()
+        {
+            // Arrange
+            var inUpdateUserDetails = _inUpdateUserDetailsFaker.Generate();
+            var user = _userFaker.Generate();
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(inUpdateUserDetails.Id))
+                .ReturnsAsync(user);
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsMailUsernameExceptCurrentIdAsync(inUpdateUserDetails.Id, inUpdateUserDetails.Email!, inUpdateUserDetails.UserName!))
+                .ReturnsAsync(1); // Duplicate email
+
+            // Act
+            var result = await _userManagementService.UpdateUserDetails(inUpdateUserDetails);
+
+            // Assert
+            Assert.Equal(2, result.Item1);
+            Assert.Equal("Email address already exists.", result.Item2);
+        }
+
+        [Fact]
+        public async Task UpdateUserDetails_ShouldReturnUsernameAlreadyExists()
+        {
+            // Arrange
+            var inUpdateUserDetails = _inUpdateUserDetailsFaker.Generate();
+            var user = _userFaker.Generate();
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(inUpdateUserDetails.Id))
+                .ReturnsAsync(user);
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsMailUsernameExceptCurrentIdAsync(inUpdateUserDetails.Id, inUpdateUserDetails.Email!, inUpdateUserDetails.UserName!))
+                .ReturnsAsync(2); // Duplicate username
+
+            // Act
+            var result = await _userManagementService.UpdateUserDetails(inUpdateUserDetails);
+
+            // Assert
+            Assert.Equal(3, result.Item1);
+            Assert.Equal("Username already exists.", result.Item2);
+        }
+
+        [Fact]
+        public async Task UpdateUserDetails_ShouldReturnUsernameAndEmailAlreadyExists()
+        {
+            // Arrange
+            var inUpdateUserDetails = _inUpdateUserDetailsFaker.Generate();
+            var user = _userFaker.Generate();
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(inUpdateUserDetails.Id))
+                .ReturnsAsync(user);
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsMailUsernameExceptCurrentIdAsync(inUpdateUserDetails.Id, inUpdateUserDetails.Email!, inUpdateUserDetails.UserName!))
+                .ReturnsAsync(3); // Duplicate email and username
+
+            // Act
+            var result = await _userManagementService.UpdateUserDetails(inUpdateUserDetails);
+
+            // Assert
+            Assert.Equal(4, result.Item1);
+            Assert.Equal("Username and email already exists.", result.Item2);
+        }
+
+        [Fact]
+        public async Task UpdateUserDetails_ShouldReturnErrorWhenUserNotFound()
+        {
+            // Arrange
+            var inUpdateUserDetails = _inUpdateUserDetailsFaker.Generate();
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(inUpdateUserDetails.Id))
+                .ReturnsAsync((User)null!);
+
+            // Act
+            var result = await _userManagementService.UpdateUserDetails(inUpdateUserDetails);
+
+            // Assert
+            Assert.Equal(4, result.Item1);
+            Assert.Equal("User not found.", result.Item2);
+        }
+
+        [Fact]
+        public async Task UpdateUserDetails_ShouldReturnErrorOnUpdateFailure()
+        {
+            // Arrange
+            var inUpdateUserDetails = _inUpdateUserDetailsFaker.Generate();
+            var user = _userFaker.Generate();
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(inUpdateUserDetails.Id))
+                .ReturnsAsync(user);
+            _userManagementRepositoryMock
+                .Setup(repo => repo.UpdateUserDetailsAsync(inUpdateUserDetails))
+                .ReturnsAsync(0); // Update failed
+
+            // Act
+            var result = await _userManagementService.UpdateUserDetails(inUpdateUserDetails);
+
+            // Assert
+            Assert.Equal(0, result.Item1);
+            Assert.Equal("Error occurred while updating user details.", result.Item2);
+        }
+
+        [Fact]
+        public async Task UpdateUserDetails_ShouldHandleException()
+        {
+            // Arrange
+            var inUpdateUserDetails = _inUpdateUserDetailsFaker.Generate();
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(inUpdateUserDetails.Id))
+                .ThrowsAsync(new Exception("Error"));
+
+            // Act
+            var result = await _userManagementService.UpdateUserDetails(inUpdateUserDetails);
+
+            // Assert
+            Assert.Equal(-1, result.Item1);
+            Assert.Contains("Error", result.Item2);
+        }
+
+        #endregion
+
+        #region HardDeleteUser Tests
+
+        [Fact]
+        public async Task HardDeleteUser_ShouldDeleteSuccessfully()
+        {
+            // Arrange
+            var user = _userFaker.Generate();
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(user.Id))
+                .ReturnsAsync(user);
+            _userManagementRepositoryMock
+                .Setup(repo => repo.HardDeleteUserAsync(user.Id))
+                .ReturnsAsync(1); // Successful deletion
+
+            // Act
+            var result = await _userManagementService.HardDeleteUser(user.Id);
+
+            // Assert
+            Assert.Equal(1, result.Item1);
+            Assert.Equal("User deleted successfully.", result.Item2);
+        }
+
+        [Fact]
+        public async Task HardDeleteUser_ShouldReturnUserNotFound()
+        {
+            // Arrange
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(It.IsAny<int>()))
+                .ReturnsAsync((User)null!);
+
+            // Act
+            var result = await _userManagementService.HardDeleteUser(1);
+
+            // Assert
+            Assert.Equal(2, result.Item1);
+            Assert.Equal("User not found.", result.Item2);
+        }
+
+        [Fact]
+        public async Task HardDeleteUser_ShouldReturnErrorOnDeleteFailure()
+        {
+            // Arrange
+            var user = _userFaker.Generate();
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(user.Id))
+                .ReturnsAsync(user);
+            _userManagementRepositoryMock
+                .Setup(repo => repo.HardDeleteUserAsync(user.Id))
+                .ReturnsAsync(0); // Deletion failed
+
+            // Act
+            var result = await _userManagementService.HardDeleteUser(user.Id);
+
+            // Assert
+            Assert.Equal(0, result.Item1);
+            Assert.Equal("Error occurred while deleting user.", result.Item2);
+        }
+
+        [Fact]
+        public async Task HardDeleteUser_ShouldHandleException()
+        {
+            // Arrange
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(It.IsAny<int>()))
+                .ThrowsAsync(new Exception("Error"));
+
+            // Act
+            var result = await _userManagementService.HardDeleteUser(1);
+
+            // Assert
+            Assert.Equal(-1, result.Item1);
+            Assert.Contains("Error", result.Item2);
+        }
+
         #endregion
     }
 }
