@@ -332,5 +332,38 @@ namespace service.Application.Repository.UserManagement
                     ErrorCode.GetUserDetailsMailUsernameExceptCurrentIdAsyncException, ConstantData.Txn());
             }
         }
+
+        /// <ingeritdoc />
+        public async Task<int> HardDeleteUserAsync(int id)
+        {
+            string query = UserManagementQueries._hardDeleteUserRecord;
+
+            try
+            {
+                var parameters = new
+                {
+                    @Id = id
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, "User deletion successful.",
+                    "Error while detion user.",
+                    "",
+                    ErrorCode.HardDeleteUserAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                return baseResponse.Status;
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Database error occurred while deleting user.");
+                throw new CustomException("Database error while deleting user.", sqlEx, ErrorCode.HardDeleteUserAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while deleting user.");
+                throw new CustomException("Error deleting user from the account repository.", ex, ErrorCode.HardDeleteUserAsyncException, ConstantData.Txn());
+            }
+        }
     }
 }

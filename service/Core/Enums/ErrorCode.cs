@@ -393,6 +393,21 @@
         /// </summary>
         public const string GetUserDetailsMailUsernameExceptCurrentIdAsyncException = "ERR-2000-034";
 
+        /// <summary>
+        /// This error code indicates that there was an error while attempting to hard delete users asynchronously.
+        /// </summary>
+        public const string HardDeleteUsersAsyncError = "ERR-2000-035";
+
+        /// <summary>
+        /// This error code indicates that a SQL exception occurred while attempting to hard delete users asynchronously.
+        /// </summary>
+        public const string HardDeleteUserAsyncSqlException = "ERR-2000-036";
+
+        /// <summary>
+        /// This error code indicates that an unexpected exception occurred while attempting to hard delete users asynchronously.
+        /// </summary>
+        public const string HardDeleteUserAsyncException = "ERR-2000-037";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred in User Management.

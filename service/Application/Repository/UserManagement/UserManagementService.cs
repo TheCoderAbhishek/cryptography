@@ -320,5 +320,44 @@ namespace service.Application.Repository.UserManagement
                 return (-1, $"{ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Asynchronously hard deletes a user with the specified ID and returns a tuple containing the number of rows affected and an error message if any occurred.
+        /// </summary>
+        /// <param name="id">The ID of the user to delete.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is a tuple containing the number of rows affected by the deletion and an error message if any occurred.</returns>
+        public async Task<(int, string)> HardDeleteUser(int id)
+        {
+            try
+            {
+                User user = await _userManagementRepository.GetUserDetailsByIdAsync(id);
+
+                if (user != null)
+                {
+                    int status = await _userManagementRepository.HardDeleteUserAsync(id);
+
+                    if (status > 0)
+                    {
+                        _logger.LogInformation("User deleted successfully.");
+                        return (1, "User deleted successfully.");
+                    }
+                    else
+                    {
+                        _logger.LogError("An error occurred deleting user.");
+                        return (0, "Error occurred while deleting user.");
+                    }
+                }
+                else
+                {
+                    _logger.LogError("An error occurred getting user details.");
+                    return (2, "User not found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while hard delete user: {Message}", ex.Message);
+                return (-1, $"{ex.Message}");
+            }
+        }
     }
 }

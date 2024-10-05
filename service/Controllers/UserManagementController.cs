@@ -424,5 +424,91 @@ namespace service.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
+
+        /// <summary>
+        /// Hard deletes a user from the system.
+        /// </summary>
+        /// <param name="id">The ID of the user to delete.</param>
+        /// <returns>An API response indicating the success or failure of the operation.</returns>
+        /// <remarks>
+        /// This endpoint is used to permanently remove a user from the system.
+        /// The operation is irreversible and should be used with caution.
+        /// </remarks>
+        [ProducesResponseType(typeof(ApiResponse<int> ), 200)]
+        [HttpDelete]
+        [Route("HardDeleteUserAsync/{id}")]
+        public async Task<IActionResult> HardDeleteUserAsync(int id)
+        {
+            try
+            {
+                var (statusCode, message) = await _userManagementService.HardDeleteUser(id);
+
+                if (statusCode == 1)
+                {
+                    _logger.LogInformation("User {Id} successfully hard deleted.", id);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        statusCode,
+                        successMessage: message,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else if (statusCode == 0)
+                {
+                    _logger.LogError("{Message}", message);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status404NotFound,
+                        statusCode,
+                        errorMessage: message,
+                        errorCode: ErrorCode.HardDeleteUserAsyncError,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else if (statusCode > 1)
+                {
+                    _logger.LogError("{Message}", message);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status302Found,
+                        statusCode,
+                        errorMessage: message,
+                        errorCode: ErrorCode.HardDeleteUserAsyncError,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else
+                {
+                    _logger.LogError("Exception occurred while hard deleting user: {Id}", id);
+
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        statusCode,
+                        errorMessage: "Exception occurred while hard deleting user.",
+                        errorCode: ErrorCode.HardDeleteUserAsyncException,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return BadRequest(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unhandled exception occurred while hard deletion of user: {Id}", id);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    responseCode: -1,
+                    errorMessage: "An unexpected error occurred.",
+                    errorCode: ErrorCode.HardDeleteUserAsyncException,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
     }
 }

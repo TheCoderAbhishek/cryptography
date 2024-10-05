@@ -50,5 +50,12 @@ namespace service.Core.Interfaces.UserManagement
         /// <param name="inUpdateUserDetails">The input object containing the updated user details.</param>
         /// <returns>A tuple containing the updated user ID and a success message.</returns>
         Task<(int, string)> UpdateUserDetails(InUpdateUserDetails inUpdateUserDetails);
+
+        /// <summary>
+        /// Asynchronously hard deletes a user with the specified ID and returns a tuple containing the number of rows affected and an error message if any occurred.
+        /// </summary>
+        /// <param name="id">The ID of the user to delete.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is a tuple containing the number of rows affected by the deletion and an error message if any occurred.</returns>
+        Task<(int, string)> HardDeleteUser(int id);
     }
 }

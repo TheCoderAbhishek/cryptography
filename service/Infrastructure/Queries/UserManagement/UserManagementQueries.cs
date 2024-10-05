@@ -60,9 +60,15 @@
         /// SQL query string for fetch user details based upon email or username except id
         /// </summary>
         public const string _getUserDetailsExceptCurrentId = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM [cryptography].[dbo].[tblUsers] WHERE Email = @Email AND Id <> @UserId AND Username = @Username) THEN 3" +
-                                                                 " WHEN EXISTS (SELECT 1 FROM [cryptography].[dbo].[tblUsers] WHERE Username = @Username AND Id <> @UserId) THEN 2" +
-                                                                 " WHEN EXISTS (SELECT 1 FROM [cryptography].[dbo].[tblUsers] WHERE Email = @Email AND Id <> @UserId) THEN 1" +
-                                                                 " ELSE 0" +
-                                                                 " END AS DuplicateStatus;";
+                                                                " WHEN EXISTS (SELECT 1 FROM [cryptography].[dbo].[tblUsers] WHERE Username = @Username AND Id <> @UserId) THEN 2" +
+                                                                " WHEN EXISTS (SELECT 1 FROM [cryptography].[dbo].[tblUsers] WHERE Email = @Email AND Id <> @UserId) THEN 1" +
+                                                                " ELSE 0" +
+                                                                " END AS DuplicateStatus;";
+
+        /// <summary>
+        /// SQL query string for hard delete user from table.
+        /// </summary>
+        public const string _hardDeleteUserRecord = @"DELETE FROM [cryptography].[dbo].[tblUsers]" +
+                                                        " WHERE Id = @Id;";
     }
 }

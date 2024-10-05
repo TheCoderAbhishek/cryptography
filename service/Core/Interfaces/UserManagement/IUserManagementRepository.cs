@@ -76,5 +76,12 @@ namespace service.Core.Interfaces.UserManagement
         /// <param name="username">The user's username.</param>
         /// <returns>A task representing the operation. The result is the user's ID if found, otherwise 0.</returns>
         Task<int> GetUserDetailsMailUsernameExceptCurrentIdAsync(int id, string email, string username);
+
+        /// <summary>
+        /// Asynchronously hard deletes a user with the specified ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to delete.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is the number of rows affected by the deletion.</returns>
+        Task<int> HardDeleteUserAsync(int id);
     }
 }
