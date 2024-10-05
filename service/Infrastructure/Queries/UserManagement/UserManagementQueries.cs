@@ -55,5 +55,14 @@
         public const string _updateUserDetails = @"UPDATE [cryptography].[dbo].[tblUsers]" +
                                                 " SET Name = @Name, UserName = @UserName, Email = @Email, UpdatedOn = @UpdatedOn" +
                                                 " WHERE Id = @Id;";
+
+        /// <summary>
+        /// SQL query string for fetch user details based upon email or username except id
+        /// </summary>
+        public const string _getUserDetailsExceptCurrentId = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM [cryptography].[dbo].[tblUsers] WHERE Email = @Email AND Id <> @UserId AND Username = @Username) THEN 3" +
+                                                                 " WHEN EXISTS (SELECT 1 FROM [cryptography].[dbo].[tblUsers] WHERE Username = @Username AND Id <> @UserId) THEN 2" +
+                                                                 " WHEN EXISTS (SELECT 1 FROM [cryptography].[dbo].[tblUsers] WHERE Email = @Email AND Id <> @UserId) THEN 1" +
+                                                                 " ELSE 0" +
+                                                                 " END AS DuplicateStatus;";
     }
 }

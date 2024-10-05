@@ -378,6 +378,21 @@
         /// </summary>
         public const string UpdateUserDetailsAsyncError = "ERR-2000-031";
 
+        /// <summary>
+        /// Error code indicating checking duplicate email or username
+        /// </summary>
+        public const string GetUserDetailsMailUsernameExceptCurrentIdAsyncError = "ERR-2000-032";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while checking duplicate email or username
+        /// </summary>
+        public const string GetUserDetailsMailUsernameExceptCurrentIdAsyncSqlException = "ERR-2000-033";
+
+        /// <summary>
+        /// Error code indicating exception occurred while checking duplicate email or username
+        /// </summary>
+        public const string GetUserDetailsMailUsernameExceptCurrentIdAsyncException = "ERR-2000-034";
+
 
         /// <summary>
         /// Error code indicating a validation error occurred in User Management.

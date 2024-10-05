@@ -298,5 +298,39 @@ namespace service.Application.Repository.UserManagement
                 throw new CustomException("Error updating user details from the account repository.", ex, ErrorCode.UpdateUserDetailsAsyncException, ConstantData.Txn());
             }
         }
+
+        /// <inheritdoc />
+        public async Task<int> GetUserDetailsMailUsernameExceptCurrentIdAsync(int id, string email, string username)
+        {
+            string query = UserManagementQueries._getUserDetailsExceptCurrentId;
+
+            try
+            {
+                var parameters = new
+                {
+                    @Email = email,
+                    @Username = username,
+                    @UserId = id
+                };
+
+                int res = await _commonDbHander.GetSingleData<int>(query, "User details retrieved successfully.",
+                    "Error checking duplicate record.",
+                    ErrorCode.GetUserDetailsMailUsernameExceptCurrentIdAsyncError,
+                    ConstantData.Txn(), parameters);
+
+                return res;
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Database error occurred while checking duplicate record for email '{Email}' and username '{Username}'.", email, username);
+                throw new CustomException("Database error while checking duplicate record.", sqlEx, ErrorCode.GetUserDetailsMailUsernameExceptCurrentIdAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while checking duplicate record for email '{Email}' and username '{Username}'.", email, username);
+                throw new CustomException("Error checking duplicate record from the account repository.", ex,
+                    ErrorCode.GetUserDetailsMailUsernameExceptCurrentIdAsyncException, ConstantData.Txn());
+            }
+        }
     }
 }

@@ -243,7 +243,7 @@ namespace service.Application.Repository.UserManagement
                     {
                         _logger.LogWarning("Failed to soft delete user with ID {Id} because user already in soft deleted state.", id);
                         return (2, $"Failed to soft delete user because user already in soft deleted state.");
-                    } 
+                    }
                 }
                 else
                 {
@@ -275,6 +275,26 @@ namespace service.Application.Repository.UserManagement
 
                 if (user != null)
                 {
+                    int duplicateRecord = await _userManagementRepository.GetUserDetailsMailUsernameExceptCurrentIdAsync(inUpdateUserDetails.Id, inUpdateUserDetails.Email!, inUpdateUserDetails.UserName!);
+
+                    if (duplicateRecord == 1)
+                    {
+                        _logger.LogWarning("Duplicate email found: {Email}", inUpdateUserDetails.Email);
+                        return (2, "Email address already exists.");
+                    }
+
+                    if (duplicateRecord == 2)
+                    {
+                        _logger.LogWarning("Duplicate username found: {UserName}", inUpdateUserDetails.UserName);
+                        return (3, "Username already exists.");
+                    }
+
+                    if (duplicateRecord == 3)
+                    {
+                        _logger.LogWarning("Duplicate username and email found: {UserName}", inUpdateUserDetails.UserName);
+                        return (4, "Username and email already exists.");
+                    }
+
                     int status = await _userManagementRepository.UpdateUserDetailsAsync(inUpdateUserDetails);
 
                     if (status > 0)
@@ -291,7 +311,7 @@ namespace service.Application.Repository.UserManagement
                 else
                 {
                     _logger.LogError("An error occurred getting user details.");
-                    return (2, "User not found.");
+                    return (4, "User not found.");
                 }
             }
             catch (Exception ex)

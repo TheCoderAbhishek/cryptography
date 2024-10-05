@@ -67,5 +67,14 @@ namespace service.Core.Interfaces.UserManagement
         /// <param name="inUpdateUserDetails">The input object containing the updated user details.</param>
         /// <returns>A task representing the asynchronous operation. The task result indicates the number of rows affected by the update.</returns>
         Task<int> UpdateUserDetailsAsync(InUpdateUserDetails inUpdateUserDetails);
+
+        /// <summary>
+        /// Retrieves user details (excluding the current user's ID) based on the provided email and username.
+        /// </summary>
+        /// <param name="id">The user's id.</param>
+        /// <param name="email">The user's email address.</param>
+        /// <param name="username">The user's username.</param>
+        /// <returns>A task representing the operation. The result is the user's ID if found, otherwise 0.</returns>
+        Task<int> GetUserDetailsMailUsernameExceptCurrentIdAsync(int id, string email, string username);
     }
 }
