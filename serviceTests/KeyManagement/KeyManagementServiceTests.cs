@@ -20,6 +20,7 @@ namespace serviceTests.KeyManagement
             _service = new KeyManagementService(_loggerMock.Object, _keyManagementRepositoryMock.Object);
         }
 
+        #region GetKeysList Tests
         [Fact]
         public async Task GetKeysList_ReturnsKeysList_WhenKeysExist()
         {
@@ -69,6 +70,7 @@ namespace serviceTests.KeyManagement
             // Assert
             Assert.Equal(-1, status);
             Assert.Empty(keys);
-        }
+        } 
+        #endregion
     }
 }

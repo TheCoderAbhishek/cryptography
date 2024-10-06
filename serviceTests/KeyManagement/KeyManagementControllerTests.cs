@@ -22,6 +22,7 @@ namespace serviceTests.KeyManagement
             _controller = new KeyManagementController(_loggerMock.Object, _keyManagementServiceMock.Object);
         }
 
+        #region GetKeysListAsync Tests
         [Fact]
         public async Task GetKeysListAsync_ReturnsOk_WithKeys()
         {
@@ -78,6 +79,7 @@ namespace serviceTests.KeyManagement
             var response = Assert.IsType<ApiResponse<string>>(serverErrorResult.Value);
             Assert.Equal(-1, response.ResponseCode);
             Assert.Equal("An unexpected error occurred.", response.ErrorMessage);
-        }
+        } 
+        #endregion
     }
 }
