@@ -207,3 +207,6 @@ CREATE TABLE [cryptography].[dbo].[tblSecureKeys] (
 
 SELECT * FROM [cryptography].[dbo].[tblKeys];
 
+-- Truncate and reset identity `[tblKeys]`
+TRUNCATE TABLE [cryptography].[dbo].[tblKeys];
+

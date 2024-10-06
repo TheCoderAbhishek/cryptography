@@ -271,10 +271,10 @@ namespace service.Application.Repository.UserManagement
             {
                 var parameters = new
                 {
-                    @Id = inUpdateUserDetails.Id,
-                    @Name = inUpdateUserDetails.Name,
-                    @UserName = inUpdateUserDetails.UserName,
-                    @Email = inUpdateUserDetails.Email,
+                    inUpdateUserDetails.Id,
+                    inUpdateUserDetails.Name,
+                    inUpdateUserDetails.UserName,
+                    inUpdateUserDetails.Email,
                     @UpdatedOn = DateTime.Now,
                 };
 

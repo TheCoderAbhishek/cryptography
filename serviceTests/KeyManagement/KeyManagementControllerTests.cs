@@ -50,7 +50,7 @@ namespace serviceTests.KeyManagement
         {
             // Arrange
             _keyManagementServiceMock.Setup(s => s.GetKeysList())
-                .ReturnsAsync((0, new List<Keys>()));
+                .ReturnsAsync((0, []));
 
             // Act
             var result = await _controller.GetKeysListAsync();

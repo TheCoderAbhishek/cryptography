@@ -46,7 +46,7 @@ namespace serviceTests.KeyManagement
         {
             // Arrange
             _keyManagementRepositoryMock.Setup(repo => repo.GetKeysListAsync())
-                .ReturnsAsync(new List<Keys>());
+                .ReturnsAsync([]);
 
             // Act
             var (status, keys) = await _service.GetKeysList();
