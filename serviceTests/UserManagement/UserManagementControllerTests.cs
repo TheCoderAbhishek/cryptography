@@ -29,7 +29,8 @@ namespace serviceTests.UserManagement
             _userFaker = new Faker<User>()
                 .RuleFor(u => u.Id, f => f.Random.Int(1, 100))
                 .RuleFor(u => u.Email, f => f.Internet.Email())
-                .RuleFor(u => u.UserName, f => f.Internet.UserName());
+                .RuleFor(u => u.UserName, f => f.Internet.UserName())
+                .RuleFor(u => u.IsDeleted, true);
         }
 
         #region GetAllUsers Tests
@@ -493,6 +494,103 @@ namespace serviceTests.UserManagement
             Assert.Contains("Error", result.Item2);
         }
 
+        #endregion
+
+        #region RestoreUserDetails Tests
+        [Fact]
+        public async Task RestoreUserDetails_UserRestoredSuccessfully_ReturnsSuccess()
+        {
+            // Arrange
+            var user = _userFaker.Generate();
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(user.Id))
+                .ReturnsAsync(user);
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.RestoreSoftDeletedUserAsync(user.Id))
+                .ReturnsAsync(1); // Success indicator
+
+            // Act
+            var result = await _userManagementService.RestoreUserDetails(user.Id);
+
+            // Assert
+            Assert.Equal(1, result.Item1); // Result ID
+            Assert.Equal("User successfully restored.", result.Item2);
+        }
+
+        [Fact]
+        public async Task RestoreUserDetails_UserAlreadyActive_ReturnsFailure()
+        {
+            // Arrange
+            var user = _userFaker.Generate();
+            user.IsDeleted = false; // Active user
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(user.Id))
+                .ReturnsAsync(user);
+
+            // Act
+            var result = await _userManagementService.RestoreUserDetails(user.Id);
+
+            // Assert
+            Assert.Equal(2, result.Item1); // Already active indicator
+            Assert.Equal("Failed to restore soft deleted user because user already in in active state.", result.Item2);
+        }
+
+        [Fact]
+        public async Task RestoreUserDetails_UserNotFound_ReturnsFailure()
+        {
+            // Arrange
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(It.IsAny<int>()))
+                .ReturnsAsync((User)null!); // User not found
+
+            // Act
+            var result = await _userManagementService.RestoreUserDetails(99);
+
+            // Assert
+            Assert.Equal(3, result.Item1); // User not found indicator
+            Assert.Equal("Failed to retrieve user details from table.", result.Item2);
+        }
+
+        [Fact]
+        public async Task RestoreUserDetails_RestoreFails_ReturnsFailure()
+        {
+            // Arrange
+            var user = _userFaker.Generate();
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(user.Id))
+                .ReturnsAsync(user);
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.RestoreSoftDeletedUserAsync(user.Id))
+                .ReturnsAsync(0); // Restore fails
+
+            // Act
+            var result = await _userManagementService.RestoreUserDetails(user.Id);
+
+            // Assert
+            Assert.Equal(0, result.Item1); // Failure indicator
+            Assert.Equal("Failed to restore soft deleted user.", result.Item2);
+        }
+
+        [Fact]
+        public async Task RestoreUserDetails_ThrowsException_ReturnsFailure()
+        {
+            // Arrange
+            var user = _userFaker.Generate();
+
+            _userManagementRepositoryMock
+                .Setup(repo => repo.GetUserDetailsByIdAsync(user.Id))
+                .ThrowsAsync(new Exception("Database failure"));
+
+            // Act
+            var result = await _userManagementService.RestoreUserDetails(user.Id);
+
+            // Assert
+            Assert.Equal(-1, result.Item1); // Exception indicator
+            Assert.Contains("Database failure", result.Item2);
+        } 
         #endregion
     }
 }
