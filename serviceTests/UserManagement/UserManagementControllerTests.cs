@@ -38,7 +38,7 @@ namespace serviceTests.UserManagement
         public async Task GetAllUsers_ShouldReturnUsers_WhenUsersExist()
         {
             // Arrange
-            var users = new List<User> { new User { UserId = "1", Name = "John" } };
+            var users = new List<User> { new() { UserId = "1", Name = "John" } };
             _userManagementRepositoryMock.Setup(repo => repo.GetUsersAsync()).ReturnsAsync(users);
 
             // Act
@@ -85,7 +85,7 @@ namespace serviceTests.UserManagement
         public async Task GetSoftDeletedUsers_ShouldReturnUsers_WhenUsersExist()
         {
             // Arrange
-            var users = new List<User> { new User { UserId = "1", Name = "John", IsDeleted = true } };
+            var users = new List<User> { new() { UserId = "1", Name = "John", IsDeleted = true } };
             _userManagementRepositoryMock.Setup(repo => repo.GetDeletedUsersAsync()).ReturnsAsync(users);
 
             // Act

@@ -159,3 +159,51 @@ WHERE id = 1;
 -- Update deleted status
 UPDATE [cryptography].[dbo].[tblUsers]
 SET IsDeleted = 0 WHERE id=1;
+
+-- Table: tblKeys
+CREATE TABLE [cryptography].[dbo].[tblKeys] (
+    Id INT IDENTITY(1,1) PRIMARY KEY,     -- Auto-increment primary key
+    KeyId NVARCHAR(255) NOT NULL,         -- KeyId as a string
+    KeyName NVARCHAR(255) NOT NULL,       -- KeyName as a string
+    KeyType NVARCHAR(255) NOT NULL,       -- KeyType as a string
+    KeyAlgorithm NVARCHAR(255) NOT NULL,  -- KeyAlgorithm as a string
+    KeySize INT NOT NULL,                 -- KeySize as a number
+    KeyOwner NVARCHAR(255) NOT NULL,      -- KeyOwner as a string
+    KeyStatus BIT NOT NULL,               -- KeyStatus as a boolean
+    KeyState INT NOT NULL,                -- KeyState as a number
+    KeyAccess NVARCHAR(255) NOT NULL,     -- KeyAccess as a string
+    KeyUsage NVARCHAR(255) NOT NULL,      -- KeyUsage as a string
+    KeyCreatedOn DATETIME NOT NULL,       -- KeyCreatedOn as a DateTime
+    KeyUpdatedOn DATETIME NOT NULL,       -- KeyUpdatedOn as a DateTime
+    KeyMaterial NVARCHAR(MAX) NOT NULL    -- KeyMaterial as a string (large data)
+);
+
+INSERT INTO [cryptography].[dbo].[tblKeys] (KeyId, KeyName, KeyType, KeyAlgorithm, KeySize, KeyOwner, KeyStatus, KeyState, KeyAccess, KeyUsage, KeyCreatedOn, KeyUpdatedOn, KeyMaterial)
+VALUES
+    ('Key1', 'Encryption Key', 'Symmetric', 'AES', 256, 'UserA', 1, 1, 'Read/Write', 'Data Encryption', GETDATE(), GETDATE(), 'keymaterial1'),
+    ('Key2', 'Signing Key', 'Asymmetric', 'RSA', 2048, 'UserB', 1, 1, 'Read/Write', 'Digital Signature', GETDATE(), GETDATE(), 'keymaterial2'),
+    ('Key3', 'Decryption Key', 'Symmetric', 'AES', 256, 'UserC', 1, 1, 'Read/Write', 'Data Decryption', GETDATE(), GETDATE(), 'keymaterial3'),
+    ('Key4', 'MAC Key', 'Symmetric', 'HMAC-SHA256', 32, 'UserD', 1, 1, 'Read/Write', 'Message Authentication', GETDATE(), GETDATE(), 'keymaterial4'),
+    ('Key5', 'Key Wrapping Key', 'Symmetric', 'AES', 256, 'UserE', 1, 1, 'Read/Write', 'Key Wrapping', GETDATE(), GETDATE(), 'keymaterial5'),
+    ('Key6', 'Key Derivation Key', 'Symmetric', 'PBKDF2', 128, 'UserF', 1, 1, 'Read/Write', 'Key Derivation', GETDATE(), GETDATE(), 'keymaterial6'),
+    ('Key7', 'Data Encryption Key', 'Symmetric', 'AES', 256, 'UserG', 1, 1, 'Read/Write', 'Data Encryption', GETDATE(), GETDATE(), 'keymaterial7'),
+    ('Key8', 'Data Decryption Key', 'Symmetric', 'AES', 256, 'UserH', 1, 1, 'Read/Write', 'Data Decryption', GETDATE(), GETDATE(), 'keymaterial8'),
+    ('Key9', 'Password Hash Key', 'Symmetric', 'Bcrypt', 64, 'UserI', 1, 1, 'Read/Write', 'Password Hashing', GETDATE(), GETDATE(), 'keymaterial9'),
+    ('Key10', 'Salt Key', 'Symmetric', 'Random', 16, 'UserJ', 1, 1, 'Read/Write', 'Password Hashing', GETDATE(), GETDATE(), 'keymaterial10');
+
+-- Table: tblSecureKeys
+CREATE TABLE [cryptography].[dbo].[tblSecureKeys] (
+    Id INT IDENTITY(1,1) PRIMARY KEY,     -- Auto-increment primary key
+    KeyId NVARCHAR(255) NOT NULL,         -- KeyId as a string
+    KeyName NVARCHAR(255) NOT NULL,       -- KeyName as a string
+    KeyType NVARCHAR(255) NOT NULL,       -- KeyType as a string
+    KeyAlgorithm NVARCHAR(255) NOT NULL,  -- KeyAlgorithm as a string
+    KeySize INT NOT NULL,                 -- KeySize as a number
+    KeyOwner NVARCHAR(255) NOT NULL,      -- KeyOwner as a string
+    KeyStatus BIT NOT NULL,               -- KeyStatus as a boolean
+    KeyAccess NVARCHAR(255) NOT NULL,     -- KeyAccess as a string
+    KeyMaterial NVARCHAR(MAX) NOT NULL    -- KeyMaterial as a string (large data)
+);
+
+SELECT * FROM [cryptography].[dbo].[tblKeys];
+

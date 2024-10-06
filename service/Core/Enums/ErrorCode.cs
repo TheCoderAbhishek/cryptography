@@ -221,7 +221,7 @@
 
         #endregion
 
-        #region Error Codes for User Management from `ERR-2000-001` to `ERR-1000-999`
+        #region Error Codes for User Management from `ERR-2000-001` to `ERR-2000-999`
 
         /// <summary>
         /// Error code indicating a error occurred while getting list of users.
@@ -457,6 +457,35 @@
         /// Error indicating unknown error in User Management.
         /// </summary>
         public const string UserManagementUnknownError = "ERR-2000-999";
+
+        #endregion
+
+        #region Error Codes for Key Management from `ERR-3000-001` to `ERR-3000-999`
+
+        /// <summary>
+        /// Error code indicating a general error occurred while retrieving the list of keys asynchronously.
+        /// </summary>
+        public const string GetKeysListAsyncError = "ERR-3000-001";
+
+        /// <summary>
+        /// Error code indicating a SQL exception occurred while retrieving the list of keys asynchronously.
+        /// </summary>
+        public const string GetKeysListAsyncSqlException = "ERR-3000-002";
+
+        /// <summary>
+        /// Error code indicating an unexpected exception occurred while retrieving the list of keys asynchronously.
+        /// </summary>
+        public const string GetKeysListAsyncException = "ERR-3000-003";
+
+        /// <summary>
+        /// Error code indicating an unhandled exception occurred while retrieving keys list.
+        /// </summary>
+        public const string GetKeysListAsyncUnhandledException = "ERR-3000-004";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string GetKeysListAsyncNoKeysFound = "ERR-3000-005";
 
         #endregion
     }
