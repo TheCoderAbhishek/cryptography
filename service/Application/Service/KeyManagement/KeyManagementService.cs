@@ -1,5 +1,4 @@
-﻿using service.Core.Entities.AccountManagement;
-using service.Core.Entities.KeyManagement;
+﻿using service.Core.Entities.KeyManagement;
 using service.Core.Interfaces.KeyManagement;
 
 namespace service.Application.Service.KeyManagement
