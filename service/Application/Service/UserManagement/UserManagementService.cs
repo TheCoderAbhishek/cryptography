@@ -5,7 +5,7 @@ using service.Core.Interfaces.UserManagement;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace service.Application.Repository.UserManagement
+namespace service.Application.Service.UserManagement
 {
     /// <summary>
     /// Implements the <see cref="IUserManagementService"/> interface for user management operations.

@@ -7,6 +7,7 @@ using service.Application.Repository.AccountManagement;
 using service.Application.Repository.UserManagement;
 using service.Application.Repository.Utility;
 using service.Application.Service.AccountManagement;
+using service.Application.Service.UserManagement;
 using service.Application.Service.Utility;
 using service.Application.Utility;
 using service.Core.Interfaces.AccountManagement;

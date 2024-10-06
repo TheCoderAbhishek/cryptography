@@ -1,7 +1,7 @@
 ﻿using Bogus;
 using Microsoft.Extensions.Logging;
 using Moq;
-using service.Application.Repository.UserManagement;
+using service.Application.Service.UserManagement;
 using service.Core.Dto.UserManagement;
 using service.Core.Entities.AccountManagement;
 using service.Core.Interfaces.UserManagement;
