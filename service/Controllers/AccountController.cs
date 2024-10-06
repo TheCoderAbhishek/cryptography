@@ -8,8 +8,6 @@ using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.Utility;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace service.Controllers
 {

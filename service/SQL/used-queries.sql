@@ -120,5 +120,42 @@ CREATE TABLE [cryptography].[dbo].[tblUsers] (
     Salt              NVARCHAR(100) NOT NULL
 );
 
+-- Insert dummy data in [tblUsers] table
+INSERT INTO [cryptography].[dbo].[tblUsers]
+(UserId, Name, UserName, Email, Password, IsAdmin, IsActive, IsLocked, IsDeleted, LoginAttempts, DeletedStatus, CreatedOn, RoleId, Salt)
+VALUES
+('user1', 'John Doe', 'johndoe', 'johndoe@example.com', 'hashed_password_1', 0, 1, 0, 0, 0, 0, GETDATE(), 1, 'salt1'),
+('user2', 'Jane Smith', 'janesmith', 'janesmith@example.com', 'hashed_password_2', 0, 1, 0, 0, 0, 0, GETDATE(), 2, 'salt2'),
+('user3', 'Admin User', 'admin', 'admin@example.com', 'hashed_password_3', 1, 1, 0, 0, 0, 0, GETDATE(), 3, 'salt3');
+
 -- View all data from `[tblUsers]` table
 SELECT * FROM [cryptography].[dbo].[tblUsers];
+
+-- Truncate and reset identity `[tblUsers]`
+TRUNCATE TABLE [cryptography].[dbo].[tblUsers];
+
+-- Update role of registered user.
+UPDATE [cryptography].[dbo].[tblUsers] SET RoleId=0 WHERE Id=1;
+
+-- Select User Details based upon Email or Username
+SELECT 
+    CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM [cryptography].[dbo].[tblUsers] 
+            WHERE Email = 'ap5747811@gmail.com'
+        ) THEN 1
+        WHEN EXISTS (
+            SELECT 1 FROM [cryptography].[dbo].[tblUsers] 
+            WHERE Username = 'ap574781'
+        ) THEN 2
+        ELSE 0
+    END AS DuplicateStatus;
+
+-- Update Lock or Unlock status
+UPDATE [cryptography].[dbo].[tblUsers]
+SET IsLocked = CASE WHEN IsLocked = 1 THEN 0 ELSE 1 END
+WHERE id = 1;
+
+-- Update deleted status
+UPDATE [cryptography].[dbo].[tblUsers]
+SET IsDeleted = 0 WHERE id=1;

@@ -220,5 +220,244 @@
         public const string UnknownError = "ERR-1000-999";
 
         #endregion
+
+        #region Error Codes for User Management from `ERR-2000-001` to `ERR-1000-999`
+
+        /// <summary>
+        /// Error code indicating a error occurred while getting list of users.
+        /// </summary>
+        public const string GetUsersAsyncError = "ERR-2000-001";
+
+        /// <summary>
+        /// Exception code for errors encountered during the GetUsersAsync operation.
+        /// </summary>
+        public const string GetUsersAsyncException = "ERR-2000-002";
+
+        /// <summary>
+        /// Error code for general errors during user retrieval.
+        /// </summary>
+        public const string GetUsersError = "ERR-2000-003";
+
+        /// <summary>
+        /// Error code indicating that no users were found during a user management operation.
+        /// </summary>
+        public const string UserManagementNoUsersError = "ERR-2000-004";
+
+        /// <summary>
+        /// Error code indicating exception occurred while inserting new user in table.
+        /// </summary>
+        public const string CreateNewUserAsyncException = "ERR-2000-005";
+
+        /// <summary>
+        /// Error code indicating error occurred while inserting new user details.
+        /// </summary>
+        public const string CreateNewUserAsyncError = "ERR-2000-006";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while inserting new user in table.
+        /// </summary>
+        public const string CreateNewUserAsyncSqlException = "ERR-2000-007";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while creating new user.
+        /// </summary>
+        public const string CreateNewUserAsyncUnhandledException = "ERR-2000-008";
+
+        /// <summary>
+        /// Error code indicating error occurred while getting user details based upon email or username.
+        /// </summary>
+        public const string GetUserDetailsMailUsernameAsyncError = "ERR-2000-009";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while getting user details based upon email or username.
+        /// </summary>
+        public const string GetUserDetailsMailUsernameAsyncSqlException = "ERR-2000-010";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while getting user details based upon email or username.
+        /// </summary>
+        public const string GetUserDetailsMailUsernameAsyncException = "ERR-2000-011";
+
+        /// <summary>
+        /// Error code indicating duplicate record found in table.
+        /// </summary>
+        public const string GetUserDetailsMailUsernameAsyncDuplicateError = "ERR-2000-012";
+
+        /// <summary>
+        /// Error code indicating error occurred while locking or unlocking user.
+        /// </summary>
+        public const string LockUnlockUserAsyncError = "ERR-2000-013";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while locking or unlocking user.
+        /// </summary>
+        public const string LockUnlockUserAsyncSqlException = "ERR-2000-014";
+
+        /// <summary>
+        /// Error code indicating exception occurred while locking or unlocking user.
+        /// </summary>
+        public const string LockUnlockUserAsyncException = "ERR-2000-015";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while locking/unlocking user.
+        /// </summary>
+        public const string LockUnlockUserAsyncUnhandledException = "ERR-2000-016";
+
+        /// <summary>
+        /// Error code indicating error occurred while getting deleted users
+        /// </summary>
+        public const string GetDeletedUsersAsyncError = "ERR-2000-017";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while fetching soft deleted users.
+        /// </summary>
+        public const string GetDeletedUsersAsyncSqlException = "ERR-2000-018";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while fetching soft deleted users.
+        /// </summary>
+        public const string GetDeletedUsersAsyncException = "ERR-2000-019";
+
+        /// <summary>
+        /// Error code indicating error occurred while getting deleted users list.
+        /// </summary>
+        public const string GetDeletedUsersError = "ERR-2000-020";
+
+        /// <summary>
+        /// Error code indicating error occurred while soft deleting user.
+        /// </summary>
+        public const string SoftDeleteUserAsyncError = "ERR-2000-021";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while soft deleting user.
+        /// </summary>
+        public const string SoftDeleteUserAsyncSqlException = "ERR-2000-022";
+
+        /// <summary>
+        /// Error code indicating exception occurred while soft deleting user.
+        /// </summary>
+        public const string SoftDeleteUserAsyncException = "ERR-2000-023";
+
+        /// <summary>
+        /// Error code indicating error occurred while getting user details.
+        /// </summary>
+        public const string GetUserDetailsByIdAsyncError = "ERR-2000-024";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while getting user details.
+        /// </summary>
+        public const string GetUserDetailsByIdAsyncSqlException = "ERR-2000-025";
+
+        /// <summary>
+        /// Error code indicating unhandled eexception occurred while getting user details.
+        /// </summary>
+        public const string GetUserDetailsByIdAsyncException = "ERR-2000-026";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while soft deleting user during API call.
+        /// </summary>
+        public const string SoftDeleteUserAsyncUnhandledException = "ERR-2000-027";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while updating user details.
+        /// </summary>
+        public const string UpdateUserDetailsAsyncUnhandledException = "ERR-2000-028";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while updating user details.
+        /// </summary>
+        public const string UpdateUserDetailsAsyncSqlException = "ERR-2000-029";
+
+        /// <summary>
+        /// Error code indicating exception occurred while updating user details.
+        /// </summary>
+        public const string UpdateUserDetailsAsyncException = "ERR-2000-030";
+
+        /// <summary>
+        /// Error code indicating updating user details.
+        /// </summary>
+        public const string UpdateUserDetailsAsyncError = "ERR-2000-031";
+
+        /// <summary>
+        /// Error code indicating checking duplicate email or username
+        /// </summary>
+        public const string GetUserDetailsMailUsernameExceptCurrentIdAsyncError = "ERR-2000-032";
+
+        /// <summary>
+        /// Error code indicating SQL exception occurred while checking duplicate email or username
+        /// </summary>
+        public const string GetUserDetailsMailUsernameExceptCurrentIdAsyncSqlException = "ERR-2000-033";
+
+        /// <summary>
+        /// Error code indicating exception occurred while checking duplicate email or username
+        /// </summary>
+        public const string GetUserDetailsMailUsernameExceptCurrentIdAsyncException = "ERR-2000-034";
+
+        /// <summary>
+        /// This error code indicates that there was an error while attempting to hard delete users asynchronously.
+        /// </summary>
+        public const string HardDeleteUsersAsyncError = "ERR-2000-035";
+
+        /// <summary>
+        /// This error code indicates that a SQL exception occurred while attempting to hard delete users asynchronously.
+        /// </summary>
+        public const string HardDeleteUserAsyncSqlException = "ERR-2000-036";
+
+        /// <summary>
+        /// This error code indicates that an unexpected exception occurred while attempting to hard delete users asynchronously.
+        /// </summary>
+        public const string HardDeleteUserAsyncException = "ERR-2000-037";
+
+        /// <summary>
+        /// Error code for the RestoreSoftDeletedUserAsync method when the user does not exist.
+        /// </summary>
+        public const string RestoreSoftDeletedUsersAsyncError = "ERR-2000-038";
+
+        /// <summary>
+        /// Error code for the RestoreSoftDeletedUserAsync method when a SQL exception occurs.
+        /// </summary>
+        public const string RestoreSoftDeletedUserAsyncSqlException = "ERR-2000-039";
+
+        /// <summary>
+        /// Error code for the RestoreSoftDeletedUserAsync method when a generic exception occurs.
+        /// </summary>
+        public const string RestoreSoftDeletedUserAsyncException = "ERR-2000-040";
+
+        /// <summary>
+        /// Error code for the unhandled exception
+        /// </summary>
+        public const string RestoreSoftDeletedUserAsyncUnhandledException = "ERR-2000-041";
+
+        /// <summary>
+        /// Error code indicating a validation error occurred in User Management.
+        /// </summary>
+        public const string UserManagementModelValidationError = "ERR-2000-900";
+
+        /// <summary>
+        /// Error code indicating a internal server error in User Management.
+        /// </summary>
+        public const string UserManagementInternalServerError = "ERR-2000-901";
+
+        /// <summary>
+        /// Error code indicating a model is in invalid state in User Management.
+        /// </summary>
+        public const string UserManagementInvalidModelRequestError = "ERR-2000-902";
+
+        /// <summary>
+        /// Error code indicating a bad request in User Management.
+        /// </summary>
+        public const string UserManagementBadRequestError = "ERR-2000-903";
+
+        /// <summary>
+        /// Error code indicating key pair generation in User Management.
+        /// </summary>
+        public const string UserManagementGenerateRsaKeyPairError = "ERR-2000-904";
+
+        /// <summary>
+        /// Error indicating unknown error in User Management.
+        /// </summary>
+        public const string UserManagementUnknownError = "ERR-2000-999";
+
+        #endregion
     }
 }
