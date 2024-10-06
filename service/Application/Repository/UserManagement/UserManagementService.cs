@@ -322,6 +322,53 @@ namespace service.Application.Repository.UserManagement
         }
 
         /// <summary>
+        /// Restores user details based on the provided ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the user to restore.</param>
+        /// <returns>A tuple containing the restored user's ID and a message indicating the operation's status.</returns>
+        public async Task<(int, string)> RestoreUserDetails(int id)
+        {
+            try
+            {
+                User user = await _userManagementRepository.GetUserDetailsByIdAsync(id);
+
+                if (user != null)
+                {
+                    if (user.IsDeleted == true)
+                    {
+                        int result = await _userManagementRepository.RestoreSoftDeletedUserAsync(id);
+
+                        if (result > 0)
+                        {
+                            _logger.LogInformation("User with ID {Id} was successfully restored.", id);
+                            return (result, "User successfully restored.");
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to restore soft deleted user with ID {Id}.", id);
+                            return (0, $"Failed to restore soft deleted user.");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to restore soft deleted user with ID {Id} because user already in active state.", id);
+                        return (2, $"Failed to restore soft deleted user because user already in in active state.");
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid {Id} id provided for user.", id);
+                    return (3, "Failed to retrieve user details from table.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while soft deleting user: {Message}", ex.Message);
+                return (-1, $"{ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Asynchronously hard deletes a user with the specified ID and returns a tuple containing the number of rows affected and an error message if any occurred.
         /// </summary>
         /// <param name="id">The ID of the user to delete.</param>

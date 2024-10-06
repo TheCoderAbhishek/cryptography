@@ -426,6 +426,88 @@ namespace service.Controllers
         }
 
         /// <summary>
+        /// Restores a soft-deleted user based on the provided ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the user to restore.</param>
+        /// <returns>An API response indicating the success or failure of the operation.</returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), 200)]
+        [HttpPatch]
+        [Route("RestoreSoftDeleteUserAsync/{id}")]
+        public async Task<IActionResult> RestoreSoftDeleteUserAsync(int id)
+        {
+            try
+            {
+                var (statusCode, message) = await _userManagementService.RestoreUserDetails(id);
+
+                if (statusCode == 1)
+                {
+                    _logger.LogInformation("User {Id} successfully restore soft deleted user.", id);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        statusCode,
+                        successMessage: message,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else if (statusCode == 0)
+                {
+                    _logger.LogError("{Message}", message);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status404NotFound,
+                        statusCode,
+                        errorMessage: message,
+                        errorCode: ErrorCode.RestoreSoftDeletedUsersAsyncError,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else if (statusCode > 1)
+                {
+                    _logger.LogError("{Message}", message);
+                    return Ok(new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status302Found,
+                        statusCode,
+                        errorMessage: message,
+                        errorCode: ErrorCode.RestoreSoftDeletedUsersAsyncError,
+                        txn: ConstantData.Txn()
+                    ));
+                }
+                else
+                {
+                    _logger.LogError("Exception occurred while restore soft deleted user: {Id}", id);
+
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        statusCode,
+                        errorMessage: "Exception occurred whilerestore soft deleted user.",
+                        errorCode: ErrorCode.RestoreSoftDeletedUserAsyncException,
+                        txn: ConstantData.Txn()
+                    );
+
+                    return BadRequest(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unhandled exception occurred while restore soft deleted user: {Id}", id);
+
+                var response = new ApiResponse<int>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    responseCode: -1,
+                    errorMessage: "An unexpected error occurred.",
+                    errorCode: ErrorCode.RestoreSoftDeletedUserAsyncUnhandledException,
+                    txn: ConstantData.Txn()
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
         /// Hard deletes a user from the system.
         /// </summary>
         /// <param name="id">The ID of the user to delete.</param>

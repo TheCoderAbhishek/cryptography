@@ -52,6 +52,13 @@ namespace service.Core.Interfaces.UserManagement
         Task<(int, string)> UpdateUserDetails(InUpdateUserDetails inUpdateUserDetails);
 
         /// <summary>
+        /// Restores user details based on the provided ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the user to restore.</param>
+        /// <returns>A tuple containing the restored user's ID and username.</returns>
+        Task<(int, string)> RestoreUserDetails(int id);
+
+        /// <summary>
         /// Asynchronously hard deletes a user with the specified ID and returns a tuple containing the number of rows affected and an error message if any occurred.
         /// </summary>
         /// <param name="id">The ID of the user to delete.</param>

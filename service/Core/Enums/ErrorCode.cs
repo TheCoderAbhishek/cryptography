@@ -408,6 +408,25 @@
         /// </summary>
         public const string HardDeleteUserAsyncException = "ERR-2000-037";
 
+        /// <summary>
+        /// Error code for the RestoreSoftDeletedUserAsync method when the user does not exist.
+        /// </summary>
+        public const string RestoreSoftDeletedUsersAsyncError = "ERR-2000-038";
+
+        /// <summary>
+        /// Error code for the RestoreSoftDeletedUserAsync method when a SQL exception occurs.
+        /// </summary>
+        public const string RestoreSoftDeletedUserAsyncSqlException = "ERR-2000-039";
+
+        /// <summary>
+        /// Error code for the RestoreSoftDeletedUserAsync method when a generic exception occurs.
+        /// </summary>
+        public const string RestoreSoftDeletedUserAsyncException = "ERR-2000-040";
+
+        /// <summary>
+        /// Error code for the unhandled exception
+        /// </summary>
+        public const string RestoreSoftDeletedUserAsyncUnhandledException = "ERR-2000-041";
 
         /// <summary>
         /// Error code indicating a validation error occurred in User Management.

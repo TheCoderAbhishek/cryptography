@@ -334,6 +334,44 @@ namespace service.Application.Repository.UserManagement
         }
 
         /// <ingeritdoc />
+        public async Task<int> RestoreSoftDeletedUserAsync(int id)
+        {
+            try
+            {
+                string query = UserManagementQueries._restoreUserFromSoftDeletedState;
+
+                var parameters = new
+                {
+                    @Id = id,
+                    @IsDeleted = 0,
+                    @DeletedStatus = 0,
+                    @UpdatedOn = DateTime.Now,
+                    @DeletedOn = (DateTime?)null,
+                    @AutoDeletedOn = (DateTime?)null,
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query, "User restoration successful.",
+                    "Error while restoring soft deleted user.",
+                    "",
+                    ErrorCode.RestoreSoftDeletedUserAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                return baseResponse.Status;
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Database error occurred while restoring soft deleted user.");
+                throw new CustomException("Database error while restoring soft deleted user.", sqlEx, ErrorCode.RestoreSoftDeletedUserAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while restoring soft deleted user.");
+                throw new CustomException("Error restoring soft deleted user from the account repository.", ex, ErrorCode.RestoreSoftDeletedUserAsyncException, ConstantData.Txn());
+            }
+        }
+
+        /// <ingeritdoc />
         public async Task<int> HardDeleteUserAsync(int id)
         {
             string query = UserManagementQueries._hardDeleteUserRecord;

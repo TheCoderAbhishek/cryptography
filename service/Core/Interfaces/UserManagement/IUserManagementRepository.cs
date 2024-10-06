@@ -78,6 +78,13 @@ namespace service.Core.Interfaces.UserManagement
         Task<int> GetUserDetailsMailUsernameExceptCurrentIdAsync(int id, string email, string username);
 
         /// <summary>
+        /// Restores a soft-deleted user with the specified ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to restore.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result indicates the number of affected rows.</returns>
+        Task<int> RestoreSoftDeletedUserAsync(int id);
+
+        /// <summary>
         /// Asynchronously hard deletes a user with the specified ID.
         /// </summary>
         /// <param name="id">The ID of the user to delete.</param>

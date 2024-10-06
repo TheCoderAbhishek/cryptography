@@ -70,5 +70,12 @@
         /// </summary>
         public const string _hardDeleteUserRecord = @"DELETE FROM [cryptography].[dbo].[tblUsers]" +
                                                         " WHERE Id = @Id;";
+
+        /// <summary>
+        /// SQL query string for restore soft deleted user.
+        /// </summary>
+        public const string _restoreUserFromSoftDeletedState = @"UPDATE [cryptography].[dbo].[tblUsers]" +
+                                                                    " SET IsDeleted = @IsDeleted, DeletedStatus = @DeletedStatus, UpdatedOn = @UpdatedOn, DeletedOn = @DeletedOn, AutoDeletedOn = @AutoDeletedOn" +
+                                                                    " WHERE id = @Id;";
     }
 }
