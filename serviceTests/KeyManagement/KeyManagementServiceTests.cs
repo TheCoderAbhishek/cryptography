@@ -4,6 +4,7 @@ using Moq;
 using service.Application.Service.KeyManagement;
 using service.Core.Entities.KeyManagement;
 using service.Core.Interfaces.KeyManagement;
+using service.Core.Interfaces.OpenSsl;
 
 namespace serviceTests.KeyManagement
 {
@@ -12,12 +13,14 @@ namespace serviceTests.KeyManagement
         private readonly Mock<IKeyManagementRepository> _keyManagementRepositoryMock;
         private readonly Mock<ILogger<KeyManagementService>> _loggerMock;
         private readonly KeyManagementService _service;
+        private readonly Mock<IOpenSslService> _openSslServiceMock;
 
         public KeyManagementServiceTests()
         {
             _keyManagementRepositoryMock = new Mock<IKeyManagementRepository>();
+            _openSslServiceMock = new Mock<IOpenSslService>();
             _loggerMock = new Mock<ILogger<KeyManagementService>>();
-            _service = new KeyManagementService(_loggerMock.Object, _keyManagementRepositoryMock.Object);
+            _service = new KeyManagementService(_loggerMock.Object, _keyManagementRepositoryMock.Object, _openSslServiceMock.Object);
         }
 
         #region GetKeysList Tests

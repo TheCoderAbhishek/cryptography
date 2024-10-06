@@ -9,11 +9,13 @@ using service.Application.Repository.UserManagement;
 using service.Application.Repository.Utility;
 using service.Application.Service.AccountManagement;
 using service.Application.Service.KeyManagement;
+using service.Application.Service.OpenSsl;
 using service.Application.Service.UserManagement;
 using service.Application.Service.Utility;
 using service.Application.Utility;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.KeyManagement;
+using service.Core.Interfaces.OpenSsl;
 using service.Core.Interfaces.UserManagement;
 using service.Core.Interfaces.Utility;
 using service.Infrastructure.Dependency;
@@ -56,6 +58,7 @@ builder.Services.AddScoped<IUserManagementRepository, UserManagementRepository>(
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IKeyManagementRepository, KeyManagementRepository>();
 builder.Services.AddScoped<IKeyManagementService, KeyManagementService>();
+builder.Services.AddScoped<IOpenSslService, OpenSslService>();
 #endregion Dependency Injection Container
 
 #region Swagger
