@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using service.Core.Dto.KeyManagement;
 using service.Core.Entities.KeyManagement;
 using service.Core.Enums;
 using service.Core.Interfaces.KeyManagement;
@@ -93,6 +94,61 @@ namespace service.Controllers
                     responseCode: -1,
                     errorMessage: "An unexpected error occurred.",
                     errorCode: ErrorCode.GetKeysListAsyncUnhandledException,
+                    txn: txn
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [HttpPost]
+        [Route("CreateKeyAsync")]
+        public async Task<IActionResult> CreateKeyAsync(InCreateKeyDto inCreateKeyDto)
+        {
+            try
+            {
+                var (status, message) = await _keyManagementService.CreateKey(inCreateKeyDto);
+
+                if (status == 1)
+                {
+                    var txn = ConstantData.Txn();
+                    _logger.LogInformation("Key created with name: {KeyName} at TXN: {Txn}", inCreateKeyDto.KeyName, txn);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        responseCode: status,
+                        successMessage: message,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else
+                {
+                    var txn = ConstantData.Txn();
+                    _logger.LogError("Error occurred while creating key with name: {KeyName} at TXN: {Txn}", inCreateKeyDto.KeyName, txn);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.CreateKeyAsyncError,
+                        txn: txn);
+                    return Ok(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                var txn = ConstantData.Txn();
+                _logger.LogCritical(ex, "Unhandled exception occurred while creating key with name: {KeyName} at TXN: {Txn}", inCreateKeyDto.KeyName, txn);
+
+                var response = new ApiResponse<string>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    responseCode: -1,
+                    errorMessage: "An unexpected error occurred.",
+                    errorCode: ErrorCode.CreateKeyAsyncUnhandledException,
                     txn: txn
                 );
 

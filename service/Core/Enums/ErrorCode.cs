@@ -483,9 +483,29 @@
         public const string GetKeysListAsyncUnhandledException = "ERR-3000-004";
 
         /// <summary>
-        /// 
+        /// Error code indicating there are no keys present in Keys table
         /// </summary>
         public const string GetKeysListAsyncNoKeysFound = "ERR-3000-005";
+
+        /// <summary>
+        /// Error code indicating a failure during asynchronous key creation.
+        /// </summary>
+        public const string CreateKeyAsyncError = "ERR-3000-006";
+
+        /// <summary>
+        /// Error code indicating a SQL exception occurred during asynchronous key creation.
+        /// </summary>
+        public const string CreateKeyAsyncSqlException = "ERR-3000-007";
+
+        /// <summary>
+        /// Error code indicating an unexpected exception occurred during asynchronous key creation.
+        /// </summary>
+        public const string CreateKeyAsyncException = "ERR-3000-008";
+
+        /// <summary>
+        /// Error code indicating an unhandled exception occurred during asynchronous key creation.
+        /// </summary>
+        public const string CreateKeyAsyncUnhandledException = "ERR-3000-009";
 
         #endregion
     }
