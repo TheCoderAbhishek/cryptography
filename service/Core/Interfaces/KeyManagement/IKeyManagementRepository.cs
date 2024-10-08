@@ -12,5 +12,12 @@ namespace service.Core.Interfaces.KeyManagement
         /// </summary>
         /// <returns>A task representing the asynchronous operation, returning a list of keys.</returns>
         Task<List<Keys>> GetKeysListAsync();
+
+        /// <summary>
+        /// Creates a new key asynchronously.
+        /// </summary>
+        /// <param name="key">The key to create.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is the newly created key ID.</returns>
+        Task<int> CreateKeyAsync(Keys key);
     }
 }

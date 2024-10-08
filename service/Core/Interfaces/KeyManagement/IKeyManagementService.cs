@@ -18,7 +18,8 @@ namespace service.Core.Interfaces.KeyManagement
         /// Creates a new key asynchronously.
         /// </summary>
         /// <param name="inCreateKeyDto">The input data for creating the key.</param>
+        /// <param name="keyOwner">The owner of the creating the key.</param>
         /// <returns>A task representing the operation. The result is a tuple containing the status code (int) and a message (string).</returns>
-        Task<(int, string)> CreateKey(InCreateKeyDto inCreateKeyDto);
+        Task<(int, string)> CreateKey(InCreateKeyDto inCreateKeyDto, string keyOwner);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using service.Core.Entities.KeyManagement;
+using service.Core.Entities.Utility;
 using service.Core.Enums;
 using service.Core.Interfaces.KeyManagement;
 using service.Core.Interfaces.Utility;
@@ -56,6 +57,62 @@ namespace service.Application.Repository.KeyManagement
                 _logger.LogError(ex, "An unexpected error occurred while fetching keys. {ErrorMessage}", ex.Message);
                 throw new CustomException("An unexpected error occurred while fetching keys from the key management repository.", ex,
                     ErrorCode.GetKeysListAsyncException, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Creates a new key in the key management repository.
+        /// </summary>
+        /// <param name="key">The key object to be created.</param>
+        /// <returns>The status of the operation (1 for success, 0 for failure).</returns>
+        /// <exception cref="CustomException">Thrown if an error occurs during the operation.</exception>
+        public async Task<int> CreateKeyAsync(Keys key)
+        {
+            string query = KeyManagementQueries._createKey;
+
+            try
+            {
+                _logger.LogInformation("Attempting to insert key details using query: {Query}", query);
+
+                var parameters = new
+                {
+                    key.KeyId,
+                    key.KeyName,
+                    key.KeyType,
+                    key.KeyAlgorithm,
+                    key.KeySize,
+                    key.KeyOwner,
+                    key.KeyStatus,
+                    key.KeyState,
+                    key.KeyAccess,
+                    key.KeyUsage,
+                    key.KeyCreatedOn,
+                    key.KeyUpdatedOn,
+                    key.KeyMaterial
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query,
+                    "Key created successfully.",
+                    "An error occurred while creating the key.",
+                    "Duplicate key record found.",
+                    ErrorCode.CreateKeyAsyncError,
+                    ConstantData.Txn(),
+                    parameters
+                    );
+
+                return baseResponse.Status;
+            }
+            catch (SqlException sqlException)
+            {
+                _logger.LogError(sqlException, "A SQL error occurred while inserting key details. Error: {ErrorMessage}", sqlException.Message);
+                throw new CustomException("An SQL error occurred while inserting key details from the key management repository.", sqlException,
+                    ErrorCode.CreateKeyAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while inserting key details. {ErrorMessage}", ex.Message);
+                throw new CustomException("An unexpected error occurred while inserting key details from the key management repository.", ex,
+                    ErrorCode.CreateKeyAsyncException, ConstantData.Txn());
             }
         }
     }

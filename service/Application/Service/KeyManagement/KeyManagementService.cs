@@ -18,6 +18,19 @@ namespace service.Application.Service.KeyManagement
         private readonly IKeyManagementRepository _keyManagementRepository = keyManagementRepository;
         private readonly IOpenSslService _openSslService = openSslService;
 
+        #region Private Methods for Support
+
+        /// <summary>
+        /// Generates a new unique key identifier using a Guid.
+        /// </summary>
+        /// <returns>A string representing the newly generated key ID.</returns>
+        private static string GenerateKeyId()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
+        #endregion
+
         /// <summary>
         /// Retrieves the list of keys from the key management repository.
         /// </summary>
@@ -49,16 +62,18 @@ namespace service.Application.Service.KeyManagement
         }
 
         /// <summary>
-        /// 
+        /// Creates a new key based on the provided parameters.
         /// </summary>
-        /// <param name="inCreateKeyDto"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public async Task<(int, string)> CreateKey(InCreateKeyDto inCreateKeyDto)
+        /// <param name="inCreateKeyDto">A DTO containing information about the key to be created.</param>
+        /// <param name="keyOwner">The owner of the key.</param>
+        /// <returns>A tuple containing the status of the operation (0 for success, -1 for error) and a corresponding message.</returns>
+        /// <exception cref="ArgumentException">Thrown if an invalid key size is specified for the AES algorithm.</exception>
+        public async Task<(int, string)> CreateKey(InCreateKeyDto inCreateKeyDto, string keyOwner)
         {
             try
             {
                 string? createAesKeyCommand = null;
+                string? aesKeyData = null;
 
                 if (inCreateKeyDto.KeyAlgorithm == "AES" && inCreateKeyDto.KeyType == "Symmetric")
                 {
@@ -69,13 +84,42 @@ namespace service.Application.Service.KeyManagement
                         256 => OpenSslCommands.GenerateAes256KeyData,// Generate AES-256 key
                         _ => throw new ArgumentException("Invalid key size for AES."),
                     };
-                    string aesKeyData = await _openSslService.RunOpenSslCommandAsync(createAesKeyCommand);
-                    return (1, aesKeyData);
+                    aesKeyData = await _openSslService.RunOpenSslCommandAsync(createAesKeyCommand);
                 }
                 else
                 {
                     _logger.LogError("Error occurred while creating a key. Invalid parameters passed.");
                     return (0, "Error occurred while creating a key. Invalid parameters passed.");
+                }
+
+                var newKey = new Keys
+                {
+                    KeyId = GenerateKeyId(),
+                    KeyName = inCreateKeyDto.KeyName,
+                    KeyType = inCreateKeyDto.KeyType,
+                    KeyAlgorithm = inCreateKeyDto.KeyAlgorithm,
+                    KeySize = inCreateKeyDto.KeySize,
+                    KeyOwner = keyOwner,
+                    KeyStatus = true,
+                    KeyState = 1,
+                    KeyAccess = "Public",
+                    KeyUsage = inCreateKeyDto.KeyUsage,
+                    KeyCreatedOn = DateTime.Now,
+                    KeyUpdatedOn = DateTime.Now,
+                    KeyMaterial = aesKeyData
+                };
+
+                int status = await _keyManagementRepository.CreateKeyAsync(newKey);
+
+                if (status == 1)
+                {
+                    _logger.LogInformation("Key created successfully.");
+                    return (status, "Key created successfully.");
+                }
+                else
+                {
+                    _logger.LogError("Failed to create key.");
+                    return (status, "Failed to create key.");
                 }
             }
             catch (Exception ex)

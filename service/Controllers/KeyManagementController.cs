@@ -4,6 +4,8 @@ using service.Core.Dto.KeyManagement;
 using service.Core.Entities.KeyManagement;
 using service.Core.Enums;
 using service.Core.Interfaces.KeyManagement;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace service.Controllers
 {
@@ -19,6 +21,28 @@ namespace service.Controllers
     {
         private readonly ILogger<KeyManagementController> _logger = logger;
         private readonly IKeyManagementService _keyManagementService = keyManagementService;
+
+        #region Private Helper Methods for Account Controller
+
+        /// <summary>
+        /// Retrieves a list of specific user claims from the current HttpContext.
+        /// </summary>
+        /// <returns>A list of strings containing the user's email and role claims.</returns>
+        private List<string> GetUserClaims()
+        {
+            var userClaims = HttpContext.User.Claims;
+
+            // Extract specific claims and add them to a list using proper ClaimTypes
+            var claimsList = new List<string>
+            {
+                userClaims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value!,  // Email
+                userClaims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value!  // Username
+            };
+
+            return claimsList;
+        }
+
+        #endregion
 
         /// <summary>
         /// Gets a list of keys from the key management service.
@@ -108,7 +132,10 @@ namespace service.Controllers
         {
             try
             {
-                var (status, message) = await _keyManagementService.CreateKey(inCreateKeyDto);
+                // Use the private method to extract claims
+                var claimsList = GetUserClaims();
+
+                var (status, message) = await _keyManagementService.CreateKey(inCreateKeyDto, claimsList[0]);
 
                 if (status == 1)
                 {
