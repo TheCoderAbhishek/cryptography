@@ -205,6 +205,7 @@ CREATE TABLE [cryptography].[dbo].[tblSecureKeys] (
     KeyMaterial NVARCHAR(MAX) NOT NULL    -- KeyMaterial as a string (large data)
 );
 
+-- View all data from `[tblKeys]` table
 SELECT * FROM [cryptography].[dbo].[tblKeys];
 
 -- Truncate and reset identity `[tblKeys]`
