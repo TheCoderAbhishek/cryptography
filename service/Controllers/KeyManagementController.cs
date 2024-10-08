@@ -4,7 +4,6 @@ using service.Core.Dto.KeyManagement;
 using service.Core.Entities.KeyManagement;
 using service.Core.Enums;
 using service.Core.Interfaces.KeyManagement;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace service.Controllers
@@ -125,7 +124,14 @@ namespace service.Controllers
             }
         }
 
+        /// <summary>
+        /// Creates a new key.
+        /// </summary>
+        /// <param name="inCreateKeyDto">The input data for creating the key.</param>
+        /// <returns>The response indicating the success or failure of the operation.</returns>
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
         [HttpPost]
         [Route("CreateKeyAsync")]
         public async Task<IActionResult> CreateKeyAsync(InCreateKeyDto inCreateKeyDto)
