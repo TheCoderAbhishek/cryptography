@@ -20,29 +20,49 @@ namespace service.Application.Service.OpenSsl
         {
             _logger.LogInformation("OpenSSL command executing: {Command}", command);
 
-            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + command)
+            var processInfo = new ProcessStartInfo("cmd.exe", $"/C {command}")
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
             };
 
-            using var process = new Process { StartInfo = processInfo };
-            process.Start();
+            using var process = Process.Start(processInfo);
+            using var reader = process!.StandardOutput;
+            string result = await reader.ReadToEndAsync();
+            return result.Trim();
+        }
 
-            string output = await process.StandardOutput.ReadToEndAsync();
-            string error = await process.StandardError.ReadToEndAsync();
-
-            await process.WaitForExitAsync();
-
-            if (!string.IsNullOrEmpty(error))
+        /// <summary>
+        /// Executes an OpenSSL command asynchronously, providing the specified input.
+        /// </summary>
+        /// <param name="command">The OpenSSL command to execute.</param>
+        /// <param name="input">The input to be provided to the command.</param>
+        /// <returns>A task representing the operation, which will return the output of the command upon completion.</returns>
+        public async Task<string> RunOpenSslCommandAsyncWithInput(string command, string input)
+        {
+            var processInfo = new ProcessStartInfo("cmd.exe", $"/C {command}")
             {
-                _logger.LogError("OpenSSL command error: {Error}", error);
-                return $"OpenSSL command error: {error}";
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            using var process = Process.Start(processInfo);
+
+            // Write the private key to the process' input stream
+            using (var writer = process!.StandardInput)
+            {
+                await writer.WriteLineAsync(input);
             }
 
-            return output;
+            // Read the public key from the output
+            using var reader = process.StandardOutput;
+            string result = await reader.ReadToEndAsync();
+            return result.Trim();
         }
     }
 }

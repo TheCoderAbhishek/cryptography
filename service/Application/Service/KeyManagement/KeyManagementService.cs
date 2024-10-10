@@ -73,7 +73,8 @@ namespace service.Application.Service.KeyManagement
             try
             {
                 string? createAesKeyCommand = null;
-                string? aesKeyData = null;
+                string? keyData = null;
+                string? rsaPrivateKeyData = null;
 
                 if (inCreateKeyDto.KeyAlgorithm == "AES" && inCreateKeyDto.KeyType == "Symmetric")
                 {
@@ -84,7 +85,24 @@ namespace service.Application.Service.KeyManagement
                         256 => OpenSslCommands.GenerateAes256KeyData,// Generate AES-256 key
                         _ => throw new ArgumentException("Invalid key size for AES."),
                     };
-                    aesKeyData = await _openSslService.RunOpenSslCommandAsync(createAesKeyCommand);
+                    keyData = await _openSslService.RunOpenSslCommandAsync(createAesKeyCommand);
+                }
+                else if (inCreateKeyDto.KeyAlgorithm == "RSA" && inCreateKeyDto.KeyType == "Asymmetric")
+                {
+                    // Step 1: Generate RSA Private Key
+                    createAesKeyCommand = inCreateKeyDto.KeySize switch
+                    {
+                        2048 => OpenSslCommands.GenerateRsa2048PrivateKey,
+                        3072 => OpenSslCommands.GenerateRsa3072PrivateKey,
+                        4096 => OpenSslCommands.GenerateRsa4096PrivateKey,
+                        _ => throw new ArgumentException("Invalid key size for RSA."),
+                    };
+
+                    // Generate RSA Private Key
+                    rsaPrivateKeyData = await _openSslService.RunOpenSslCommandAsync(createAesKeyCommand);
+
+                    // Step 2: Extract RSA Public Key from the generated Private Key
+                    keyData = await _openSslService.RunOpenSslCommandAsyncWithInput(OpenSslCommands.ExtractPublicKeyFromPrivateKey, rsaPrivateKeyData);
                 }
                 else
                 {
@@ -106,7 +124,7 @@ namespace service.Application.Service.KeyManagement
                     KeyUsage = inCreateKeyDto.KeyUsage,
                     KeyCreatedOn = DateTime.Now,
                     KeyUpdatedOn = DateTime.Now,
-                    KeyMaterial = aesKeyData
+                    KeyMaterial = keyData
                 };
 
                 int status = await _keyManagementRepository.CreateKeyAsync(newKey);
