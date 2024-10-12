@@ -81,6 +81,8 @@ namespace service.Application.Service.KeyManagement
 
                     string? createAesKeyCommand = null;
                     string? createDesKeyCommand = null;
+                    string? create3DesKeyCommand = null;
+                    string? createSeedKeyCommand = null;
                     string? createRsaKeyPairCommand = null;
                     string? createEcKeyPairCommand = null;
                     string? keyData = null;
@@ -112,6 +114,26 @@ namespace service.Application.Service.KeyManagement
                                 _ => throw new ArgumentException("Invalid key size for AES."),
                             };
                             keyData = await _openSslService.RunOpenSslCommandAsync(createDesKeyCommand);
+                        }
+                        else if (inCreateKeyDto.KeyAlgorithm == "3des" && inCreateKeyDto.KeyType == "symmetric")
+                        {
+                            create3DesKeyCommand = inCreateKeyDto.KeySize switch
+                            {
+                                64 => OpenSslCommands.Generate3Des64KeyData,// Generate 3DES-64 key
+                                128 => OpenSslCommands.Generate3Des128KeyData,// Generate 3DES-128 key
+                                192 => OpenSslCommands.Generate3Des192KeyData,// Generate 3DES-192 key
+                                _ => throw new ArgumentException("Invalid key size for AES."),
+                            };
+                            keyData = await _openSslService.RunOpenSslCommandAsync(create3DesKeyCommand);
+                        }
+                        else if (inCreateKeyDto.KeyAlgorithm == "seed" && inCreateKeyDto.KeyType == "symmetric")
+                        {
+                            createSeedKeyCommand = inCreateKeyDto.KeySize switch
+                            {
+                                128 => OpenSslCommands.GenerateSeed128KeyData,// Generate SEED-128 key
+                                _ => throw new ArgumentException("Invalid key size for AES."),
+                            };
+                            keyData = await _openSslService.RunOpenSslCommandAsync(createSeedKeyCommand);
                         }
                         else if (inCreateKeyDto.KeyAlgorithm == "rsa" && inCreateKeyDto.KeyType == "asymmetric")
                         {

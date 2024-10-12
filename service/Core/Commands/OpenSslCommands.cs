@@ -92,5 +92,29 @@
         /// This command produces a random key of 21 bytes, suitable for DES encryption.
         /// </summary>
         public const string GenerateDes168KeyData = @"openssl rand -hex 21";
+
+        /// <summary>
+        /// Generates a pseudo-random 64-bit key for 3DES encryption using OpenSSL.
+        /// The key is represented as a hexadecimal string.
+        /// </summary>
+        public const string Generate3Des64KeyData = @"openssl rand -hex 8";
+
+        /// <summary>
+        /// Generates a pseudo-random 128-bit key for 3DES encryption using OpenSSL.
+        /// The key is represented as a hexadecimal string.
+        /// </summary>
+        public const string Generate3Des128KeyData = @"openssl rand -hex 16";
+
+        /// <summary>
+        /// Generates a pseudo-random 192-bit key for 3DES encryption using OpenSSL.
+        /// The key is represented as a hexadecimal string.
+        /// </summary>
+        public const string Generate3Des192KeyData = @"openssl rand -hex 24";
+
+        /// <summary>
+        /// Generates a pseudo-random 128-bit key for SEED encryption using OpenSSL.
+        /// The key is represented as a hexadecimal string.
+        /// </summary>
+        public const string GenerateSeed128KeyData = @"openssl rand -hex 16";
     }
 }
