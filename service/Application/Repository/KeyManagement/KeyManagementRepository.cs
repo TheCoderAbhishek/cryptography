@@ -218,5 +218,57 @@ namespace service.Application.Repository.KeyManagement
                     ErrorCode.InsertPrivateDataAsyncException, ConstantData.Txn());
             }
         }
+
+        /// <summary>
+        /// Checks if the specified key id is unique in the database.
+        /// </summary>
+        /// <param name="keyId">The key id to check.</param>
+        /// <returns>
+        /// 1 if the key id is unique, 0 if it is not unique.
+        /// </returns>
+        /// <exception cref="CustomException">Thrown if an error occurs during the check.</exception>
+        public async Task<int> CheckUniqueKeyIdAsync(string keyId)
+        {
+            string query = KeyManagementQueries._checkKeyIdUniqueOrNot;
+            try
+            {
+                _logger.LogInformation("Starting unique key id check for key: {KeyId}", keyId);
+
+                var parameters = new
+                {
+                    @KeyId = keyId,
+                };
+
+                int isUnique = await _commonDbHander.GetSingleData<int>(query,
+                    $"Unique key id check successful for key: {keyId}",
+                    $"Error checking unique key id for key: {keyId}",
+                    ErrorCode.CheckUniqueKeyIdAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                if (isUnique == 1)
+                {
+                    _logger.LogInformation("Unique key id check successful for key: {KeyId}", keyId);
+                }
+                else
+                {
+                    _logger.LogError("Error checking unique key id for key: {KeyId}", keyId);
+                }
+
+                return isUnique;
+            }
+            catch (SqlException sqlException)
+            {
+                _logger.LogError(sqlException, "SQL exception occurred during unique key id check: {ErrorMessage}", sqlException.Message);
+                throw new CustomException("SQL exception occurred during unique key id check", sqlException,
+                    ErrorCode.CheckUniqueKeyIdAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception occurred during unique key id check: {ErrorMessage}", ex.Message);
+                throw new CustomException("Exception occurred during unique key id check", ex,
+                    ErrorCode.CheckUniqueKeyIdAsyncException, ConstantData.Txn());
+            }
+        }
     }
 }

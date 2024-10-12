@@ -33,5 +33,12 @@ namespace service.Core.Interfaces.KeyManagement
         /// <param name="secureKeys">An object containing the key information to be inserted.</param>
         /// <returns>A task representing the operation. The result of the task will be the number of rows affected by the insertion.</returns>
         Task<int> InsertPrivateDataAsync(SecureKeys secureKeys);
+
+        /// <summary>
+        /// Checks if a given key id is unique within the system.
+        /// </summary>
+        /// <param name="keyId">The key id to be checked.</param>
+        /// <returns>A task that returns 1 if the key id is unique, 0 if it is not unique, and throws an exception if there is an error.</returns>
+        Task<int> CheckUniqueKeyIdAsync(string keyId);
     }
 }

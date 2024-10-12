@@ -537,6 +537,21 @@
         /// </summary>
         public const string InsertPrivateDataAsyncException = "ERR-3000-015";
 
+        /// <summary>
+        /// Error code indicating a unique key ID check failure due to an unknown error.
+        /// </summary>
+        public const string CheckUniqueKeyIdAsyncError = "ERR-3000-016";
+
+        /// <summary>
+        /// Error code indicating a SQL exception occurred during the unique key ID check.
+        /// </summary>
+        public const string CheckUniqueKeyIdAsyncSqlException = "ERR-3000-017";
+
+        /// <summary>
+        /// Error code indicating a general exception occurred during the unique key ID check.
+        /// </summary>
+        public const string CheckUniqueKeyIdAsyncException = "ERR-3000-018";
+
         #endregion
     }
 }

@@ -30,5 +30,13 @@
         /// </summary>
         public const string _insertPrivateDataTable = @"INSERT INTO [cryptography].[dbo].[tblSecureKeys] (KeyId, KeyName, KeyType, KeyAlgorithm, KeySize, KeyOwner, KeyStatus, KeyAccess, KeyMaterial)" +
                                                             " VALUES (@KeyId, @KeyName, @KeyType, @KeyAlgorithm, @KeySize, @KeyOwner, @KeyStatus, @KeyAccess, @KeyMaterial);";
+
+        /// <summary>
+        /// Checks if a given KeyId exists uniquely in the tblKeys table.
+        /// Returns 1 if the KeyId is unique, 0 otherwise.
+        /// </summary>
+        public const string _checkKeyIdUniqueOrNot = @"SELECT CASE WHEN COUNT(*) > 0 THEN 0 ELSE 1 END AS IsUnique" +
+                                                            " FROM [cryptography].[dbo].[tblKeys]" +
+                                                            " WHERE KeyId = @KeyId;";
     }
 }
