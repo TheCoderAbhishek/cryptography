@@ -76,13 +76,19 @@ namespace service.Application.Service.KeyManagement
 
                 if (isKeyNameUnique == 1)
                 {
+                    inCreateKeyDto.KeyType = inCreateKeyDto.KeyType!.ToLower();
+                    inCreateKeyDto.KeyAlgorithm = inCreateKeyDto.KeyAlgorithm!.ToLower();
+
                     string? createAesKeyCommand = null;
+                    string? createDesKeyCommand = null;
                     string? createRsaKeyPairCommand = null;
+                    string? createEcKeyPairCommand = null;
                     string? keyData = null;
                     string? rsaPrivateKeyData = null;
+                    string? ecPrivateKeyData = null;
                     string KeyId = GenerateKeyId();
 
-                    if (inCreateKeyDto.KeyAlgorithm == "AES" && inCreateKeyDto.KeyType == "Symmetric")
+                    if (inCreateKeyDto.KeyAlgorithm == "aes" && inCreateKeyDto.KeyType == "symmetric")
                     {
                         createAesKeyCommand = inCreateKeyDto.KeySize switch
                         {
@@ -93,7 +99,17 @@ namespace service.Application.Service.KeyManagement
                         };
                         keyData = await _openSslService.RunOpenSslCommandAsync(createAesKeyCommand);
                     }
-                    else if (inCreateKeyDto.KeyAlgorithm == "RSA" && inCreateKeyDto.KeyType == "Asymmetric")
+                    else if (inCreateKeyDto.KeyAlgorithm == "des" && inCreateKeyDto.KeyType == "symmetric")
+                    {
+                        createDesKeyCommand = inCreateKeyDto.KeySize switch
+                        {
+                            112 => OpenSslCommands.GenerateDes112KeyData,// Generate DES-112 key
+                            168 => OpenSslCommands.GenerateDes168KeyData,// Generate DES-168 key
+                            _ => throw new ArgumentException("Invalid key size for AES."),
+                        };
+                        keyData = await _openSslService.RunOpenSslCommandAsync(createDesKeyCommand);
+                    }
+                    else if (inCreateKeyDto.KeyAlgorithm == "rsa" && inCreateKeyDto.KeyType == "asymmetric")
                     {
                         // Step 1: Generate RSA Private Key
                         createRsaKeyPairCommand = inCreateKeyDto.KeySize switch
@@ -133,6 +149,50 @@ namespace service.Application.Service.KeyManagement
                         {
                             _logger.LogError("Error occurred while inserting rsa private key data.");
                             return (-2, $"Error occurred while creating RSA private key {inCreateKeyDto.KeyName}");
+                        }
+                    }
+                    else if (inCreateKeyDto.KeyAlgorithm == "ec" && inCreateKeyDto.KeyType == "asymmetric")
+                    {
+                        // Step 1: Generate RSA Private Key
+                        createEcKeyPairCommand = inCreateKeyDto.KeySize switch
+                        {
+                            160 => OpenSslCommands.GenerateEcc160PrivateKey,// Generate EC-160 key. This size is considered to provide security equivalent to a 1024-bit RSA key
+                            224 => OpenSslCommands.GenerateEcc224PrivateKey,// Generate EC-224 key. This size is considered to provide security equivalent to a 2048-bit RSA key
+                            256 => OpenSslCommands.GenerateEcc256PrivateKey,// Generate EC-256 key. This size is considered to provide security equivalent to a 3072-bit RSA key
+                            384 => OpenSslCommands.GenerateEcc384PrivateKey,// Generate EC-384 key. This size is considered to provide security equivalent to a 7680-bit RSA key
+                            521 => OpenSslCommands.GenerateEcc521PrivateKey,// Generate EC-521 key. This size is considered to provide security equivalent to a 15360-bit RSA key
+                            _ => throw new ArgumentException("Invalid key size for RSA."),
+                        };
+
+                        // Generate RSA Private Key
+                        ecPrivateKeyData = await _openSslService.RunOpenSslCommandAsync(createEcKeyPairCommand);
+
+                        // Step 2: Extract RSA Public Key from the generated Private Key
+                        keyData = await _openSslService.RunOpenSslCommandAsyncWithInput(OpenSslCommands.ExtractPublicKeyFromPrivateKeyEcc, ecPrivateKeyData);
+
+                        var secureKey = new SecureKeys
+                        {
+                            KeyId = KeyId,
+                            KeyName = inCreateKeyDto.KeyName,
+                            KeyType = inCreateKeyDto.KeyType,
+                            KeyAlgorithm = inCreateKeyDto.KeyAlgorithm,
+                            KeySize = inCreateKeyDto.KeySize,
+                            KeyOwner = keyOwner,
+                            KeyStatus = true,
+                            KeyAccess = "Private",
+                            KeyMaterial = ecPrivateKeyData
+                        };
+
+                        int storeSecureKey = await _keyManagementRepository.InsertPrivateDataAsync(secureKey);
+
+                        if (storeSecureKey == 1)
+                        {
+                            _logger.LogInformation("EC private key data successfully inserted into table.");
+                        }
+                        else
+                        {
+                            _logger.LogError("Error occurred while inserting ec private key data.");
+                            return (-2, $"Error occurred while creating EC private key {inCreateKeyDto.KeyName}");
                         }
                     }
                     else

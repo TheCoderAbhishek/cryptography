@@ -225,4 +225,5 @@ WHERE KeyName = 'Aes256EncDec'; -- Dynamically pass the KeyName
 -- View all data from `[tblSecureKeys]` table
 SELECT * FROM [cryptography].[dbo].[tblSecureKeys];
 
-
+-- Truncate and reset identity `[tblKeys]`
+TRUNCATE TABLE [cryptography].[dbo].[tblSecureKeys];
