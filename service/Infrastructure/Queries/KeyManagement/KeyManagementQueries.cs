@@ -16,5 +16,13 @@
         public const string _createKey = @"INSERT INTO [cryptography].[dbo].[tblKeys]" +
                                             "(KeyId, KeyName, KeyType, KeyAlgorithm, KeySize, KeyOwner, KeyStatus, KeyState, KeyAccess, KeyUsage, KeyCreatedOn, KeyUpdatedOn, KeyMaterial)" +
                                             "VALUES(@KeyId, @KeyName, @KeyType, @KeyAlgorithm, @KeySize, @KeyOwner, @KeyStatus, @KeyState, @KeyAccess, @KeyUsage, @KeyCreatedOn, @KeyUpdatedOn, @KeyMaterial)";
+
+        /// <summary>
+        /// Checks if a given KeyName exists uniquely in the tblKeys table.
+        /// Returns 1 if the KeyName is unique, 0 otherwise.
+        /// </summary>
+        public const string _checkKeyNameUniqueOrNot = @"SELECT CASE WHEN COUNT(*) > 0 THEN 0 ELSE 1 END AS IsUnique" +
+                                                            " FROM [cryptography].[dbo].[tblKeys]" +
+                                                            " WHERE KeyName = @KeyName;";
     }
 }

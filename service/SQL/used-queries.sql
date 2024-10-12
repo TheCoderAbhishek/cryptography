@@ -211,3 +211,14 @@ SELECT * FROM [cryptography].[dbo].[tblKeys];
 -- Truncate and reset identity `[tblKeys]`
 TRUNCATE TABLE [cryptography].[dbo].[tblKeys];
 
+-- Check if the dynamically passed KeyName exists in the table
+SELECT CASE
+         -- If the KeyName exists (COUNT(*) > 0), return 0
+         WHEN COUNT(*) > 0 THEN 0
+         -- If the KeyName does not exist (COUNT(*) = 0), return 1
+         ELSE 1
+       END AS IsUnique
+FROM [cryptography].[dbo].[tblKeys]
+WHERE KeyName = 'Aes256EncDec'; -- Dynamically pass the KeyName
+
+

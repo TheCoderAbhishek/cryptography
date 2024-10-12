@@ -115,5 +115,57 @@ namespace service.Application.Repository.KeyManagement
                     ErrorCode.CreateKeyAsyncException, ConstantData.Txn());
             }
         }
+
+        /// <summary>
+        /// Checks if the specified key name is unique in the database.
+        /// </summary>
+        /// <param name="keyName">The key name to check.</param>
+        /// <returns>
+        /// 1 if the key name is unique, 0 if it is not unique.
+        /// </returns>
+        /// <exception cref="CustomException">Thrown if an error occurs during the check.</exception>
+        public async Task<int> CheckUniqueKeyName(string keyName)
+        {
+            string query = KeyManagementQueries._checkKeyNameUniqueOrNot;
+            try
+            {
+                _logger.LogInformation("Starting unique key name check for key: {KeyName}", keyName);
+
+                var parameters = new
+                {
+                    @KeyName = keyName,
+                };
+
+                int isUnique = await _commonDbHander.GetSingleData<int>(query,
+                    $"Unique key name check successful for key: {keyName}",
+                    $"Error checking unique key name for key: {keyName}",
+                    ErrorCode.CheckUniqueKeyNameError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                if (isUnique == 1)
+                {
+                    _logger.LogInformation("Unique key name check successful for key: {KeyName}", keyName);
+                }
+                else
+                {
+                    _logger.LogError("Error checking unique key name for key: {KeyName}", keyName);
+                }
+
+                return isUnique;
+            }
+            catch (SqlException sqlException)
+            {
+                _logger.LogError(sqlException, "SQL exception occurred during unique key name check: {ErrorMessage}", sqlException.Message);
+                throw new CustomException("SQL exception occurred during unique key name check", sqlException,
+                    ErrorCode.CheckUniqueKeyNameSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception occurred during unique key name check: {ErrorMessage}", ex.Message);
+                throw new CustomException("Exception occurred during unique key name check", ex,
+                    ErrorCode.CheckUniqueKeyNameException, ConstantData.Txn());
+            }
+        }
     }
 }

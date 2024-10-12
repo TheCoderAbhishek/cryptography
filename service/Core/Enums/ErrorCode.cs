@@ -507,6 +507,21 @@
         /// </summary>
         public const string CreateKeyAsyncUnhandledException = "ERR-3000-009";
 
+        /// <summary>
+        /// This error code indicates that a unique key constraint violation has occurred.
+        /// </summary>
+        public const string CheckUniqueKeyNameError = "ERR-3000-010";
+
+        /// <summary>
+        /// This error code indicates that a unique key constraint exception has occurred.
+        /// </summary>
+        public const string CheckUniqueKeyNameException = "ERR-3000-011";
+
+        /// <summary>
+        /// This error code indicates that a unique key constraint SQL exception has occurred.
+        /// </summary>
+        public const string CheckUniqueKeyNameSqlException = "ERR-3000-012";
+
         #endregion
     }
 }

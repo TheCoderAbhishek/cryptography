@@ -130,6 +130,7 @@ namespace service.Controllers
         /// <param name="inCreateKeyDto">The input data for creating the key.</param>
         /// <returns>The response indicating the success or failure of the operation.</returns>
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status302Found)]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
         [HttpPost]
@@ -153,6 +154,20 @@ namespace service.Controllers
                         StatusCodes.Status200OK,
                         responseCode: status,
                         successMessage: message,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else if (status == 2)
+                {
+                    var txn = ConstantData.Txn();
+                    _logger.LogError("Error occurred while creating key with name: {KeyName} due to duplicate key name in table at TXN: {Txn}", inCreateKeyDto.KeyName, txn);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status302Found,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.CreateKeyAsyncError,
                         txn: txn);
                     return Ok(response);
                 }

@@ -19,5 +19,12 @@ namespace service.Core.Interfaces.KeyManagement
         /// <param name="key">The key to create.</param>
         /// <returns>A task that represents the asynchronous operation. The task result is the newly created key ID.</returns>
         Task<int> CreateKeyAsync(Keys key);
+
+        /// <summary>
+        /// Checks if a given key name is unique within the system.
+        /// </summary>
+        /// <param name="keyName">The key name to be checked.</param>
+        /// <returns>A task that returns 1 if the key name is unique, 0 if it is not unique, and throws an exception if there is an error.</returns>
+        Task<int> CheckUniqueKeyName(string keyName);
     }
 }

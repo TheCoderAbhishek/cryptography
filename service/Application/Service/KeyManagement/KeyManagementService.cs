@@ -72,72 +72,83 @@ namespace service.Application.Service.KeyManagement
         {
             try
             {
-                string? createAesKeyCommand = null;
-                string? keyData = null;
-                string? rsaPrivateKeyData = null;
+                int isKeyNameUnique = await _keyManagementRepository.CheckUniqueKeyName(inCreateKeyDto.KeyName!);
 
-                if (inCreateKeyDto.KeyAlgorithm == "AES" && inCreateKeyDto.KeyType == "Symmetric")
+                if (isKeyNameUnique == 1)
                 {
-                    createAesKeyCommand = inCreateKeyDto.KeySize switch
+                    string? createAesKeyCommand = null;
+                    string? createRsaKeyPairCommand = null;
+                    string? keyData = null;
+                    string? rsaPrivateKeyData = null;
+
+                    if (inCreateKeyDto.KeyAlgorithm == "AES" && inCreateKeyDto.KeyType == "Symmetric")
                     {
-                        128 => OpenSslCommands.GenerateAes128KeyData,// Generate AES-128 key
-                        192 => OpenSslCommands.GenerateAes192KeyData,// Generate AES-192 key
-                        256 => OpenSslCommands.GenerateAes256KeyData,// Generate AES-256 key
-                        _ => throw new ArgumentException("Invalid key size for AES."),
-                    };
-                    keyData = await _openSslService.RunOpenSslCommandAsync(createAesKeyCommand);
-                }
-                else if (inCreateKeyDto.KeyAlgorithm == "RSA" && inCreateKeyDto.KeyType == "Asymmetric")
-                {
-                    // Step 1: Generate RSA Private Key
-                    createAesKeyCommand = inCreateKeyDto.KeySize switch
+                        createAesKeyCommand = inCreateKeyDto.KeySize switch
+                        {
+                            128 => OpenSslCommands.GenerateAes128KeyData,// Generate AES-128 key
+                            192 => OpenSslCommands.GenerateAes192KeyData,// Generate AES-192 key
+                            256 => OpenSslCommands.GenerateAes256KeyData,// Generate AES-256 key
+                            _ => throw new ArgumentException("Invalid key size for AES."),
+                        };
+                        keyData = await _openSslService.RunOpenSslCommandAsync(createAesKeyCommand);
+                    }
+                    else if (inCreateKeyDto.KeyAlgorithm == "RSA" && inCreateKeyDto.KeyType == "Asymmetric")
                     {
-                        2048 => OpenSslCommands.GenerateRsa2048PrivateKey,
-                        3072 => OpenSslCommands.GenerateRsa3072PrivateKey,
-                        4096 => OpenSslCommands.GenerateRsa4096PrivateKey,
-                        _ => throw new ArgumentException("Invalid key size for RSA."),
+                        // Step 1: Generate RSA Private Key
+                        createRsaKeyPairCommand = inCreateKeyDto.KeySize switch
+                        {
+                            2048 => OpenSslCommands.GenerateRsa2048PrivateKey,// Generate RSA-2048 key
+                            3072 => OpenSslCommands.GenerateRsa3072PrivateKey,// Generate RSA-3072 key
+                            4096 => OpenSslCommands.GenerateRsa4096PrivateKey,// Generate RSA-4096 key
+                            _ => throw new ArgumentException("Invalid key size for RSA."),
+                        };
+
+                        // Generate RSA Private Key
+                        rsaPrivateKeyData = await _openSslService.RunOpenSslCommandAsync(createRsaKeyPairCommand);
+
+                        // Step 2: Extract RSA Public Key from the generated Private Key
+                        keyData = await _openSslService.RunOpenSslCommandAsyncWithInput(OpenSslCommands.ExtractPublicKeyFromPrivateKey, rsaPrivateKeyData);
+                    }
+                    else
+                    {
+                        _logger.LogError("Error occurred while creating a key. Invalid parameters passed.");
+                        return (0, "Error occurred while creating a key. Invalid parameters passed.");
+                    }
+
+                    var newKey = new Keys
+                    {
+                        KeyId = GenerateKeyId(),
+                        KeyName = inCreateKeyDto.KeyName,
+                        KeyType = inCreateKeyDto.KeyType,
+                        KeyAlgorithm = inCreateKeyDto.KeyAlgorithm,
+                        KeySize = inCreateKeyDto.KeySize,
+                        KeyOwner = keyOwner,
+                        KeyStatus = true,
+                        KeyState = 1,
+                        KeyAccess = "Public",
+                        KeyUsage = inCreateKeyDto.KeyUsage,
+                        KeyCreatedOn = DateTime.Now,
+                        KeyUpdatedOn = DateTime.Now,
+                        KeyMaterial = keyData
                     };
 
-                    // Generate RSA Private Key
-                    rsaPrivateKeyData = await _openSslService.RunOpenSslCommandAsync(createAesKeyCommand);
+                    int status = await _keyManagementRepository.CreateKeyAsync(newKey);
 
-                    // Step 2: Extract RSA Public Key from the generated Private Key
-                    keyData = await _openSslService.RunOpenSslCommandAsyncWithInput(OpenSslCommands.ExtractPublicKeyFromPrivateKey, rsaPrivateKeyData);
+                    if (status == 1)
+                    {
+                        _logger.LogInformation("Key created successfully.");
+                        return (status, "Key created successfully.");
+                    }
+                    else
+                    {
+                        _logger.LogError("Failed to create key.");
+                        return (status, "Failed to create key.");
+                    } 
                 }
                 else
                 {
-                    _logger.LogError("Error occurred while creating a key. Invalid parameters passed.");
-                    return (0, "Error occurred while creating a key. Invalid parameters passed.");
-                }
-
-                var newKey = new Keys
-                {
-                    KeyId = GenerateKeyId(),
-                    KeyName = inCreateKeyDto.KeyName,
-                    KeyType = inCreateKeyDto.KeyType,
-                    KeyAlgorithm = inCreateKeyDto.KeyAlgorithm,
-                    KeySize = inCreateKeyDto.KeySize,
-                    KeyOwner = keyOwner,
-                    KeyStatus = true,
-                    KeyState = 1,
-                    KeyAccess = "Public",
-                    KeyUsage = inCreateKeyDto.KeyUsage,
-                    KeyCreatedOn = DateTime.Now,
-                    KeyUpdatedOn = DateTime.Now,
-                    KeyMaterial = keyData
-                };
-
-                int status = await _keyManagementRepository.CreateKeyAsync(newKey);
-
-                if (status == 1)
-                {
-                    _logger.LogInformation("Key created successfully.");
-                    return (status, "Key created successfully.");
-                }
-                else
-                {
-                    _logger.LogError("Failed to create key.");
-                    return (status, "Failed to create key.");
+                    _logger.LogError("{KeyName} already present in table please use different key name.", inCreateKeyDto.KeyName);
+                    return (2, $"{inCreateKeyDto.KeyName} already present in table please use different key name.");
                 }
             }
             catch (Exception ex)
