@@ -80,6 +80,7 @@ namespace service.Application.Service.KeyManagement
                     string? createRsaKeyPairCommand = null;
                     string? keyData = null;
                     string? rsaPrivateKeyData = null;
+                    string KeyId = GenerateKeyId();
 
                     if (inCreateKeyDto.KeyAlgorithm == "AES" && inCreateKeyDto.KeyType == "Symmetric")
                     {
@@ -108,6 +109,31 @@ namespace service.Application.Service.KeyManagement
 
                         // Step 2: Extract RSA Public Key from the generated Private Key
                         keyData = await _openSslService.RunOpenSslCommandAsyncWithInput(OpenSslCommands.ExtractPublicKeyFromPrivateKey, rsaPrivateKeyData);
+
+                        var secureKey = new SecureKeys
+                        {
+                            KeyId = KeyId,
+                            KeyName = inCreateKeyDto.KeyName,
+                            KeyType = inCreateKeyDto.KeyType,
+                            KeyAlgorithm = inCreateKeyDto.KeyAlgorithm,
+                            KeySize = inCreateKeyDto.KeySize,
+                            KeyOwner = keyOwner,
+                            KeyStatus = true,
+                            KeyAccess = "Private",
+                            KeyMaterial = rsaPrivateKeyData
+                        };
+
+                        int storeSecureKey = await _keyManagementRepository.InsertPrivateDataAsync(secureKey);
+
+                        if (storeSecureKey == 1)
+                        {
+                            _logger.LogInformation("RSA private key data successfully inserted into table.");
+                        }
+                        else
+                        {
+                            _logger.LogError("Error occurred while inserting rsa private key data.");
+                            return (-2, $"Error occurred while creating RSA private key {inCreateKeyDto.KeyName}");
+                        }
                     }
                     else
                     {
@@ -117,7 +143,7 @@ namespace service.Application.Service.KeyManagement
 
                     var newKey = new Keys
                     {
-                        KeyId = GenerateKeyId(),
+                        KeyId = KeyId,
                         KeyName = inCreateKeyDto.KeyName,
                         KeyType = inCreateKeyDto.KeyType,
                         KeyAlgorithm = inCreateKeyDto.KeyAlgorithm,

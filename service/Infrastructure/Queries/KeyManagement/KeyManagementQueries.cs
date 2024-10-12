@@ -24,5 +24,11 @@
         public const string _checkKeyNameUniqueOrNot = @"SELECT CASE WHEN COUNT(*) > 0 THEN 0 ELSE 1 END AS IsUnique" +
                                                             " FROM [cryptography].[dbo].[tblKeys]" +
                                                             " WHERE KeyName = @KeyName;";
+
+        /// <summary>
+        /// Inserts a new record into the `tblSecureKeys` table.
+        /// </summary>
+        public const string _insertPrivateDataTable = @"INSERT INTO [cryptography].[dbo].[tblSecureKeys] (KeyId, KeyName, KeyType, KeyAlgorithm, KeySize, KeyOwner, KeyStatus, KeyAccess, KeyMaterial)" +
+                                                            " VALUES (@KeyId, @KeyName, @KeyType, @KeyAlgorithm, @KeySize, @KeyOwner, @KeyStatus, @KeyAccess, @KeyMaterial);";
     }
 }

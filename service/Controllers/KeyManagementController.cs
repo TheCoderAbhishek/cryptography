@@ -137,6 +137,7 @@ namespace service.Controllers
         [Route("CreateKeyAsync")]
         public async Task<IActionResult> CreateKeyAsync(InCreateKeyDto inCreateKeyDto)
         {
+            var txn = ConstantData.Txn();
             try
             {
                 // Use the private method to extract claims
@@ -146,7 +147,6 @@ namespace service.Controllers
 
                 if (status == 1)
                 {
-                    var txn = ConstantData.Txn();
                     _logger.LogInformation("Key created with name: {KeyName} at TXN: {Txn}", inCreateKeyDto.KeyName, txn);
 
                     var response = new ApiResponse<string>(
@@ -159,8 +159,20 @@ namespace service.Controllers
                 }
                 else if (status == 2)
                 {
-                    var txn = ConstantData.Txn();
                     _logger.LogError("Error occurred while creating key with name: {KeyName} due to duplicate key name in table at TXN: {Txn}", inCreateKeyDto.KeyName, txn);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status302Found,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.CreateKeyAsyncError,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else if (status == -2)
+                {
+                    _logger.LogError("Error occurred while creating key with name: {KeyName} due to '{Message}' at TXN: {Txn}", inCreateKeyDto.KeyName, message, txn);
 
                     var response = new ApiResponse<string>(
                         ApiResponseStatus.Failure,
@@ -173,7 +185,6 @@ namespace service.Controllers
                 }
                 else
                 {
-                    var txn = ConstantData.Txn();
                     _logger.LogError("Error occurred while creating key with name: {KeyName} at TXN: {Txn}", inCreateKeyDto.KeyName, txn);
 
                     var response = new ApiResponse<string>(
@@ -188,7 +199,6 @@ namespace service.Controllers
             }
             catch (Exception ex)
             {
-                var txn = ConstantData.Txn();
                 _logger.LogCritical(ex, "Unhandled exception occurred while creating key with name: {KeyName} at TXN: {Txn}", inCreateKeyDto.KeyName, txn);
 
                 var response = new ApiResponse<string>(

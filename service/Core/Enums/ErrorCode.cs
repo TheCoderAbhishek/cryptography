@@ -522,6 +522,21 @@
         /// </summary>
         public const string CheckUniqueKeyNameSqlException = "ERR-3000-012";
 
+        /// <summary>
+        /// Error code for a failure to insert private data.
+        /// </summary>
+        public const string InsertPrivateDataAsyncError = "ERR-3000-013";
+
+        /// <summary>
+        /// Error code for a SQL exception during private data insertion.
+        /// </summary>
+        public const string InsertPrivateDataAsyncSqlException = "ERR-3000-014";
+
+        /// <summary>
+        /// Error code for a general exception during private data insertion.
+        /// </summary>
+        public const string InsertPrivateDataAsyncException = "ERR-3000-015";
+
         #endregion
     }
 }

@@ -6,6 +6,7 @@ using service.Core.Interfaces.KeyManagement;
 using service.Core.Interfaces.Utility;
 using service.Infrastructure.Dependency;
 using service.Infrastructure.Queries.KeyManagement;
+using System.Security.Cryptography;
 
 namespace service.Application.Repository.KeyManagement
 {
@@ -165,6 +166,56 @@ namespace service.Application.Repository.KeyManagement
                 _logger.LogError(ex, "Exception occurred during unique key name check: {ErrorMessage}", ex.Message);
                 throw new CustomException("Exception occurred during unique key name check", ex,
                     ErrorCode.CheckUniqueKeyNameException, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Inserts private data into the database.
+        /// </summary>
+        /// <param name="secureKeys">The secure keys to insert.</param>
+        /// <returns>The status of the insertion operation.</returns>
+        /// <exception cref="CustomException">Thrown if an error occurs during the insertion.</exception>
+        public async Task<int> InsertPrivateDataAsync(SecureKeys secureKeys)
+        {
+            string query = KeyManagementQueries._insertPrivateDataTable;
+            try
+            {
+                _logger.LogInformation("");
+
+                var parameters = new
+                {
+                    secureKeys.KeyId,
+                    secureKeys.KeyName,
+                    secureKeys.KeyType,
+                    secureKeys.KeyAlgorithm,
+                    secureKeys.KeySize,
+                    secureKeys.KeyOwner,
+                    secureKeys.KeyStatus,
+                    secureKeys.KeyAccess,
+                    secureKeys.KeyMaterial
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(query,
+                    $"Private data inserted successfully for KeyId: {secureKeys.KeyId}",
+                    $"Failed to insert private data for KeyId: {secureKeys.KeyId}.",
+                    $"Failed to insert private data for KeyId: {secureKeys.KeyId}. Duplicate record found.",
+                    ErrorCode.InsertPrivateDataAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                return baseResponse.Status;
+            }
+            catch (SqlException sqlException)
+            {
+                _logger.LogError(sqlException, "An error occurred while inserting private data into the database: {ErrorMessage}", sqlException.Message);
+                throw new CustomException("An error occurred while inserting private data into the database.", sqlException,
+                    ErrorCode.InsertPrivateDataAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while inserting private data: {ErrorMessage}", ex.Message);
+                throw new CustomException("An unexpected error occurred while inserting private data.", ex,
+                    ErrorCode.InsertPrivateDataAsyncException, ConstantData.Txn());
             }
         }
     }
