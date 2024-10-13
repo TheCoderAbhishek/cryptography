@@ -552,6 +552,41 @@
         /// </summary>
         public const string CheckUniqueKeyIdAsyncException = "ERR-3000-018";
 
+        /// <summary>
+        /// Error code indicates a failure during the asynchronous export key operation.
+        /// </summary>
+        public const string ExportKeyAsyncError = "ERR-3000-019";
+
+        /// <summary>
+        /// Error code indicates a SQL exception occurred during the asynchronous export key operation.
+        /// </summary>
+        public const string ExportKeyAsyncSqlException = "ERR-3000-020";
+
+        /// <summary>
+        /// Error code indicates a generic exception occurred during the asynchronous export key operation.
+        /// </summary>
+        public const string ExportKeyAsyncException = "ERR-3000-021";
+
+        /// <summary>
+        /// Error code for when an error occurs while getting key details by ID asynchronously.
+        /// </summary>
+        public const string GetKeyDetailsByIdAsyncError = "ERR-3000-022";
+
+        /// <summary>
+        /// Error code for when a SQL exception occurs while getting key details by ID asynchronously.
+        /// </summary>
+        public const string GetKeyDetailsByIdAsyncSqlException = "ERR-3000-023";
+
+        /// <summary>
+        /// Error code for when a general exception occurs while getting key details by ID asynchronously.
+        /// </summary>
+        public const string GetKeyDetailsByIdAsyncException = "ERR-3000-024";
+
+        /// <summary>
+        /// Error code indicating unhandled exception occurred while exporting key.
+        /// </summary>
+        public const string ExportKeyAsyncUnhandledException = "ERR-3000-025";
+
         #endregion
     }
 }

@@ -270,5 +270,113 @@ namespace service.Application.Repository.KeyManagement
                     ErrorCode.CheckUniqueKeyIdAsyncException, ConstantData.Txn());
             }
         }
+
+        /// <summary>
+        /// Exports the key material associated with the specified key ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the key to be exported.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains the key material as a string.
+        /// </returns>
+        /// <exception cref="CustomException">
+        /// Thrown when a SQL exception occurs during the export process or when an unexpected error occurs.
+        /// </exception>
+        public async Task<string> ExportKeyAsync(int id)
+        {
+            string query = KeyManagementQueries._getKeyDataAssociatedWithId;
+
+            try
+            {
+                _logger.LogInformation("Initiating export for key with ID: {Id}", id);
+
+                var parameters = new
+                {
+                    @Id = id,
+                };
+
+                string keyMaterial = await _commonDbHander.GetSingleData<string>(
+                    query,
+                    $"Successfully retrieved key material for key ID: {id}",
+                    $"Failed to retrieve key material for key ID: {id}",
+                    ErrorCode.ExportKeyAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                if (!string.IsNullOrEmpty(keyMaterial))
+                {
+                    _logger.LogInformation("Key material successfully exported for key ID: {Id}", id);
+                }
+                else
+                {
+                    _logger.LogWarning("No key material found for key ID: {Id}. Possible reasons include the key not existing or being inactive.", id);
+                }
+
+                return keyMaterial;
+            }
+            catch (SqlException sqlException)
+            {
+                _logger.LogError(sqlException, "SQL exception occurred while exporting key ID: {Id}. Error: {ErrorMessage}", id, sqlException.Message);
+                throw new CustomException("SQL exception occurred during key export", sqlException,
+                    ErrorCode.ExportKeyAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while exporting key ID: {Id}. Error: {ErrorMessage}", id, ex.Message);
+                throw new CustomException("An unexpected error occurred during key export", ex,
+                    ErrorCode.ExportKeyAsyncException, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Retrieves key details from the database based on the provided ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to retrieve.</param>
+        /// <returns>The key details if found, otherwise null.</returns>
+        /// <exception cref="CustomException">Throws a custom exception if an error occurs during retrieval.</exception>
+        public async Task<Keys?> GetKeyDetailsByIdAsync(int id)
+        {
+            string query = KeyManagementQueries._getKeyDetailsById;
+
+            try
+            {
+                _logger.LogInformation("Fetching key details for ID: {Id}", id);
+
+                var parameters = new
+                {
+                    @Id = id,
+                };
+
+                Keys keyDetails = await _commonDbHander.GetSingleData<Keys>(
+                    query,
+                    $"Successfully retrieved key details for ID: {id}",
+                    $"Failed to retrieve key details for ID: {id}",
+                    ErrorCode.GetKeyDetailsByIdAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                if (keyDetails != null)
+                {
+                    _logger.LogInformation("Key details successfully retrieved for ID: {Id}", id);
+                }
+                else
+                {
+                    _logger.LogWarning("No key details found for ID: {Id}. Possible reasons include the key not existing or being inactive.", id);
+                }
+
+                return keyDetails;
+            }
+            catch (SqlException sqlException)
+            {
+                _logger.LogError(sqlException, "SQL exception occurred while fetching key details for ID: {Id}. Error: {ErrorMessage}", id, sqlException.Message);
+                throw new CustomException("SQL exception occurred during key details retrieval", sqlException,
+                    ErrorCode.GetKeyDetailsByIdAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while fetching key details for ID: {Id}. Error: {ErrorMessage}", id, ex.Message);
+                throw new CustomException("An unexpected error occurred during key details retrieval", ex,
+                    ErrorCode.GetKeyDetailsByIdAsyncException, ConstantData.Txn());
+            }
+        }
     }
 }

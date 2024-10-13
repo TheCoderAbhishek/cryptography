@@ -227,3 +227,5 @@ SELECT * FROM [cryptography].[dbo].[tblSecureKeys];
 
 -- Truncate and reset identity `[tblKeys]`
 TRUNCATE TABLE [cryptography].[dbo].[tblSecureKeys];
+
+SELECT KeyMaterial AS key_material FROM [cryptography].[dbo].[tblKeys] WHERE id = 1;

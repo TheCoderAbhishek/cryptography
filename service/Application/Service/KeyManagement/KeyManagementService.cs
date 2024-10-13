@@ -285,5 +285,45 @@ namespace service.Application.Service.KeyManagement
                 return (-1, $"Error occurred while creating a key. Invalid parameters passed.");
             }
         }
+
+        /// <summary>
+        /// Exports the key material for a given key ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to export.</param>
+        /// <returns>A tuple containing the status code and a message indicating the result of the operation.</returns>
+        /// <exception cref="Exception">Throws an exception if an unexpected error occurs during the export process.</exception>
+        public async Task<(int, string, string)> ExportKey(int id)
+        {
+            try
+            {
+                Keys? key = await _keyManagementRepository.GetKeyDetailsByIdAsync(id);
+
+                if (key != null)
+                {
+                    string keyMaterial = await _keyManagementRepository.ExportKeyAsync(id);
+
+                    if (!string.IsNullOrEmpty(keyMaterial))
+                    {
+                        _logger.LogInformation("Key Material fetched successfully.");
+                        return (1, "Key material fetched successfully.", keyMaterial);
+                    }
+                    else
+                    {
+                        _logger.LogError("An unhandled exception occurred while exporting a key.");
+                        return (0, "Error occurred while exporting a key.", keyMaterial);
+                    } 
+                }
+                else
+                {
+                    _logger.LogError("Invalid id provided while exporting key material. {Id}", id);
+                    return (-2, "invalid id provided.", "Invalid Request");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unhandled exception occurred while exporting a key: {Message}", ex.Message);
+                return (-1, $"Exception occurred while exporting a key.", "Exception");
+            }
+        }
     }
 }

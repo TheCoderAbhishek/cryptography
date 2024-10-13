@@ -40,5 +40,19 @@ namespace service.Core.Interfaces.KeyManagement
         /// <param name="keyId">The key id to be checked.</param>
         /// <returns>A task that returns 1 if the key id is unique, 0 if it is not unique, and throws an exception if there is an error.</returns>
         Task<int> CheckUniqueKeyIdAsync(string keyId);
+
+        /// <summary>
+        /// Gets the key data from table.
+        /// </summary>
+        /// <param name="id">The integer id associated with key.</param>
+        /// <returns>A string of key data.</returns>
+        Task<string> ExportKeyAsync(int id);
+
+        /// <summary>
+        /// Retrieves key details based on the provided ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to retrieve.</param>
+        /// <returns>A Task that represents the asynchronous operation. The result of the task will be a Keys object containing the requested key details.</returns>
+        Task<Keys?> GetKeyDetailsByIdAsync(int id);
     }
 }

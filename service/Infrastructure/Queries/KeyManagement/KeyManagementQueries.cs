@@ -38,5 +38,15 @@
         public const string _checkKeyIdUniqueOrNot = @"SELECT CASE WHEN COUNT(*) > 0 THEN 0 ELSE 1 END AS IsUnique" +
                                                             " FROM [cryptography].[dbo].[tblKeys]" +
                                                             " WHERE KeyId = @KeyId;";
+
+        /// <summary>
+        /// SQL query to get key material from keys table.
+        /// </summary>
+        public const string _getKeyDataAssociatedWithId = @"SELECT KeyMaterial FROM [cryptography].[dbo].[tblKeys] WHERE id = @Id;";
+
+        /// <summary>
+        /// SQL query to get key details associated with id.
+        /// </summary>
+        public const string _getKeyDetailsById = @"SELECT * FROM [cryptography].[dbo].[tblKeys] WHERE id = @Id;";
     }
 }

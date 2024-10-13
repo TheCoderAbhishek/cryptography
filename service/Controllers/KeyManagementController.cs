@@ -213,5 +213,98 @@ namespace service.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
+
+        /// <summary>
+        /// Exports a key based on the provided ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to export.</param>
+        /// <returns>
+        /// A response indicating the success or failure of the export operation.
+        /// </returns>
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status302Found)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
+        [HttpPost]
+        [Route("ExportKeyAsync")]
+        public async Task<IActionResult> ExportKeyAsync(int id)
+        {
+            var txn = ConstantData.Txn();
+            try
+            {
+                var (status, message, keyMaterial) = await _keyManagementService.ExportKey(id);
+
+                if (status == 1)
+                {
+                    _logger.LogInformation("Key exported at TXN: {Txn}", txn);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        responseCode: status,
+                        successMessage: message,
+                        returnValue: keyMaterial,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else if (status == 0)
+                {
+                    _logger.LogError("Error occured while exporting key. {Message}", message);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status302Found,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.ExportKeyAsyncError,
+                        returnValue: keyMaterial,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else if (status == -2)
+                {
+                    _logger.LogError("Error occured while exporting key. {Message}", message);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.ExportKeyAsyncError,
+                        returnValue: keyMaterial,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else
+                {
+                    _logger.LogError("Error occurred while exporting key at TXN: {Txn}", txn);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.ExportKeyAsyncError,
+                        returnValue: keyMaterial,
+                        txn: txn);
+                    return Ok(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unhandled exception occurred while exporting key at TXN: {Txn}", txn);
+
+                var response = new ApiResponse<string>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    responseCode: -1,
+                    errorMessage: "An unexpected error occurred.",
+                    errorCode: ErrorCode.ExportKeyAsyncUnhandledException,
+                    txn: txn
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
     }
 }
