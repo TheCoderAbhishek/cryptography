@@ -203,7 +203,7 @@ namespace service.Application.Service.KeyManagement
                             else
                             {
                                 _logger.LogError("Invalid key algorithm provided: {KeyAlgorithm}", inCreateKeyDto.KeyAlgorithm);
-                                return (-2, $"Error occurred while creating {inCreateKeyDto.KeyAlgorithm} private key {inCreateKeyDto.KeyName}");
+                                return (-2, $"Error occurred while creating private key");
                             }
 
                             var secureKey = new SecureKeys
@@ -276,7 +276,7 @@ namespace service.Application.Service.KeyManagement
                 else
                 {
                     _logger.LogError("{KeyName} already present in table please use different key name.", inCreateKeyDto.KeyName);
-                    return (2, $"{inCreateKeyDto.KeyName} already present in table please use different key name.");
+                    return (2, $"Key name already exists.");
                 }
             }
             catch (Exception ex)

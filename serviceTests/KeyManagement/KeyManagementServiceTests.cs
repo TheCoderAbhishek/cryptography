@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using service.Application.Service.KeyManagement;
+using service.Core.Dto.KeyManagement;
 using service.Core.Entities.KeyManagement;
 using service.Core.Interfaces.KeyManagement;
 using service.Core.Interfaces.OpenSsl;
@@ -14,6 +15,7 @@ namespace serviceTests.KeyManagement
         private readonly Mock<ILogger<KeyManagementService>> _loggerMock;
         private readonly KeyManagementService _service;
         private readonly Mock<IOpenSslService> _openSslServiceMock;
+        private readonly Faker<InCreateKeyDto> _fakeInCreateKeyDto;
 
         public KeyManagementServiceTests()
         {
@@ -21,7 +23,41 @@ namespace serviceTests.KeyManagement
             _openSslServiceMock = new Mock<IOpenSslService>();
             _loggerMock = new Mock<ILogger<KeyManagementService>>();
             _service = new KeyManagementService(_loggerMock.Object, _keyManagementRepositoryMock.Object, _openSslServiceMock.Object);
+
+            // Bogus for generating random data
+            _fakeInCreateKeyDto = new Faker<InCreateKeyDto>()
+                .RuleFor(k => k.KeyName, f => f.Lorem.Word())
+                .RuleFor(k => k.KeyType, "symmetric")
+                .RuleFor(k => k.KeyAlgorithm, "aes")
+                .RuleFor(k => k.KeySize, 256)
+                .RuleFor(k => k.KeyUsage, "encryption");
         }
+
+        #region Helpers for common mocking scenarios
+
+        private void SetupUniqueKeyName(int returnValue)
+        {
+            _keyManagementRepositoryMock
+                .Setup(repo => repo.CheckUniqueKeyName(It.IsAny<string>()))
+                .ReturnsAsync(returnValue);
+        }
+
+        private void SetupUniqueKeyId(int returnValue)
+        {
+            _keyManagementRepositoryMock
+                .Setup(repo => repo.CheckUniqueKeyIdAsync(It.IsAny<string>()))
+                .ReturnsAsync(returnValue);
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "S1172:Unused parameter", Justification = "Required by method signature.")]
+        private void SetupOpenSslCommand(string keyAlgorithm, string result)
+        {
+            _openSslServiceMock
+                .Setup(service => service.RunOpenSslCommandAsync(It.IsAny<string>()))
+                .ReturnsAsync(result);
+        }
+
+        #endregion
 
         #region GetKeysList Tests
         [Fact]
@@ -73,7 +109,85 @@ namespace serviceTests.KeyManagement
             // Assert
             Assert.Equal(-1, status);
             Assert.Empty(keys);
-        } 
+        }
+        #endregion
+
+        #region CreateKey Tests
+
+        [Fact]
+        public async Task CreateKey_ShouldReturnSuccess_WhenAesKeyIsCreated()
+        {
+            // Arrange
+            var fakeKeyDto = _fakeInCreateKeyDto.Generate();
+            var keyOwner = "user123";
+            SetupUniqueKeyName(1);  // Key name is unique
+            SetupUniqueKeyId(1);    // Key ID is unique
+            SetupOpenSslCommand("aes", "GeneratedAesKeyData");
+
+            _keyManagementRepositoryMock
+                .Setup(repo => repo.CreateKeyAsync(It.IsAny<Keys>()))
+                .ReturnsAsync(1);  // Simulate successful key creation
+
+            // Act
+            var result = await _service.CreateKey(fakeKeyDto, keyOwner);
+
+            // Assert
+            Assert.Equal(1, result.Item1);
+            Assert.Equal("Key created successfully.", result.Item2);
+        }
+
+        [Fact]
+        public async Task CreateKey_ShouldReturnError_WhenKeyNameAlreadyExists()
+        {
+            // Arrange
+            var fakeKeyDto = _fakeInCreateKeyDto.Generate();
+            SetupUniqueKeyName(0);  // Key name already exists
+
+            // Act
+            var result = await _service.CreateKey(fakeKeyDto, "user123");
+
+            // Assert
+            Assert.Equal(2, result.Item1);
+            Assert.Equal("Key name already exists.", result.Item2);
+        }
+
+        [Fact]
+        public async Task CreateKey_ShouldReturnError_WhenPrivateKeyStorageFails()
+        {
+            // Arrange
+            var fakeKeyDto = _fakeInCreateKeyDto.Clone().RuleFor(k => k.KeyType, "asymmetric").Generate();
+            SetupUniqueKeyName(1);  // Key name is unique
+            SetupUniqueKeyId(1);    // Key ID is unique
+            SetupOpenSslCommand("rsa", "GeneratedRsaPrivateKeyData");
+
+            _keyManagementRepositoryMock
+                .Setup(repo => repo.InsertPrivateDataAsync(It.IsAny<SecureKeys>()))
+                .ReturnsAsync(0);  // Simulate failure in storing private key
+
+            // Act
+            var result = await _service.CreateKey(fakeKeyDto, "user123");
+
+            // Assert
+            Assert.Equal(-2, result.Item1);
+            Assert.Equal("Error occurred while creating private key", result.Item2);
+        }
+
+        [Fact]
+        public async Task CreateKey_ShouldReturnError_ForInvalidAlgorithm()
+        {
+            // Arrange
+            var fakeKeyDto = _fakeInCreateKeyDto.Clone().RuleFor(k => k.KeyAlgorithm, "invalidAlgorithm").Generate();
+            SetupUniqueKeyName(1);  // Key name is unique
+            SetupUniqueKeyId(1);    // Key ID is unique
+
+            // Act
+            var result = await _service.CreateKey(fakeKeyDto, "user123");
+
+            // Assert
+            Assert.Equal(0, result.Item1);
+            Assert.Equal("Error occurred while creating a key. Invalid parameters passed.", result.Item2);
+        }
+
         #endregion
     }
 }
