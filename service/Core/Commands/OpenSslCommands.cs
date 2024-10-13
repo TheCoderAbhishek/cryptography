@@ -116,5 +116,35 @@
         /// The key is represented as a hexadecimal string.
         /// </summary>
         public const string GenerateSeed128KeyData = @"openssl rand -hex 16";
+
+        /// <summary>
+        /// Command to generate a DSA key of 1024 bits.
+        /// This command creates DSA parameters and then generates the private key,
+        /// displaying the private key in the console.
+        /// </summary>
+        public static string GenerateDsa1024KeyData(string outputDirectory) =>
+            $@"openssl dsaparam -out {outputDirectory}\\dsa_param.pem 1024 && openssl gendsa -out {outputDirectory}\\dsa_key.pem {outputDirectory}\\dsa_param.pem && type {outputDirectory}\\dsa_key.pem";
+
+        /// <summary>
+        /// Command to generate a DSA key of 2048 bits.
+        /// This command creates DSA parameters and then generates the private key,
+        /// displaying the private key in the console.
+        /// </summary>
+        public static string GenerateDsa2048KeyData(string outputDirectory) =>
+            $@"openssl dsaparam -out {outputDirectory}\\dsa_param.pem 2048 && openssl gendsa -out {outputDirectory}\\dsa_key.pem {outputDirectory}\\dsa_param.pem && type {outputDirectory}\\dsa_key.pem";
+
+        /// <summary>
+        /// Command to generate a DSA key of 3072 bits.
+        /// This command creates DSA parameters and then generates the private key,
+        /// displaying the private key in the console.
+        /// </summary>
+        public static string GenerateDsa3072KeyData(string outputDirectory) =>
+            $@"openssl dsaparam -out {outputDirectory}\\dsa_param.pem 3072 && openssl gendsa -out {outputDirectory}\\dsa_key.pem {outputDirectory}\\dsa_param.pem && type {outputDirectory}\\dsa_key.pem";
+
+        /// <summary>
+        /// Command to extract the public key from the generated DSA private key.
+        /// This command outputs the public key to the console.
+        /// </summary>
+        public const string ExtractPublicKeyFromPrivateKeyDsa = @"openssl dsa -pubout";
     }
 }

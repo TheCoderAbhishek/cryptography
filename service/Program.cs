@@ -13,6 +13,7 @@ using service.Application.Service.OpenSsl;
 using service.Application.Service.UserManagement;
 using service.Application.Service.Utility;
 using service.Application.Utility;
+using service.Core.Enums;
 using service.Core.Interfaces.AccountManagement;
 using service.Core.Interfaces.KeyManagement;
 using service.Core.Interfaces.OpenSsl;
@@ -45,6 +46,10 @@ builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"
 // Configure Dapper with MSSQL
 builder.Services.AddScoped<IDbConnection>(sp =>
     new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+#region Read Data from Configuration File into Variables.
+ConstantData.KeyStorePath = builder.Configuration["KeyStore"];
+#endregion
 
 #region Dependency Injection Container
 builder.Services.AddScoped<ICommonDbHander, CommonDbHander>();

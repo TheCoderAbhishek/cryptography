@@ -83,5 +83,20 @@
                     </body>
                     </html>";
         }
+
+        /// <summary>
+        /// Gets or sets the path to the keystore file.
+        /// </summary>
+        public static string? KeyStorePath { get; set; } = null;
+
+        /// <summary>
+        /// The file name for the DSA parameters.
+        /// </summary>
+        public const string DsaParameterFileName = @"dsa_param.pem";
+
+        /// <summary>
+        /// The file name for the DSA private key.
+        /// </summary>
+        public const string DsaKeyFileName = @"dsa_key.pem";
     }
 }

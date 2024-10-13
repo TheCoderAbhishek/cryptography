@@ -1,6 +1,7 @@
 ﻿using service.Core.Commands;
 using service.Core.Dto.KeyManagement;
 using service.Core.Entities.KeyManagement;
+using service.Core.Enums;
 using service.Core.Interfaces.KeyManagement;
 using service.Core.Interfaces.OpenSsl;
 
@@ -84,6 +85,7 @@ namespace service.Application.Service.KeyManagement
                     string? create3DesKeyCommand = null;
                     string? createSeedKeyCommand = null;
                     string? createRsaKeyPairCommand = null;
+                    string? createDsaKeyPairCommand = null;
                     string? createEcKeyPairCommand = null;
                     string? keyData = null;
                     string? privateKeyData = null;
@@ -153,6 +155,32 @@ namespace service.Application.Service.KeyManagement
                                 // Step 2: Extract RSA Public Key from the generated Private Key
                                 keyData = await _openSslService.RunOpenSslCommandAsyncWithInput(OpenSslCommands.ExtractPublicKeyFromPrivateKey, privateKeyData);
                             }
+                            else if (inCreateKeyDto.KeyAlgorithm == "dsa")
+                            {
+                                // Define the output directory for the keys
+                                string outputDirectory = ConstantData.KeyStorePath!;
+
+                                string dsaParameterFileName = $"{outputDirectory}\\{ConstantData.DsaParameterFileName}";
+                                string dsaKeyFileName = $"{outputDirectory}\\{ConstantData.DsaKeyFileName}";
+
+                                // Generate the DSA private key based on the provided key size
+                                createDsaKeyPairCommand = inCreateKeyDto.KeySize switch
+                                {
+                                    1024 => OpenSslCommands.GenerateDsa1024KeyData(outputDirectory), // Generate DSA-1024 key
+                                    2048 => OpenSslCommands.GenerateDsa2048KeyData(outputDirectory), // Generate DSA-2048 key
+                                    3072 => OpenSslCommands.GenerateDsa3072KeyData(outputDirectory), // Generate DSA-3072 key
+                                    _ => throw new ArgumentException("Invalid key size for DSA."),
+                                };
+
+                                // Step 1: Generate DSA Private Key and store it in the specified directory
+                                privateKeyData = await _openSslService.RunOpenSslCommandAsync(createDsaKeyPairCommand);
+
+                                // Step 2: Extract DSA Public Key from the generated Private Key
+                                keyData = await _openSslService.RunOpenSslCommandAsyncWithInput(OpenSslCommands.ExtractPublicKeyFromPrivateKeyDsa, privateKeyData);
+
+                                File.Delete(dsaParameterFileName);
+                                File.Delete(dsaKeyFileName);
+                            }
                             else if (inCreateKeyDto.KeyAlgorithm == "ec")
                             {
                                 // Step 1: Generate EC Private Key
@@ -174,7 +202,8 @@ namespace service.Application.Service.KeyManagement
                             }
                             else
                             {
-                                _logger.LogError("");
+                                _logger.LogError("Invalid key algorithm provided: {KeyAlgorithm}", inCreateKeyDto.KeyAlgorithm);
+                                return (-2, $"Error occurred while creating {inCreateKeyDto.KeyAlgorithm} private key {inCreateKeyDto.KeyName}");
                             }
 
                             var secureKey = new SecureKeys

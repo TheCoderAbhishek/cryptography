@@ -29,9 +29,18 @@ namespace service.Application.Service.OpenSsl
             };
 
             using var process = Process.Start(processInfo);
-            using var reader = process!.StandardOutput;
-            string result = await reader.ReadToEndAsync();
-            return result.Trim();
+            using var outputReader = process!.StandardOutput;
+            using var errorReader = process.StandardError;
+
+            string output = await outputReader.ReadToEndAsync();
+            string error = await errorReader.ReadToEndAsync();
+
+            if (!string.IsNullOrWhiteSpace(error))
+            {
+                _logger.LogError("OpenSSL command error: {Error}", error);
+            }
+
+            return output.Trim();
         }
 
         /// <summary>
