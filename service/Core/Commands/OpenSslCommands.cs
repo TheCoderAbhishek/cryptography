@@ -146,5 +146,30 @@
         /// This command outputs the public key to the console.
         /// </summary>
         public const string ExtractPublicKeyFromPrivateKeyDsa = @"openssl dsa -pubout";
+
+        /// <summary>
+        /// Represents the private key for generating ECDSA using the P-192 curve.
+        /// </summary>
+        public const string GenerateEcDsa192PrivateKey = @"";
+
+        /// <summary>
+        /// Represents the private key for generating ECDSA using the P-224 curve.
+        /// </summary>
+        public const string GenerateEcDsa224PrivateKey = @"";
+
+        /// <summary>
+        /// Represents the private key for generating ECDSA using the P-256 curve.
+        /// </summary>
+        public const string GenerateEcDsa256PrivateKey = @"";
+
+        /// <summary>
+        /// Represents the private key for generating ECDSA using the P-384 curve.
+        /// </summary>
+        public const string GenerateEcDsa384PrivateKey = @"";
+
+        /// <summary>
+        /// Represents the private key for generating ECDSA using the P-521 curve.
+        /// </summary>
+        public const string GenerateEcDsa521PrivateKey = @"";
     }
 }
