@@ -1,11 +1,14 @@
 ﻿using Bogus;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using service.Controllers;
+using service.Core.Dto.KeyManagement;
 using service.Core.Entities.KeyManagement;
 using service.Core.Enums;
 using service.Core.Interfaces.KeyManagement;
+using System.Security.Claims;
 
 namespace serviceTests.KeyManagement
 {
@@ -14,13 +17,35 @@ namespace serviceTests.KeyManagement
         private readonly Mock<IKeyManagementService> _keyManagementServiceMock;
         private readonly Mock<ILogger<KeyManagementController>> _loggerMock;
         private readonly KeyManagementController _controller;
+        private readonly Faker _faker;
 
         public KeyManagementControllerTests()
         {
             _keyManagementServiceMock = new Mock<IKeyManagementService>();
             _loggerMock = new Mock<ILogger<KeyManagementController>>();
             _controller = new KeyManagementController(_loggerMock.Object, _keyManagementServiceMock.Object);
+            _faker = new Faker();
+            SetUserClaims();
         }
+
+        #region Private Methods for Support
+
+        private void SetUserClaims()
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, _faker.Internet.Email()),
+                new Claim(ClaimTypes.Role, "User")
+            };
+
+            var identity = new ClaimsIdentity(claims);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) }
+            };
+        }
+
+        #endregion
 
         #region GetKeysListAsync Tests
         [Fact]
@@ -79,7 +104,123 @@ namespace serviceTests.KeyManagement
             var response = Assert.IsType<ApiResponse<string>>(serverErrorResult.Value);
             Assert.Equal(-1, response.ResponseCode);
             Assert.Equal("An unexpected error occurred.", response.ErrorMessage);
-        } 
+        }
+        #endregion
+
+        #region CreateKeyAsync Tests
+
+        [Fact]
+        public async Task CreateKeyAsync_ReturnsSuccess_WhenKeyCreated()
+        {
+            // Arrange
+            var createKeyDto = new InCreateKeyDto { KeyName = _faker.Random.Word() };
+            var expectedStatus = 1;
+            var expectedMessage = "Key created successfully.";
+
+            _keyManagementServiceMock
+                .Setup(service => service.CreateKey(createKeyDto, It.IsAny<string>()))
+                .ReturnsAsync((expectedStatus, expectedMessage));
+
+            // Act
+            var result = await _controller.CreateKeyAsync(createKeyDto) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var apiResponse = result.Value as ApiResponse<string>;
+            Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+            Assert.Equal(ApiResponseStatus.Success, apiResponse!.Status);
+            Assert.Equal(expectedMessage, apiResponse.SuccessMessage);
+        }
+
+        [Fact]
+        public async Task CreateKeyAsync_ReturnsDuplicateKeyError_WhenKeyAlreadyExists()
+        {
+            // Arrange
+            var createKeyDto = new InCreateKeyDto { KeyName = _faker.Random.Word() };
+            var expectedStatus = 2;
+            var expectedMessage = "Duplicate key name.";
+
+            _keyManagementServiceMock
+                .Setup(service => service.CreateKey(createKeyDto, It.IsAny<string>()))
+                .ReturnsAsync((expectedStatus, expectedMessage));
+
+            // Act
+            var result = await _controller.CreateKeyAsync(createKeyDto) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var apiResponse = result.Value as ApiResponse<string>;
+            Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse!.Status);
+            Assert.Equal(expectedMessage, apiResponse.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task CreateKeyAsync_ReturnsError_WhenServiceReturnsOtherError()
+        {
+            // Arrange
+            var createKeyDto = new InCreateKeyDto { KeyName = _faker.Random.Word() };
+            var expectedStatus = -2;
+            var expectedMessage = "Service error occurred.";
+
+            _keyManagementServiceMock
+                .Setup(service => service.CreateKey(createKeyDto, It.IsAny<string>()))
+                .ReturnsAsync((expectedStatus, expectedMessage));
+
+            // Act
+            var result = await _controller.CreateKeyAsync(createKeyDto) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var apiResponse = result.Value as ApiResponse<string>;
+            Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse!.Status);
+            Assert.Equal(expectedMessage, apiResponse.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task CreateKeyAsync_ReturnsBadRequest_WhenKeyCreationFails()
+        {
+            // Arrange
+            var createKeyDto = new InCreateKeyDto { KeyName = _faker.Random.Word() };
+            var expectedStatus = 0;
+            var expectedMessage = "Key creation failed.";
+
+            _keyManagementServiceMock
+                .Setup(service => service.CreateKey(createKeyDto, It.IsAny<string>()))
+                .ReturnsAsync((expectedStatus, expectedMessage));
+
+            // Act
+            var result = await _controller.CreateKeyAsync(createKeyDto) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var apiResponse = result.Value as ApiResponse<string>;
+            Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse!.Status);
+            Assert.Equal(expectedMessage, apiResponse.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task CreateKeyAsync_ReturnsServerError_WhenExceptionOccurs()
+        {
+            // Arrange
+            var createKeyDto = new InCreateKeyDto { KeyName = _faker.Random.Word() };
+            _keyManagementServiceMock
+                .Setup(service => service.CreateKey(createKeyDto, It.IsAny<string>()))
+                .ThrowsAsync(new System.Exception("Unhandled exception."));
+
+            // Act
+            var result = await _controller.CreateKeyAsync(createKeyDto) as ObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var apiResponse = result.Value as ApiResponse<string>;
+            Assert.Equal(StatusCodes.Status500InternalServerError, result.StatusCode);
+            Assert.Equal(ApiResponseStatus.Failure, apiResponse!.Status);
+            Assert.Equal("An unexpected error occurred.", apiResponse.ErrorMessage);
+        }
+
         #endregion
     }
 }
