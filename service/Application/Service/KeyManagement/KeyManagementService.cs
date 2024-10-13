@@ -270,7 +270,7 @@ namespace service.Application.Service.KeyManagement
                     else
                     {
                         _logger.LogError("{KeyId} already present in table please use different key name.", KeyId);
-                        return (3, $"Error occurred while creating a key. Plase make another request.");
+                        return (3, $"Key ID already exists.");
                     }
                 }
                 else
@@ -282,7 +282,7 @@ namespace service.Application.Service.KeyManagement
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An unhandled exception occurred while creating a key: {Message}", ex.Message);
-                return (-1, $"An error occurred while creating key: {ex.Message}");
+                return (-1, $"Error occurred while creating a key. Invalid parameters passed.");
             }
         }
     }
