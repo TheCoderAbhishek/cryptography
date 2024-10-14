@@ -16,6 +16,7 @@ namespace serviceTests.KeyManagement
         private readonly KeyManagementService _service;
         private readonly Mock<IOpenSslService> _openSslServiceMock;
         private readonly Faker<InCreateKeyDto> _fakeInCreateKeyDto;
+        private readonly Faker<Keys> _fakeKeys;
 
         public KeyManagementServiceTests()
         {
@@ -31,6 +32,11 @@ namespace serviceTests.KeyManagement
                 .RuleFor(k => k.KeyAlgorithm, "aes")
                 .RuleFor(k => k.KeySize, 256)
                 .RuleFor(k => k.KeyUsage, "encryption");
+
+            // Bogus for generating fake data
+            _fakeKeys = new Faker<Keys>()
+                .RuleFor(k => k.Id, f => f.Random.Int(1, 1000))
+                .RuleFor(k => k.KeyName, f => f.Lorem.Word());
         }
 
         #region Helpers for common mocking scenarios
@@ -314,6 +320,97 @@ namespace serviceTests.KeyManagement
             // Assert
             Assert.Equal(-1, result.Item1);
             Assert.Equal("Error occurred while creating a key. Invalid parameters passed.", result.Item2);
+        }
+
+        #endregion
+
+        #region ExportKey Tests
+
+        [Fact]
+        public async Task ExportKey_ReturnsSuccess_WhenValidIdAndKeyMaterialExists()
+        {
+            // Arrange
+            var keyId = 1;
+            var keyMaterial = "ValidKeyMaterial";
+            var fakeKey = _fakeKeys.Generate();
+
+            _keyManagementRepositoryMock
+                .Setup(repo => repo.GetKeyDetailsByIdAsync(keyId))
+                .ReturnsAsync(fakeKey);
+
+            _keyManagementRepositoryMock
+                .Setup(repo => repo.ExportKeyAsync(keyId))
+                .ReturnsAsync(keyMaterial);
+
+            // Act
+            var result = await _service.ExportKey(keyId);
+
+            // Assert
+            Assert.Equal(1, result.Item1); // Success
+            Assert.Equal("Key material fetched successfully.", result.Item2);
+            Assert.Equal(keyMaterial, result.Item3);
+        }
+
+        [Fact]
+        public async Task ExportKey_ReturnsError_WhenKeyNotFound()
+        {
+            // Arrange
+            var keyId = 1;
+
+            _keyManagementRepositoryMock
+                .Setup(repo => repo.GetKeyDetailsByIdAsync(keyId))
+                .ReturnsAsync((Keys)null!); // Key not found
+
+            // Act
+            var result = await _service.ExportKey(keyId);
+
+            // Assert
+            Assert.Equal(-2, result.Item1); // Error Code for invalid ID
+            Assert.Equal("invalid id provided.", result.Item2);
+            Assert.Equal("Invalid Request", result.Item3);
+        }
+
+        [Fact]
+        public async Task ExportKey_ReturnsError_WhenKeyMaterialIsEmpty()
+        {
+            // Arrange
+            var keyId = 1;
+            var fakeKey = _fakeKeys.Generate();
+
+            _keyManagementRepositoryMock
+                .Setup(repo => repo.GetKeyDetailsByIdAsync(keyId))
+                .ReturnsAsync(fakeKey);
+
+            _keyManagementRepositoryMock
+                .Setup(repo => repo.ExportKeyAsync(keyId))
+                .ReturnsAsync(string.Empty); // Empty key material
+
+            // Act
+            var result = await _service.ExportKey(keyId);
+
+            // Assert
+            Assert.Equal(0, result.Item1); // Error Code for empty key material
+            Assert.Equal("Error occurred while exporting a key.", result.Item2);
+            Assert.Equal(string.Empty, result.Item3);
+        }
+
+        [Fact]
+        public async Task ExportKey_ReturnsError_WhenExceptionIsThrown()
+        {
+            // Arrange
+            var keyId = 1;
+
+            _keyManagementRepositoryMock
+                .Setup(repo => repo.GetKeyDetailsByIdAsync(keyId))
+                .ThrowsAsync(new Exception("Database error"));
+
+            // Act
+            var result = await _service.ExportKey(keyId);
+
+            // Assert
+            Assert.Equal(-1, result.Item1); // Error code for exception
+            Assert.Equal("Exception occurred while exporting a key.", result.Item2);
+            Assert.Equal("Exception", result.Item3);
         }
 
         #endregion

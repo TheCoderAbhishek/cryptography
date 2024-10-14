@@ -222,5 +222,115 @@ namespace serviceTests.KeyManagement
         }
 
         #endregion
+
+        #region ExportKeyAsync Tests
+
+        [Fact]
+        public async Task ExportKeyAsync_ShouldReturn200_WhenKeyExportIsSuccessful()
+        {
+            // Arrange
+            int keyId = _faker.Random.Int(1, 1000);
+            var successMessage = _faker.Lorem.Sentence();
+            var keyMaterial = _faker.Lorem.Word();
+            _keyManagementServiceMock
+                .Setup(s => s.ExportKey(It.IsAny<int>()))
+                .ReturnsAsync((1, successMessage, keyMaterial));
+
+            // Act
+            var result = await _controller.ExportKeyAsync(keyId) as OkObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result!.StatusCode);
+            Assert.Equal(ApiResponseStatus.Success, response?.Status);
+            Assert.Equal(successMessage, response?.SuccessMessage);
+            Assert.Equal(keyMaterial, response?.ReturnValue);
+        }
+
+        [Fact]
+        public async Task ExportKeyAsync_ShouldReturn302_WhenKeyExportFailsWithStatusZero()
+        {
+            // Arrange
+            int keyId = _faker.Random.Int(1, 1000);
+            var errorMessage = _faker.Lorem.Sentence();
+            _keyManagementServiceMock
+                .Setup(s => s.ExportKey(It.IsAny<int>()))
+                .ReturnsAsync((0, errorMessage, string.Empty));
+
+            // Act
+            var result = await _controller.ExportKeyAsync(keyId) as OkObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result!.StatusCode);
+            Assert.Equal(ApiResponseStatus.Failure, response?.Status);
+            Assert.Equal(errorMessage, response?.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task ExportKeyAsync_ShouldReturn400_WhenKeyExportFailsWithStatusNegativeTwo()
+        {
+            // Arrange
+            int keyId = _faker.Random.Int(1, 1000);
+            var errorMessage = _faker.Lorem.Sentence();
+            _keyManagementServiceMock
+                .Setup(s => s.ExportKey(It.IsAny<int>()))
+                .ReturnsAsync((-2, errorMessage, string.Empty));
+
+            // Act
+            var result = await _controller.ExportKeyAsync(keyId) as OkObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result!.StatusCode);
+            Assert.Equal(ApiResponseStatus.Failure, response?.Status);
+            Assert.Equal(errorMessage, response?.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task ExportKeyAsync_ShouldReturn400_WhenKeyExportFailsWithUnhandledStatus()
+        {
+            // Arrange
+            int keyId = _faker.Random.Int(1, 1000);
+            var errorMessage = _faker.Lorem.Sentence();
+            _keyManagementServiceMock
+                .Setup(s => s.ExportKey(It.IsAny<int>()))
+                .ReturnsAsync((5, errorMessage, string.Empty));
+
+            // Act
+            var result = await _controller.ExportKeyAsync(keyId) as OkObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result!.StatusCode);
+            Assert.Equal(ApiResponseStatus.Failure, response?.Status);
+            Assert.Equal(errorMessage, response?.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task ExportKeyAsync_ShouldReturn500_WhenExceptionOccurs()
+        {
+            // Arrange
+            int keyId = _faker.Random.Int(1, 1000);
+            _keyManagementServiceMock
+                .Setup(s => s.ExportKey(It.IsAny<int>()))
+                .ThrowsAsync(new System.Exception("Test exception"));
+
+            // Act
+            var result = await _controller.ExportKeyAsync(keyId) as ObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, result!.StatusCode);
+            Assert.Equal(ApiResponseStatus.Failure, response?.Status);
+            Assert.Equal("An unexpected error occurred.", response?.ErrorMessage);
+        }
+
+        #endregion
     }
 }
