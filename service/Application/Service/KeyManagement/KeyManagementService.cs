@@ -102,6 +102,7 @@ namespace service.Application.Service.KeyManagement
                                 128 => OpenSslCommands.GenerateAes128KeyData,// Generate AES-128 key
                                 192 => OpenSslCommands.GenerateAes192KeyData,// Generate AES-192 key
                                 256 => OpenSslCommands.GenerateAes256KeyData,// Generate AES-256 key
+                                512 => OpenSslCommands.GenerateAes512KeyData,// Generate AES-512 key
                                 _ => throw new ArgumentException("Invalid key size for AES."),
                             };
                             keyData = await _openSslService.RunOpenSslCommandAsync(createAesKeyCommand);
@@ -311,7 +312,7 @@ namespace service.Application.Service.KeyManagement
                     {
                         _logger.LogError("An unhandled exception occurred while exporting a key.");
                         return (0, "Error occurred while exporting a key.", keyMaterial);
-                    } 
+                    }
                 }
                 else
                 {

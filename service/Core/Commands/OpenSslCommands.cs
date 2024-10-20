@@ -6,6 +6,11 @@
     public static class OpenSslCommands
     {
         /// <summary>
+        /// Generates a random AES key data string with a length of 64 bytes.
+        /// </summary>
+        public const string GenerateAes512KeyData = @"openssl rand -base64 64";
+
+        /// <summary>
         /// Generates a random AES key data string with a length of 32 bytes.
         /// </summary>
         public const string GenerateAes256KeyData = @"openssl rand -base64 32";
