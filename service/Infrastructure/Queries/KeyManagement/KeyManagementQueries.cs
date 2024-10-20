@@ -8,7 +8,7 @@
         /// <summary>
         /// SQL query to retrieve a list of all keys.
         /// </summary>
-        public const string _getKeyList = @"SELECT Id, KeyName, KeyType, KeyAlgorithm, KeySize, KeyOwner, KeyStatus, KeyState, KeyCreatedOn FROM [cryptography].[dbo].[tblKeys]";
+        public const string _getKeyList = @"SELECT Id, KeyName, KeyType, KeyAlgorithm, KeySize, KeyOwner, KeyStatus, KeyState, KeyCreatedOn, KeyUsage FROM [cryptography].[dbo].[tblKeys]";
 
         /// <summary>
         /// SQL query to insert key details in table.
