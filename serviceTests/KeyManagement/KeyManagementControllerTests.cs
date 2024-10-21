@@ -223,6 +223,166 @@ namespace serviceTests.KeyManagement
 
         #endregion
 
+        #region SoftDeleteKeyAsync Tests
+
+        [Fact]
+        public async Task SoftDeleteKeyAsync_ShouldReturnOk_WhenKeyIsSuccessfullyDeleted()
+        {
+            // Arrange
+            var keyId = _faker.Random.Int();
+            var successMessage = _faker.Lorem.Sentence();
+            _keyManagementServiceMock.Setup(s => s.SoftDeleteKey(keyId))
+                .ReturnsAsync((1, successMessage));
+
+            // Act
+            var result = await _controller.SoftDeleteKeyAsync(keyId) as OkObjectResult;
+            var response = result?.Value as ApiResponse<int>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+            Assert.Equal(1, response?.ReturnValue);
+            Assert.Equal(successMessage, response?.SuccessMessage);
+        }
+
+        [Fact]
+        public async Task SoftDeleteKeyAsync_ShouldReturnOk_WhenKeyIsNotFound()
+        {
+            // Arrange
+            var keyId = _faker.Random.Int();
+            var errorMessage = _faker.Lorem.Sentence();
+            _keyManagementServiceMock.Setup(s => s.SoftDeleteKey(keyId))
+                .ReturnsAsync((0, errorMessage));
+
+            // Act
+            var result = await _controller.SoftDeleteKeyAsync(keyId) as OkObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+            Assert.Equal(errorMessage, response?.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task SoftDeleteKeyAsync_ShouldReturnBadRequest_WhenInvalidRequest()
+        {
+            // Arrange
+            var keyId = _faker.Random.Int();
+            var errorMessage = _faker.Lorem.Sentence();
+            _keyManagementServiceMock.Setup(s => s.SoftDeleteKey(keyId))
+                .ReturnsAsync((-2, errorMessage));
+
+            // Act
+            var result = await _controller.SoftDeleteKeyAsync(keyId) as OkObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+            Assert.Equal(errorMessage, response?.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task SoftDeleteKeyAsync_ShouldReturnInternalServerError_WhenUnhandledExceptionOccurs()
+        {
+            // Arrange
+            var keyId = _faker.Random.Int();
+            _keyManagementServiceMock.Setup(s => s.SoftDeleteKey(keyId))
+                .ThrowsAsync(new Exception("Unexpected error"));
+
+            // Act
+            var result = await _controller.SoftDeleteKeyAsync(keyId) as ObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, result.StatusCode);
+            Assert.Equal("An unexpected error occurred.", response?.ErrorMessage);
+        }
+
+        #endregion
+
+        #region RecoverSoftDeletedKeyAsync Tests
+
+        [Fact]
+        public async Task RecoverSoftDeletedKeyAsync_ShouldReturnOk_WhenKeyIsRecoveredSuccessfully()
+        {
+            // Arrange
+            var keyId = _faker.Random.Int();
+            var successMessage = _faker.Lorem.Sentence();
+            _keyManagementServiceMock.Setup(s => s.RecoverSoftDeletedKey(keyId))
+                .ReturnsAsync((1, successMessage));
+
+            // Act
+            var result = await _controller.RecoverSoftDeletedKeyAsync(keyId) as OkObjectResult;
+            var response = result?.Value as ApiResponse<int>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+            Assert.Equal(1, response?.ReturnValue);
+            Assert.Equal(successMessage, response?.SuccessMessage);
+        }
+
+        [Fact]
+        public async Task RecoverSoftDeletedKeyAsync_ShouldReturnOk_WhenKeyIsNotFound()
+        {
+            // Arrange
+            var keyId = _faker.Random.Int();
+            var errorMessage = _faker.Lorem.Sentence();
+            _keyManagementServiceMock.Setup(s => s.RecoverSoftDeletedKey(keyId))
+                .ReturnsAsync((0, errorMessage));
+
+            // Act
+            var result = await _controller.RecoverSoftDeletedKeyAsync(keyId) as OkObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+            Assert.Equal(errorMessage, response?.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task RecoverSoftDeletedKeyAsync_ShouldReturnBadRequest_WhenInvalidRequest()
+        {
+            // Arrange
+            var keyId = _faker.Random.Int();
+            var errorMessage = _faker.Lorem.Sentence();
+            _keyManagementServiceMock.Setup(s => s.RecoverSoftDeletedKey(keyId))
+                .ReturnsAsync((-2, errorMessage));
+
+            // Act
+            var result = await _controller.RecoverSoftDeletedKeyAsync(keyId) as OkObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+            Assert.Equal(errorMessage, response?.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task RecoverSoftDeletedKeyAsync_ShouldReturnInternalServerError_WhenUnhandledExceptionOccurs()
+        {
+            // Arrange
+            var keyId = _faker.Random.Int();
+            _keyManagementServiceMock.Setup(s => s.RecoverSoftDeletedKey(keyId))
+                .ThrowsAsync(new Exception("Unexpected error"));
+
+            // Act
+            var result = await _controller.RecoverSoftDeletedKeyAsync(keyId) as ObjectResult;
+            var response = result?.Value as ApiResponse<string>;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, result.StatusCode);
+            Assert.Equal("An unexpected error occurred.", response?.ErrorMessage);
+        }
+
+        #endregion
+
         #region ExportKeyAsync Tests
 
         [Fact]
