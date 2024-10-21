@@ -215,6 +215,202 @@ namespace service.Controllers
         }
 
         /// <summary>
+        /// Soft deletes a key based on the provided ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to soft delete.</param>
+        /// <returns>
+        /// An `ApiResponse` object containing the status and message of the operation.
+        /// 
+        /// **Possible Response Codes:**
+        /// * **200 OK:** The key was successfully soft deleted.
+        /// * **302 Found:** The key was not found.
+        /// * **400 Bad Request:** The request was invalid or the key cannot be soft deleted.
+        /// * **500 Internal Server Error:** An unexpected error occurred while processing the request.
+        /// </returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status302Found)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
+        [HttpPut]
+        [Route("SoftDeleteKeyAsync")]
+        public async Task<IActionResult> SoftDeleteKeyAsync(int id)
+        {
+            var txn = ConstantData.Txn();
+            try
+            {
+                var (status, message) = await _keyManagementService.SoftDeleteKey(id);
+
+                if (status == 1)
+                {
+                    _logger.LogInformation("Key soft deleted at TXN: {Txn}", txn);
+
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        responseCode: status,
+                        successMessage: message,
+                        returnValue: status,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else if (status == 0)
+                {
+                    _logger.LogError("Error occured while soft deleting key. {Message}", message);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status302Found,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.SoftDeleteKeyAsyncError,
+                        returnValue: message,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else if (status == -2)
+                {
+                    _logger.LogError("Error occured while soft deleting key. {Message}", message);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.SoftDeleteKeyAsyncError,
+                        returnValue: message,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else
+                {
+                    _logger.LogError("Error occurred while soft deleting key at TXN: {Txn}", txn);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.SoftDeleteKeyAsyncError,
+                        returnValue: message,
+                        txn: txn);
+                    return Ok(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unhandled exception occurred while soft deleting key at TXN: {Txn}", txn);
+
+                var response = new ApiResponse<string>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    responseCode: -1,
+                    errorMessage: "An unexpected error occurred.",
+                    errorCode: ErrorCode.SoftDeleteKeyAsyncUnhandledException,
+                    txn: txn
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
+        /// Recovers a soft-deleted key based on the provided ID.
+        /// </summary>
+        /// <param name="id">The ID of the soft-deleted key.</param>
+        /// <returns>
+        /// An `ApiResponse` object containing the recovery status and message.
+        /// - **Status 1:** Key recovered successfully.
+        /// - **Status 0:** Error occurred while recovering the key.
+        /// - **Status -2:** The key is already recovered or does not exist.
+        /// - **Status -1:** An unexpected error occurred.
+        /// </returns>
+        [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status302Found)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
+        [HttpPatch]
+        [Route("RecoverSoftDeletedKeyAsync")]
+        public async Task<IActionResult> RecoverSoftDeletedKeyAsync(int id)
+        {
+            var txn = ConstantData.Txn();
+            try
+            {
+                var (status, message) = await _keyManagementService.RecoverSoftDeletedKey(id);
+
+                if (status == 1)
+                {
+                    _logger.LogInformation("Key recovered successfully at TXN: {Txn}", txn);
+
+                    var response = new ApiResponse<int>(
+                        ApiResponseStatus.Success,
+                        StatusCodes.Status200OK,
+                        responseCode: status,
+                        successMessage: message,
+                        returnValue: status,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else if (status == 0)
+                {
+                    _logger.LogError("Error occured while recovering soft deleted key. {Message}", message);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status302Found,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.RecoverSoftDeletedKeyAsyncError,
+                        returnValue: message,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else if (status == -2)
+                {
+                    _logger.LogError("Error occured while recovering soft deleted key. {Message}", message);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.RecoverSoftDeletedKeyAsyncError,
+                        returnValue: message,
+                        txn: txn);
+                    return Ok(response);
+                }
+                else
+                {
+                    _logger.LogError("Error occurred while recovering soft deleted key at TXN: {Txn}", txn);
+
+                    var response = new ApiResponse<string>(
+                        ApiResponseStatus.Failure,
+                        StatusCodes.Status400BadRequest,
+                        responseCode: status,
+                        errorMessage: message,
+                        errorCode: ErrorCode.RecoverSoftDeletedKeyAsyncError,
+                        returnValue: message,
+                        txn: txn);
+                    return Ok(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unhandled exception occurred while soft deleting key at TXN: {Txn}", txn);
+
+                var response = new ApiResponse<string>(
+                    ApiResponseStatus.Failure,
+                    StatusCodes.Status500InternalServerError,
+                    responseCode: -1,
+                    errorMessage: "An unexpected error occurred.",
+                    errorCode: ErrorCode.RecoverSoftDeletedKeyAsyncUnhandledException,
+                    txn: txn
+                );
+
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        /// <summary>
         /// Exports a key based on the provided ID.
         /// </summary>
         /// <param name="id">The ID of the key to export.</param>

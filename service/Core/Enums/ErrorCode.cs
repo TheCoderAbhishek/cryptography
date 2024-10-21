@@ -587,6 +587,46 @@
         /// </summary>
         public const string ExportKeyAsyncUnhandledException = "ERR-3000-025";
 
+        /// <summary>
+        /// Error code for when the soft delete key operation fails due to a validation error or missing data.
+        /// </summary>
+        public const string SoftDeleteKeyAsyncError = "ERR-3000-026";
+
+        /// <summary>
+        /// Error code for when the soft delete key operation fails due to a SQL exception.
+        /// </summary>
+        public const string SoftDeleteKeyAsyncSqlException = "ERR-3000-027";
+
+        /// <summary>
+        /// Error code for when the soft delete key operation fails due to an unexpected exception.
+        /// </summary>
+        public const string SoftDeleteKeyAsyncException = "ERR-3000-028";
+
+        /// <summary>
+        /// Error code for when the soft delete key operation fails due to an unhandled exception.
+        /// </summary>
+        public const string SoftDeleteKeyAsyncUnhandledException = "ERR-3000-029";
+
+        /// <summary>
+        /// Error message for when recovering a soft-deleted key asynchronously fails due to an unknown reason.
+        /// </summary>
+        public const string RecoverSoftDeletedKeyAsyncError = "ERR-3000-030";
+
+        /// <summary>
+        /// Error message for when recovering a soft-deleted key asynchronously fails due to a SQL exception.
+        /// </summary>
+        public const string RecoverSoftDeletedKeyAsyncSqlException = "ERR-3000-031";
+
+        /// <summary>
+        /// Error message for when recovering a soft-deleted key asynchronously fails due to an unexpected exception.
+        /// </summary>
+        public const string RecoverSoftDeletedKeyAsyncException = "ERR-3000-032";
+
+        /// <summary>
+        /// Error message for when recovering a soft-deleted key asynchronously fails due to an unhandled exception.
+        /// </summary>
+        public const string RecoverSoftDeletedKeyAsyncUnhandledException = "ERR-3000-033";
+
         #endregion
     }
 }

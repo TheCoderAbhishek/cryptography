@@ -326,5 +326,99 @@ namespace service.Application.Service.KeyManagement
                 return (-1, $"Exception occurred while exporting a key.", "Exception");
             }
         }
+
+        /// <summary>
+        /// Soft deletes a key based on the provided ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to soft delete.</param>
+        /// <returns>A tuple containing the result code (1 for success, -1 for exception, -2 for invalid ID) and an error message if applicable.</returns>
+        public async Task<(int, string)> SoftDeleteKey(int id)
+        {
+            try
+            {
+                Keys? key = await _keyManagementRepository.GetKeyDetailsByIdAsync(id);
+
+                if (key != null)
+                {
+                    if (key.KeyStatus == true && key.KeyState == 1)
+                    {
+                        int res = await _keyManagementRepository.SoftDeleteKeyAsync(id);
+
+                        if (res == 1)
+                        {
+                            _logger.LogInformation("Key with ID {Id} soft deleted successfully.", id);
+                            return (res, $"Key with ID {id} soft deleted successfully.");
+                        }
+                        else
+                        {
+                            _logger.LogError("Failed to soft delete key with ID {Id}.", id);
+                            return (res, $"Failed to soft delete key with ID {id}.");
+                        } 
+                    }
+                    else
+                    {
+                        _logger.LogError("Failed to soft delete key with ID {Id}. Because key is already in deleted state.", id);
+                        return (-3, $"Failed to soft delete key with ID {id}. Because key is already in deleted state.");
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid id provided while soft deletion of a key. {Id}", id);
+                    return (-2, "invalid id provided.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unhandled exception occurred while soft deletion of a key: {Message}", ex.Message);
+                return (-1, $"Exception occurred while soft deletion of a key.");
+            }
+        }
+
+        /// <summary>
+        /// Recovers a soft-deleted key based on the provided ID.
+        /// </summary>
+        /// <param name="id">The ID of the soft-deleted key.</param>
+        /// <returns>A tuple containing the result code (1 for success, -1 for exception, -2 for invalid ID) and a message indicating the operation's outcome.</returns>
+        public async Task<(int, string)> RecoverSoftDeletedKey(int id)
+        {
+            try
+            {
+                Keys? key = await _keyManagementRepository.GetKeyDetailsByIdAsync(id);
+
+                if (key != null)
+                {
+                    if (key.KeyStatus == false && key.KeyState == 0)
+                    {
+                        int res = await _keyManagementRepository.RecoverSoftDeletedKeyAsync(id);
+
+                        if (res == 1)
+                        {
+                            _logger.LogInformation("Key with ID {Id} recovered successfully.", id);
+                            return (res, $"Key with ID {id} recovered successfully.");
+                        }
+                        else
+                        {
+                            _logger.LogError("Failed to recover soft deleted key with ID {Id}.", id);
+                            return (res, $"Failed to recover soft deleted key with ID {id}.");
+                        } 
+                    }
+                    else
+                    {
+                        _logger.LogError("Failed to recover soft deleted key with ID {Id}. Because key is already in active state.", id);
+                        return (-3, $"Failed to recover soft deleted key with ID {id}. Because key is already in active state.");
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid id provided while recovering soft deleted key. {Id}", id);
+                    return (-2, "Invalid id provided.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unhandled exception occurred while recovering soft deleted key: {Message}", ex.Message);
+                return (-1, $"Exception occurred while recovering soft deleted key.");
+            }
+        }
     }
 }

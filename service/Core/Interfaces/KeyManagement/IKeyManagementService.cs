@@ -28,5 +28,19 @@ namespace service.Core.Interfaces.KeyManagement
         /// <param name="id">The identifier of the key to be exported.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains a tuple with an integer status code and a string message.</returns>
         Task<(int, string, string)> ExportKey(int id);
+
+        /// <summary>
+        /// Soft deletes a key based on the provided ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to soft delete.</param>
+        /// <returns>A tuple containing the status of the operation (1 for success, 0 for failure) and a message indicating the result.</returns>
+        Task<(int, string)> SoftDeleteKey (int id);
+
+        /// <summary>
+        /// Recovers a soft-deleted key with the specified ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to recover.</param>
+        /// <returns>A tuple containing the recovery status (1 if successful, 0 otherwise) and a message indicating the result.</returns>
+        Task<(int, string)> RecoverSoftDeletedKey (int id);
     }
 }

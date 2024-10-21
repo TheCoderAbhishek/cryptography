@@ -54,5 +54,19 @@ namespace service.Core.Interfaces.KeyManagement
         /// <param name="id">The ID of the key to retrieve.</param>
         /// <returns>A Task that represents the asynchronous operation. The result of the task will be a Keys object containing the requested key details.</returns>
         Task<Keys?> GetKeyDetailsByIdAsync(int id);
+
+        /// <summary>
+        /// Soft deletes a key by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to soft delete.</param>
+        /// <returns>A task representing the operation. The result is the number of affected rows.</returns>
+        Task<int> SoftDeleteKeyAsync(int id);
+
+        /// <summary>
+        /// Recovers a soft-deleted key with the specified ID.
+        /// </summary>
+        /// <param name="id">The ID of the soft-deleted key to recover.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result indicates whether the recovery was successful (1) or failed (0).</returns>
+        Task<int> RecoverSoftDeletedKeyAsync(int id);
     }
 }

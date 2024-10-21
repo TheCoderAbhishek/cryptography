@@ -378,5 +378,113 @@ namespace service.Application.Repository.KeyManagement
                     ErrorCode.GetKeyDetailsByIdAsyncException, ConstantData.Txn());
             }
         }
+
+        /// <summary>
+        /// Soft deletes a key based on the provided ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to soft delete.</param>
+        /// <returns>1 if the deletion was successful, 0 otherwise.</returns>
+        /// <exception cref="CustomException">Thrown if an error occurs during the soft deletion process.</exception>
+        public async Task<int> SoftDeleteKeyAsync(int id)
+        {
+            string query = KeyManagementQueries._softDeleteOrRestoreKey;
+
+            try
+            {
+                _logger.LogInformation("Soft deleting key with ID: {Id}", id);
+
+                var parameters = new
+                {
+                    @KeyStatus = false,
+                    @KeyState = 0,
+                    @Id = id,
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(
+                    query,
+                    $"Key with ID: {id} soft deleted successfully.",
+                    $"Failed to soft delete key with ID: {id}.",
+                    "",
+                    ErrorCode.SoftDeleteKeyAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                if (baseResponse.Status == 1)
+                {
+                    _logger.LogInformation("Key with ID: {Id} soft deleted successfully.", id);
+                }
+                else
+                {
+                    _logger.LogError("Failed to soft delete key with ID: {Id}.", id);
+                }
+                return baseResponse.Status;
+            }
+            catch (SqlException sqlException)
+            {
+                _logger.LogError(sqlException, "SQL exception occurred while soft deleting key ID: {Id}. Error: {ErrorMessage}", id, sqlException.Message);
+                throw new CustomException("SQL exception occurred during soft deleting key", sqlException,
+                    ErrorCode.SoftDeleteKeyAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while soft deleting key ID: {Id}. Error: {ErrorMessage}", id, ex.Message);
+                throw new CustomException("An unexpected error occurred during soft deleting key", ex,
+                    ErrorCode.SoftDeleteKeyAsyncException, ConstantData.Txn());
+            }
+        }
+
+        /// <summary>
+        /// Recovers a soft-deleted key with the specified ID.
+        /// </summary>
+        /// <param name="id">The ID of the key to recover.</param>
+        /// <returns>1 if the key was recovered successfully, 0 otherwise.</returns>
+        /// <exception cref="CustomException">Thrown if an error occurs during the recovery process.</exception>
+        public async Task<int> RecoverSoftDeletedKeyAsync(int id)
+        {
+            string query = KeyManagementQueries._softDeleteOrRestoreKey;
+
+            try
+            {
+                _logger.LogInformation("Recovering soft deleted key with ID: {Id}", id);
+
+                var parameters = new
+                {
+                    @KeyStatus = true,
+                    @KeyState = 1,
+                    @Id = id,
+                };
+
+                BaseResponse baseResponse = await _commonDbHander.AddUpdateDeleteData(
+                    query,
+                    $"Key with ID: {id} recovered successfully.",
+                    $"Failed to recover soft deleted key with ID: {id}.",
+                    "",
+                    ErrorCode.RecoverSoftDeletedKeyAsyncError,
+                    ConstantData.Txn(),
+                    parameters);
+
+                if (baseResponse.Status == 1)
+                {
+                    _logger.LogInformation("Key with ID: {Id} recovered successfully.", id);
+                }
+                else
+                {
+                    _logger.LogError("Failed to recover soft deleted key with ID: {Id}.", id);
+                }
+                return baseResponse.Status;
+            }
+            catch (SqlException sqlException)
+            {
+                _logger.LogError(sqlException, "SQL exception occurred while recovering soft deleted key ID: {Id}. Error: {ErrorMessage}", id, sqlException.Message);
+                throw new CustomException("SQL exception occurred during recovering soft deleted key", sqlException,
+                    ErrorCode.RecoverSoftDeletedKeyAsyncSqlException, ConstantData.Txn());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while recovering soft deleted key ID: {Id}. Error: {ErrorMessage}", id, ex.Message);
+                throw new CustomException("An unexpected error occurred during recovering soft deleted key", ex,
+                    ErrorCode.RecoverSoftDeletedKeyAsyncException, ConstantData.Txn());
+            }
+        }
     }
 }

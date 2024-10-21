@@ -229,3 +229,7 @@ SELECT * FROM [cryptography].[dbo].[tblSecureKeys];
 TRUNCATE TABLE [cryptography].[dbo].[tblSecureKeys];
 
 SELECT KeyMaterial AS key_material FROM [cryptography].[dbo].[tblKeys] WHERE id = 1;
+
+-- Soft delete key
+UPDATE [cryptography].[dbo].[tblKeys]
+SET KeyStatus = 0, KeyState = 0 WHERE id=1;

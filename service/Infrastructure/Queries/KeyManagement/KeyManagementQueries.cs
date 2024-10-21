@@ -48,5 +48,16 @@
         /// SQL query to get key details associated with id.
         /// </summary>
         public const string _getKeyDetailsById = @"SELECT * FROM [cryptography].[dbo].[tblKeys] WHERE id = @Id;";
+
+        /// <summary>
+        /// SQL query to soft delete key associated with id.
+        /// </summary>
+        public const string _softDeleteOrRestoreKey = @"UPDATE [cryptography].[dbo].[tblKeys]" +
+                                                    " SET KeyStatus = @KeyStatus, KeyState = @KeyState WHERE id=@Id;";
+
+        /// <summary>
+        /// SQL query to hard delete key associated with ID.
+        /// </summary>
+        public const string _hardDeleteKey = @"DELETE FROM [cryptography].[dbo].[tblKeys] WHERE id = @Id";
     }
 }
