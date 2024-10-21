@@ -324,6 +324,140 @@ namespace serviceTests.KeyManagement
 
         #endregion
 
+        #region SoftDeleteKey Tests
+
+        [Fact]
+        public async Task SoftDeleteKey_KeyExistsAndActive_ShouldSoftDelete()
+        {
+            // Arrange
+            var key = _fakeKeys.Generate();
+            _keyManagementRepositoryMock.Setup(repo => repo.GetKeyDetailsByIdAsync(It.IsAny<int>())).ReturnsAsync(key);
+            _keyManagementRepositoryMock.Setup(repo => repo.SoftDeleteKeyAsync(It.IsAny<int>())).ReturnsAsync(1);
+
+            // Act
+            var result = await _service.SoftDeleteKey(key.Id);
+
+            // Assert
+            Assert.Equal(-3, result.Item1);
+            Assert.Equal($"Key with ID {key.Id} soft deleted successfully.", result.Item2);
+        }
+
+        [Fact]
+        public async Task SoftDeleteKey_KeyExistsButAlreadyDeleted_ShouldReturnAlreadyDeletedError()
+        {
+            // Arrange
+            var key = _fakeKeys.Generate();
+            key.KeyStatus = false; // Key is already deleted
+            key.KeyState = 0;
+            _keyManagementRepositoryMock.Setup(repo => repo.GetKeyDetailsByIdAsync(It.IsAny<int>())).ReturnsAsync(key);
+
+            // Act
+            var result = await _service.SoftDeleteKey(key.Id);
+
+            // Assert
+            Assert.Equal(-3, result.Item1);
+            Assert.Equal($"Key with ID {key.Id} soft deleted successfully.", result.Item2);
+        }
+
+        [Fact]
+        public async Task SoftDeleteKey_KeyDoesNotExist_ShouldReturnInvalidIdError()
+        {
+            // Arrange
+            _keyManagementRepositoryMock.Setup(repo => repo.GetKeyDetailsByIdAsync(It.IsAny<int>())).ReturnsAsync((Keys)null!);
+
+            // Act
+            var result = await _service.SoftDeleteKey(999);
+
+            // Assert
+            Assert.Equal(-2, result.Item1);
+            Assert.Equal("invalid id provided.", result.Item2);
+        }
+
+        [Fact]
+        public async Task SoftDeleteKey_ExceptionThrown_ShouldReturnExceptionError()
+        {
+            // Arrange
+            _keyManagementRepositoryMock.Setup(repo => repo.GetKeyDetailsByIdAsync(It.IsAny<int>()))
+                .ThrowsAsync(new System.Exception("Test Exception"));
+
+            // Act
+            var result = await _service.SoftDeleteKey(1);
+
+            // Assert
+            Assert.Equal(-1, result.Item1);
+            Assert.Equal("Exception occurred while soft deletion of a key.", result.Item2);
+        }
+
+        #endregion
+
+        #region RecoverSoftDeletedKey Tests
+
+        [Fact]
+        public async Task RecoverSoftDeletedKey_KeyExistsAndDeleted_ShouldRecoverKey()
+        {
+            // Arrange
+            var key = _fakeKeys.Generate();
+            key.KeyStatus = false; // Key is soft deleted
+            key.KeyState = 0;
+            _keyManagementRepositoryMock.Setup(repo => repo.GetKeyDetailsByIdAsync(It.IsAny<int>())).ReturnsAsync(key);
+            _keyManagementRepositoryMock.Setup(repo => repo.RecoverSoftDeletedKeyAsync(It.IsAny<int>())).ReturnsAsync(1);
+
+            // Act
+            var result = await _service.RecoverSoftDeletedKey(key.Id);
+
+            // Assert
+            Assert.Equal(1, result.Item1);
+            Assert.Equal($"Key with ID {key.Id} recovered successfully.", result.Item2);
+        }
+
+        [Fact]
+        public async Task RecoverSoftDeletedKey_KeyExistsButAlreadyActive_ShouldReturnAlreadyActiveError()
+        {
+            // Arrange
+            var key = _fakeKeys.Generate();
+            key.KeyStatus = true; // Key is already active
+            key.KeyState = 1;
+            _keyManagementRepositoryMock.Setup(repo => repo.GetKeyDetailsByIdAsync(It.IsAny<int>())).ReturnsAsync(key);
+
+            // Act
+            var result = await _service.RecoverSoftDeletedKey(key.Id);
+
+            // Assert
+            Assert.Equal(-3, result.Item1);
+            Assert.Equal($"Failed to recover soft deleted key with ID {key.Id}. Because key is already in active state.", result.Item2);
+        }
+
+        [Fact]
+        public async Task RecoverSoftDeletedKey_KeyDoesNotExist_ShouldReturnInvalidIdError()
+        {
+            // Arrange
+            _keyManagementRepositoryMock.Setup(repo => repo.GetKeyDetailsByIdAsync(It.IsAny<int>())).ReturnsAsync((Keys)null!);
+
+            // Act
+            var result = await _service.RecoverSoftDeletedKey(999);
+
+            // Assert
+            Assert.Equal(-2, result.Item1);
+            Assert.Equal("Invalid id provided.", result.Item2);
+        }
+
+        [Fact]
+        public async Task RecoverSoftDeletedKey_ExceptionThrown_ShouldReturnExceptionError()
+        {
+            // Arrange
+            _keyManagementRepositoryMock.Setup(repo => repo.GetKeyDetailsByIdAsync(It.IsAny<int>()))
+                .ThrowsAsync(new System.Exception("Test Exception"));
+
+            // Act
+            var result = await _service.RecoverSoftDeletedKey(1);
+
+            // Assert
+            Assert.Equal(-1, result.Item1);
+            Assert.Equal("Exception occurred while recovering soft deleted key.", result.Item2);
+        }
+
+        #endregion
+
         #region ExportKey Tests
 
         [Fact]

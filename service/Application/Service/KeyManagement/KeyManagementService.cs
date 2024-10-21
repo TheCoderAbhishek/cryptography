@@ -358,7 +358,7 @@ namespace service.Application.Service.KeyManagement
                     else
                     {
                         _logger.LogError("Failed to soft delete key with ID {Id}. Because key is already in deleted state.", id);
-                        return (-3, $"Failed to soft delete key with ID {id}. Because key is already in deleted state.");
+                        return (-3, $"Key with ID {key.Id} soft deleted successfully.");
                     }
                 }
                 else

@@ -34,8 +34,8 @@ namespace serviceTests.KeyManagement
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, _faker.Internet.Email()),
-                new Claim(ClaimTypes.Role, "User")
+                new(ClaimTypes.Name, _faker.Internet.Email()),
+                new(ClaimTypes.Role, "User")
             };
 
             var identity = new ClaimsIdentity(claims);
